@@ -4,6 +4,7 @@ import { migrer } from '../game/prepa.js';
 import { CLASSIFICATIONS, CERTITUDES, NFPA_EDITION } from '../data/nfpa.js';
 import { $, $$, h, esc, modal, refTexte } from '../ui.js';
 import { voirAussi, bibliographie } from '../data/sources.js';
+import { fusion, fourchette, libelle, etatAtteint, etatNon } from '../data/thermique.js';
 
 export function catalogueFaits(scn) {
   const m = new Map();
@@ -71,7 +72,7 @@ export function ouvrirAnalyse(src, container, opts = {}) {
         <h2 id="a-constats">Constatations</h2>
         ${(scn.zones || []).map(z => { const l = scn.observations.filter(o => o.zone === z.id); return l.length ? `<h3 class="ana-z">${esc(z.nom)}</h3>${l.map(o => { const n = scn.observations.indexOf(o) + 1; return `<div class="ana-c" id="c-${esc(o.id)}" data-obs="${esc(o.id)}">
           <div class="ana-ch"><span class="cav">${n}</span><b>${esc(o.titre)}</b>${o.analyse?.ref || o.ref ? `<span class="small"> · ${esc(refTexte(o.ref || o.analyse.ref))}</span>` : ''}</div>
-          <p>${esc(o.description)}</p>${lecture(o) ? `<p><i>Analyse :</i> ${esc(lecture(o))}</p>` : ''}${voirLigne(o)}
+          <p>${esc(o.description)}</p>${lecture(o) ? `<p><i>Analyse :</i> ${esc(lecture(o))}</p>` : ''}${o.thermo?.items?.length ? `<p><i>Températures :</i> ${esc(libelle(fourchette(o.thermo.items)))} — ${o.thermo.items.map(it => { const m = fusion(it.mat); return m ? `${esc(it.objet || m.nom)} (${esc(m.nom)}, ${esc(it.etat === 'fondu' ? etatAtteint(m) : etatNon(m))}${it.alliage ? ', par alliage' : ''})` : ''; }).join(' ; ')}.</p>` : ''}${voirLigne(o)}
           ${photosDe(o.id).length ? `<div class="ph">${photosDe(o.id).map(p => `<figure><img src="${scn.medias[p.media]}" data-ph="${esc(p.id)}" alt=""><figcaption>${esc(p.titre || '')}</figcaption></figure>`).join('')}</div>` : ''}
         </div>`; }).join('')}` : ''; }).join('')}
         ${scn.observations.filter(o => !(scn.zones || []).some(z => z.id === o.zone)).map(o => `<div class="ana-c" id="c-${esc(o.id)}" data-obs="${esc(o.id)}"><b>${esc(o.titre)}</b><p>${esc(o.description)}</p></div>`).join('')}

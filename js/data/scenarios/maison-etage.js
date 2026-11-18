@@ -239,6 +239,26 @@ export default {
         { t: 'Du bois pourri, sans rapport.', ok: false, fb: 'Il est au contact du conduit, au centre de la zone la plus brûlée.' },
       ] },
       prelevement: 'P1' },
+    { id: 'M17', zone: 'ch1', pos: [2.0, 1.3, 0.12], titre: 'La fenêtre de la chambre 1',
+      description: 'Vitre affaissée, coulée en bas du cadre. Poignée de fenêtre en zamac fondue. Paumelles en laiton intactes.',
+      thermo: { items: [
+        { mat: 'verre', etat: 'fondu', objet: 'Vitre de la fenêtre, affaissée et coulée' },
+        { mat: 'zamac', etat: 'fondu', objet: 'Poignée de fenêtre (zamac)' },
+        { mat: 'laiton', etat: 'intact', objet: 'Paumelles en laiton' },
+      ], fb: 'Exact : entre ≈ 750 et ≈ 930 °C près de la fenêtre : la chambre 1 a été durement exposée… par le haut, quand la toiture a brûlé.' } },
+    { id: 'M18', zone: 'sejour', pos: [3.0, 2.4, 3.0], titre: 'Le plafonnier du séjour',
+      description: 'Plafonnier au centre du séjour : diffuseur en acrylique intact, simplement voilé de suie. Gaines électriques en PVC du plafond non déformées.',
+      thermo: { items: [
+        { mat: 'acrylique', etat: 'intact', objet: 'Diffuseur du plafonnier (acrylique)' },
+        { mat: 'pvc', etat: 'intact', objet: 'Gaines électriques du plafond (PVC)' },
+      ], fb: 'Exact : même le PVC n\'a pas ramolli (moins de ≈ 90 °C) au plafond du séjour : le rez-de-chaussée n\'a jamais été chaud. Le feu n\'est pas parti d\'en bas.' } },
+    { id: 'M19', zone: 'combles', pos: [3.45, 2.9, 0.75], titre: 'Coulures métalliques sur le câble d\'éclairage',
+      description: 'L\'abergement en zinc de la souche a fondu et coulé dans les combles. Sous les coulures, le conducteur en cuivre du circuit d\'éclairage est percé, grisâtre et poreux. À 30 cm, hors des coulures, le même conducteur est intact.',
+      thermo: { items: [
+        { mat: 'zinc', etat: 'fondu', objet: 'Abergement de la souche (zinc), coulé dans les combles' },
+        { mat: 'cuivre', etat: 'fondu', alliage: true, objet: 'Conducteur en cuivre percé et grisâtre sous les coulures de zinc' },
+        { mat: 'cuivre', etat: 'intact', objet: 'Même conducteur à 30 cm, hors des coulures' },
+      ], fb: 'Exact : le zinc a fondu (au moins ≈ 420 °C) ; le cuivre intact à 30 cm montre qu\'on est resté sous ≈ 1 082 °C. Le cuivre « fondu » sous le zinc est un alliage (NFPA 921, chap. 6.2.8.6), pas une preuve de 1 082 °C ni d\'un arc.' } },
   ],
 
   fouille: {
@@ -291,7 +311,7 @@ export default {
       { id: 'MO1', nom: 'Charpente autour de la traversée du conduit (combles, au-dessus de la chambre 1)', niveau: 'r1', pos: [3, 2.3, 0.6], ok: true, soutien: ['M01', 'M10', 'M11', 'M12', 'M15', 'MF4', 'M08'], refute: [] },
       { id: 'MO2', nom: 'Parquet de la chambre 1', niveau: 'r1', pos: [2.4, 0.1, 2.3], soutien: ['M07'], refute: ['M07', 'M08', 'M10'] },
       { id: 'MO3', nom: 'Spot encastré du plafond de la chambre 1', niveau: 'r1', pos: [3.4, 2.3, 1.1], soutien: [], refute: ['M09', 'M15', 'M10'] },
-      { id: 'MO4', nom: 'Poêle à bois du séjour', niveau: 'rdc', pos: [3, 0.4, 0.5], soutien: [], refute: ['M03', 'M04'] },
+      { id: 'MO4', nom: 'Poêle à bois du séjour', niveau: 'rdc', pos: [3, 0.4, 0.5], soutien: [], refute: ['M03', 'M04', 'TH-M18'] },
     ],
     causes: [
       { id: 'MC1', nom: 'Chaleur du conduit transmise à la charpente (bois à 2 cm, sans isolant) : pyrolyse lente puis inflammation pendant une longue chauffe', premierCombustible: 'Chevrons et coffrage en bois au contact du conduit', source: 'Conduit de fumée chaud (poêle en fonctionnement)', classification: 'accidentelle', ok: true, origine: 'MO1',
@@ -310,6 +330,7 @@ export default {
     pieges: [
       { id: 'dropdown', titre: 'Les brûlures au sol de la chambre 1', ref: '6.3.7.8', texte: 'Quand le feu vient d\'en haut, les matériaux qui tombent brûlent le plancher : intensité au sol ≠ origine.', faits: ['M07'], origine: 'MO2' },
       { id: 'spot', titre: 'Le spot et le disjoncteur déclenché', ref: '17.4.5', texte: 'Un circuit atteint par le feu déclenche aussi. Seul un arc en amont, au bon endroit, est significatif.', faits: ['M09', 'M02'], cause: 'MC2' },
+      { id: 'alliage', titre: 'Le cuivre « fondu » sous le zinc', ref: '6.2.8.6', texte: 'Un conducteur percé sous des coulures de zinc a formé un alliage : ni 1 082 °C, ni arc électrique.', faits: ['M19'] },
       { id: 'cheminee', titre: '« Pas de ramonage » ≠ feu de cheminée', ref: '18.6', texte: 'Un défaut d\'entretien n\'est pas une cause : il faut des traces d\'un feu de cheminée dans le conduit.', faits: ['MF3'], cause: 'MC5' },
     ],
   },

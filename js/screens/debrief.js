@@ -5,6 +5,7 @@ import { grade } from '../state.js';
 import { $, $$, h, esc, ref, toast } from '../ui.js';
 import { apercuRapport } from './rapport.js';
 import { voirAussiHtml } from '../data/sources.js';
+import { DOMAINES, gainsEnquete, crediter, niveauDe, NOMS_NIVEAU } from '../game/competences.js';
 import { BADGES, badgesGagnes, etoiles } from '../game/badges.js';
 import { SCENARIOS } from '../data/scenarios/index.js';
 
@@ -19,7 +20,11 @@ export function ouvrirDebrief(E, ctx) {
   c.journal = c.journal.slice(0, 40);
   const avant = new Set(c.badges || []);
   const gagnes = badgesGagnes(E, ev);
-  if (SCENARIOS.every(x => (c.missions[x.id]?.meilleur ?? 0) >= 40)) gagnes.push('tous');
+  if (SCENARIOS.filter(x => x.ordre <= 3).every(x => (c.missions[x.id]?.meilleur ?? 0) >= 40)) gagnes.push('tous');
+  const gainsC = gainsEnquete(E, ev);
+  const montees = crediter(c, gainsC);
+  if (DOMAINES.some(d => niveauDe(c, d.id) >= 3)) gagnes.push('specialiste');
+  if (DOMAINES.every(d => niveauDe(c, d.id) >= 2)) gagnes.push('polyvalent');
   const nouveaux = gagnes.filter(b => !avant.has(b));
   c.badges = [...new Set([...avant, ...gagnes])];
   ctx.save();
@@ -53,7 +58,10 @@ export function ouvrirDebrief(E, ctx) {
           </div>
         </div>
         <p style="margin-top:14px">+ <b style="color:var(--accent2)">${ev.credits.toLocaleString('fr-FR')} cr</b> · + <b>${ev.xp} XP</b>${ev.deja ? ' <span class="muted small">(rejouée : gains réduits)</span>' : ''}
-        ${gApres.n > gAvant.n ? `<br><span class="chip ok" style="margin-top:8px">🎖️ Promotion : ${esc(gApres.nom)}</span>` : ''}</p>
+        ${gApres.n > gAvant.n ? `<br><span class="chip ok" style="margin-top:8px">🎖️ Promotion : ${esc(gApres.nom)}</span>` : ''}${ev.bonusComp ? ` <span class="small muted">(dont +${Math.round(ev.bonusComp * 100)} % de bonus de compétences)</span>` : ''}</p>
+        <div class="kicker" style="margin-top:12px">Compétences gagnées</div>
+        <div class="comp-gains">${DOMAINES.filter(d => gainsC[d.id]).map(d => `<span class="chip">${d.ic} ${esc(d.nom)} <b>+${gainsC[d.id]}</b></span>`).join(' ') || '<span class="small muted">—</span>'}</div>
+        ${montees.map(m => `<div class="chip ok" style="margin-top:6px">${m.dom.ic} ${esc(m.dom.nom)} : niveau ${m.n} (${NOMS_NIVEAU[m.n - 1]})${m.n === 3 ? ` — avantage débloqué : <b>${esc(m.dom.avantage.nom)}</b>` : ''}</div>`).join('')}
       </div>
       <div class="hero-card">
         <div class="kicker">Solution de référence</div>
@@ -78,7 +86,7 @@ export function ouvrirDebrief(E, ctx) {
     ${ev.penalites.length ? `<div class="panel"><h3>Pénalités</h3>${ev.penalites.map(p => `<div class="fait contamine"><div class="hd"><b>${esc(p.titre)}</b> ${ref(p.ref)} <span class="chip ko">−${p.pts}</span></div>${esc(p.texte)}</div>`).join('')}</div>` : ''}
     <div class="panel"><h3>Pièges de la scène</h3>${ev.pieges.map(p => `<div class="piege"><div>${etatChip[p.etat]}</div><div><b>${esc(p.titre)}</b> ${ref(p.ref)}<div class="small muted">${esc(p.texte)}</div>${voirAussiHtml({ ref: p.ref, texte: `${p.titre} ${p.texte}` }, { max: 3 })}</div></div>`).join('')}</div>
     <div class="panel"><h3>Écarts de méthode (${E.violations.length})</h3>${E.violations.map(v => `<div class="small" style="padding:4px 0;border-bottom:1px solid var(--line)">⚠ ${esc(v.texte)} ${ref(v.ref)}</div>`).join('') || '<p class="muted">Aucun.</p>'}</div>
-    <div class="panel"><h3>Analyses discutables</h3>${[...E.analyses].filter(([, a]) => !a.ok).map(([id, a]) => { const o = E.obs(id); const bon = o.analyse.options.find(x => x.ok); return `<div class="fait"><div class="hd"><b>${esc(o.titre)}</b>${ref(o.analyse.ref)}</div><div class="small">Votre réponse : ${esc(o.analyse.options[a.idx].t)}</div><div class="small" style="color:var(--ok)">Attendu : ${esc(bon.t)}</div><div class="small muted">${esc(o.analyse.options[a.idx].fb || bon.fb || '')}</div>${voirAussiHtml({ ref: o.analyse.ref || o.ref, sources: o.sources, texte: `${o.titre} ${o.description || ''}` }, { max: 3 })}</div>`; }).join('') || '<p class="muted">Toutes vos analyses sont correctes.</p>'}</div>
+    <div class="panel"><h3>Analyses discutables</h3>${[...E.analyses].filter(([, a]) => !a.ok).map(([id, a]) => { const o = E.obs(id); const bon = o.analyse.options.find(x => x.ok); return `<div class="fait"><div class="hd"><b>${esc(o.titre)}</b>${ref(o.analyse.ref)}</div><div class="small">Votre réponse : ${esc(o.analyse.options[a.idx].t)}</div><div class="small" style="color:var(--ok)">Attendu : ${esc(bon.t)}</div><div class="small muted">${esc(o.analyse.options[a.idx].fb || bon.fb || '')}</div>${voirAussiHtml({ ref: o.analyse.ref || o.ref, sources: o.sources, texte: `${o.titre} ${o.description || ''}` }, { max: 3 })}</div>`; }).join('') }${[...E.releves].filter(([, r]) => !r.ok).map(([id, r]) => { const o = E.obs(id); const bon = o.thermo.options.find(x => x.ok); return `<div class="fait"><div class="hd"><b>🌡️ ${esc(o.titre)}</b>${ref(o.thermo.ref)}</div><div class="small">Votre estimation : ${esc(o.thermo.options[r.idx].t)}</div><div class="small" style="color:var(--ok)">Attendu : ${esc(bon.t)}</div><div class="small muted">${esc(o.thermo.options[r.idx].fb || '')}</div></div>`; }).join('')}${[...E.analyses].some(([, a]) => !a.ok) || [...E.releves].some(([, r]) => !r.ok) ? '' : '<p class="muted">Toutes vos analyses sont correctes.</p>'}</div>
   </div></div>`);
   screen.appendChild(el);
 

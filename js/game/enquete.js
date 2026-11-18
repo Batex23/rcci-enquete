@@ -2,6 +2,8 @@
 import { possede } from '../state.js';
 import { OUTILS, CONTENANTS } from '../data/outils.js';
 import { norm } from '../ui.js';
+import { fourchette } from '../data/thermique.js';
+import { aAvantage } from './competences.js';
 
 export class Enquete {
   constructor(scn, carriere) {
@@ -17,6 +19,7 @@ export class Enquete {
     this.photoZone = new Set();
     this.photoCouche = new Set();
     this.analyses = new Map(); // obsId -> { idx, ok }
+    this.releves = new Map(); // obsId -> { idx, ok } (témoins de température)
     this.fouille = { retirees: 0 };
     this.scelles = [];
     this.faits = new Map();
@@ -181,6 +184,22 @@ export class Enquete {
     return { ok: !!opt.ok, fb: opt.fb, ref: o.analyse.ref };
   }
 
+  // -------------------------------------------------- témoins de température
+  estimerTemperature(obsId, idx) {
+    const o = this.obs(obsId);
+    const opt = o.thermo.options[idx];
+    this.releves.set(obsId, { idx, ok: !!opt.ok });
+    const f = fourchette(o.thermo.items);
+    const z = this.zone(o.zone)?.nom || '';
+    const id = o.thermo.fait || `TH-${obsId}`;
+    this.faits.delete(id);
+    this.ajouterFait({ id, texte: `Températures — ${z}, ${o.titre} : ${opt.t}.`, court: `🌡️ ${z} : ${opt.t}`, type: 'thermo', source: z, obs: obsId, zone: o.zone, bas: f.bas, haut: f.haut });
+    this.log(`Estimation de température : ${o.titre} (${opt.t}).`);
+    return { ok: !!opt.ok, fb: opt.fb, ref: o.thermo.ref };
+  }
+  aEstimer(o) { return !!o?.thermo?.options?.length && !this.releves.has(o.id); }
+  perk(d) { return aAvantage(this.c, d); }
+
   // -------------------------------------------------- fouille
   peutRetirerCouche() {
     const f = this.scn.fouille;
@@ -228,12 +247,17 @@ export class Enquete {
     this.log(`Scellé ${s.id} : ${p.nom}${temoin ? ' + échantillon de comparaison' : ''}.`);
     return { scelle: s, msgs };
   }
-  coutAnalyse(a) { return this.possede('labo') ? Math.round(a.cout / 2) : a.cout; }
+  coutAnalyse(a, p) {
+    let c = this.possede('labo') ? a.cout / 2 : a.cout;
+    if (this.perk('labo')) c *= 0.8;
+    if (p && p.type !== 'liquide' && this.perk('elec')) c *= 0.7;
+    return Math.round(c);
+  }
   analyserScelle(sid, aid) {
     const s = this.scelles.find(x => x.id === sid);
     const p = this.scn.prelevements.find(x => x.id === s.prelevement);
     const a = p.analyses.find(x => x.id === aid);
-    const cout = this.coutAnalyse(a);
+    const cout = this.coutAnalyse(a, p);
     if (this.c.credits < cout) return { erreur: `Crédits insuffisants (${cout} requis).` };
     this.c.credits -= cout; this.depenses += cout;
     let r;
@@ -294,7 +318,13 @@ export class Enquete {
   faitValide(fid) {
     const f = this.faits.get(fid);
     if (!f || f.contamine || f.speculatif || f.partiel) return false;
-    if (f.type === 'constat') return this.obs(fid)?.analyse ? this.analyses.get(fid)?.ok === true : true;
+    if (f.type === 'thermo') return this.releves.get(f.obs)?.ok === true;
+    if (f.type === 'constat') {
+      const o = this.obs(fid);
+      if (o?.analyse) return this.analyses.get(fid)?.ok === true;
+      if (o?.thermo) return this.releves.get(fid)?.ok === true;
+      return true;
+    }
     return true;
   }
 

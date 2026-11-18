@@ -155,6 +155,12 @@ export default {
         { t: 'Une prise est toujours suspecte : je la garde comme cause.', ok: false, fb: 'Une piste se garde ou s\'écarte selon les faits. Ici, rien ne la soutient.' },
         { t: 'Je ne m\'en occupe pas, ce n\'est pas la plaque.', ok: false, fb: 'Si : un bon enquêteur vérifie toutes les sources possibles avant de conclure.' },
       ] } },
+    { id: 'T09', zone: 'cuisine', pos: [1.95, 2.05, 0.3], titre: 'La hotte',
+      description: 'Hotte au-dessus de la plaque : le filtre à graisse en aluminium a coulé en gouttes sur la plaque. Le cache en verre de l\'éclairage de la hotte est fissuré et noirci, mais pas coulé.',
+      thermo: { items: [
+        { mat: 'alualliage', etat: 'fondu', objet: 'Filtre à graisse de la hotte' },
+        { mat: 'verre', etat: 'intact', objet: 'Cache en verre de l\'éclairage de la hotte (fissuré, non coulé)' },
+      ], fb: 'Exact : l\'alliage d\'aluminium a fondu (au moins ≈ 600 °C), le verre n\'a pas coulé (moins de ≈ 750 °C). Des températures normales pour des flammes qui lèchent une hotte pendant quelques minutes.' } },
   ],
 
   fouille: {
@@ -234,6 +240,8 @@ export default {
       mentor: 'Regarde ce qui est apparu : les manettes et la casserole. C\'est souvent là que tout se joue.' },
     { objectif: 'Vérifier les autres sources', cond: { type: 'analyse', ids: ['T06', 'T07'] }, obs: ['T06', 'T07'], ref: '4.3.9',
       mentor: 'Ne tombe pas amoureux de ta première piste ! On vérifie <b>toutes</b> les sources possibles : le réfrigérateur et la prise du plan de travail. Lentini consacre un chapitre entier aux erreurs d\'enquête : écarter une donnée qui dérange en fait partie.' },
+    { objectif: 'Estimer une température', cond: { type: 'thermo', ids: ['T09'] }, obs: ['T09'], cible: '.fiche', ref: '6.2.2.4',
+      mentor: 'Encore un outil d\'enquêteur : les <b>témoins de température</b>. Clique sur la hotte. Ce qui a <b>fondu</b> prouve une température minimale, ce qui a <b>tenu</b> une température maximale. Photo, puis estimation avec tes repères de fusion.' },
     { objectif: 'Entendre l\'occupante', cond: { type: 'temoin', id: 'T1', n: 2 }, cible: '[data-p=temoins]', ref: '13.4',
       mentor: 'Maintenant, on écoute l\'occupante. Ouvre ton <b>carnet</b>, onglet 🗣️, puis clique sur Mme Martin. Laisse-la parler : questions <b>ouvertes</b> d\'abord (Chandler en fait la base de tout entretien).' },
     { objectif: 'Confronter les hypothèses', cond: { type: 'hypotheses' }, cible: '[data-p=hyp]', ref: '4.3.6',

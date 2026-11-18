@@ -7,15 +7,16 @@ import { CLASSIFICATIONS, CERTITUDES } from '../data/nfpa.js';
 import { $, $$, h, esc, toast, modal, confirmer, ref } from '../ui.js';
 import { calculateur, testCompetence } from './outilsAnalyse.js';
 import { voirAussiHtml } from '../data/sources.js';
+import { FUSIONS, fusion, fourchette, etatAtteint, etatNon, fmt } from '../data/thermique.js';
 import { ouvrirDebrief } from './debrief.js';
 import { apercuRapport } from './rapport.js';
 import { son, basculerSon, estMuet } from '../game/sons.js';
 
 const PAGES = [
   ['mission', '📋', 'Mission', '#f6d365'], ['constats', '🔎', 'Indices', '#fda085'], ['temoins', '🗣️', 'Témoins & recherches', '#a1c4fd'],
-  ['labo', '🧪', 'Scellés & labo', '#c2e9fb'], ['hyp', '🧠', 'Hypothèses', '#d4fc79'], ['notes', '✏️', 'Mes notes', '#fbc2eb'],
+  ['thermo', '🌡️', 'Températures', '#ffd6a5'], ['labo', '🧪', 'Scellés & labo', '#c2e9fb'], ['hyp', '🧠', 'Hypothèses', '#d4fc79'], ['notes', '✏️', 'Mes notes', '#fbc2eb'],
 ];
-const ICONES = [[/cuisine/i, '🍳'], [/s[ée]jour|salon/i, '🛋️'], [/chambre/i, '🛏️'], [/bain|sdb|wc/i, '🛁'], [/garage/i, '🚗'], [/couloir|entr[ée]e|palier|d[ée]gagement/i, '🚪'], [/combles|toit/i, '🏚️'], [/fa[çc]ade/i, '🧱'], [/bureau/i, '🖥️']];
+const ICONES = [[/cuisine/i, '🍳'], [/s[ée]jour|salon/i, '🛋️'], [/chambre/i, '🛏️'], [/bain|sdb|wc/i, '🛁'], [/garage/i, '🚗'], [/couloir|entr[ée]e|palier|d[ée]gagement/i, '🚪'], [/combles|toit/i, '🏚️'], [/fa[çc]ade/i, '🧱'], [/bureau/i, '🖥️'], [/moteur/i, '⚙️'], [/habitacle/i, '💺'], [/roue/i, '🛞'], [/v[ée]hicule/i, '🚗'], [/cellier/i, '🧺']];
 const APPS = [['tout', '🔍 Web'], ['reseaux', '👥 Réseaux'], ['meteo', '☁️ Météo'], ['rappel', '⚠️ RappelConso'], ['presse', '📰 Presse'], ['cadastre', '🗺️ Cadastre'], ['societes', '🏢 Sociétés']];
 const MENTOR = { nom: 'Cne Ferrand · ton tuteur', avatar: '👨‍🚒' };
 
@@ -27,6 +28,7 @@ export function ouvrirEnquete(scnSrc, ctx) {
   const immediat = reg.feedback !== 'differe';
   const tuto = scn.tutoriel?.length ? scn.tutoriel : null;
   const bat = scn.batiment;
+  const aThermo = scn.observations.some(o => o.thermo?.options?.length);
   const ui = { outil: 'observer', page: 'mission', carnet: !tuto, carte: null, tutoIdx: 0, app: 'tout', res: [], vu: new Set() };
   if (tuto) for (const k of ['origines', 'causes']) for (const d of scn.hypotheses[k]) E.ajouterHypothese(k, d.id);
 
@@ -100,6 +102,8 @@ export function ouvrirEnquete(scnSrc, ctx) {
       { t: `Trouver les indices`, n: dec, max: nObs(), ok: dec >= nObs(), hint: 'Survole la scène et clique sur ce qui t\'intrigue : traces, objets, appareils. Pivote la vue avec Q / E.' },
       { t: `Interpréter les indices`, n: ana, max: Math.max(anaPos, 1), ok: anaPos > 0 && ana >= anaPos, hint: 'Ouvre chaque indice : photographie-le, puis choisis la bonne lecture.', ref: '4.3.4' },
     ];
+    const nTh = scn.observations.filter(o => o.thermo?.options?.length && !o.cachee).length;
+    if (nTh) l.push({ t: 'Estimer les températures', n: E.releves.size, max: nTh, ok: E.releves.size >= Math.ceil(nTh * 0.75), hint: 'Certains indices sont des <b>témoins de température</b> : ce qui a fondu ou est resté intact. Dans la fiche, déduis la température atteinte à cet endroit.', ref: '6.2.2' });
     if (scn.fouille) l.push({ t: 'Fouiller la zone d\'intérêt', n: E.fouille.retirees, max: scn.fouille.couches.length, ok: E.fouille.retirees >= scn.fouille.couches.length, hint: 'Quand les tracés t\'ont mené à la zone d\'origine, fouille couche par couche : photo, puis retrait.', ref: '17.3.2' });
     if (tn) l.push({ t: 'Entendre les témoins', n: tv, max: tn, ok: tv >= Math.ceil(tn / 2), hint: 'Carnet → 🗣️ : questions ouvertes d\'abord, jamais de question qui suggère la réponse.', ref: '13.4' });
     l.push({ t: 'Tester les hypothèses', n: hy('origines') + hy('causes'), max: 4, ok: hy('origines') >= 2 && hy('causes') >= 2, hint: 'Carnet → 🧠 : ajoute au moins deux origines et deux causes possibles, et confronte-les aux faits.', ref: '4.3.6' });
@@ -132,6 +136,7 @@ export function ouvrirEnquete(scnSrc, ctx) {
       case 'decouvert': return tous(c.ids, id => E.decouverts.has(id));
       case 'photo': return tous(c.ids, id => E.photoObs.has(id));
       case 'analyse': return tous(c.ids, id => E.analyses.has(id));
+      case 'thermo': return tous(c.ids, id => E.releves.has(id));
       case 'fouille': return E.fouille.retirees >= (c.n || 1);
       case 'temoin': return (E.temoins.get(c.id)?.size || 0) >= (c.n || 1);
       case 'hypotheses': return [...E.hyp.origines.values(), ...E.hyp.causes.values()].every(x => x.teste);
@@ -236,6 +241,10 @@ export function ouvrirEnquete(scnSrc, ctx) {
     $('[data-f=retirer]', el)?.addEventListener('click', retirerCouche);
   }
   function retirerCouche() {
+    if (E.perk('methode') && !E.photoCouche.has(E.fouille.retirees + 1)) {
+      capture(img => { E.photoDeZone(img); pop('📷 Réflexe photo : couche photographiée'); retirerCouche(); });
+      return;
+    }
     const r = E.retirerCouche();
     S.setFouille(E.fouille.retirees);
     signaler(r.msgs);
@@ -246,13 +255,14 @@ export function ouvrirEnquete(scnSrc, ctx) {
 
   // ------------------------------------------------------------ carnet
   function renderCarnet() {
-    const cnt = { constats: [...E.decouverts.keys()].filter(id => E.obs(id)?.analyse && !E.analyses.has(id)).length, hyp: [...E.hyp.origines.values(), ...E.hyp.causes.values()].filter(x => !x.teste).length };
-    $('.carnet .onglets', root).innerHTML = PAGES.map(([id, ic, l, c]) => `<button class="onglet ${ui.page === id ? 'on' : ''}" data-p="${id}" title="${l}" style="background:${c}">${ic}${cnt[id] ? `<span class="n">${cnt[id]}</span>` : ''}</button>`).join('');
+    const cnt = { constats: [...E.decouverts.keys()].filter(id => E.obs(id)?.analyse && !E.analyses.has(id)).length, thermo: [...E.decouverts.keys()].filter(id => E.aEstimer(E.obs(id))).length, hyp: [...E.hyp.origines.values(), ...E.hyp.causes.values()].filter(x => !x.teste).length };
+    const pages = PAGES.filter(p => p[0] !== 'thermo' || aThermo);
+    $('.carnet .onglets', root).innerHTML = pages.map(([id, ic, l, c]) => `<button class="onglet ${ui.page === id ? 'on' : ''}" data-p="${id}" title="${l}" style="background:${c}">${ic}${cnt[id] ? `<span class="n">${cnt[id]}</span>` : ''}</button>`).join('');
     $$('.onglet', root).forEach(b => b.onclick = () => { ui.page = b.dataset.p; ui.vu.add(ui.page); if (!ui.carnet) { ui.carnet = true; root.classList.remove('carnet-ferme'); } son('page'); renderCarnet(); verifierTuto(); renderObjectifs(); surligner(); });
     const page = $('.carnet .page', root);
     const [, ic, titre] = PAGES.find(p => p[0] === ui.page);
     page.innerHTML = `<div class="page-h"><h2>${ic} ${titre}</h2><small>${esc(scn.titreCourt || scn.titre)}</small></div><div class="page-b"></div>`;
-    ({ mission: pMission, constats: pConstats, temoins: pTemoins, labo: pLabo, hyp: pHyp, notes: pNotes })[ui.page]($('.page-b', page));
+    ({ mission: pMission, constats: pConstats, thermo: pThermo, temoins: pTemoins, labo: pLabo, hyp: pHyp, notes: pNotes })[ui.page]($('.page-b', page));
   }
 
   function pMission(b) {
@@ -268,10 +278,37 @@ export function ouvrirEnquete(scnSrc, ctx) {
     b.innerHTML = parZone.map(({ z, l }) => `<div class="sous">${iconeZone(z)} ${esc(z.nom)}</div>${l.sort((a, b2) => a.num - b2.num).map(({ o, num }) => {
       const a = E.analyses.get(o.id); const ph = E.photos.find(p => p.obs === o.id);
       return `<div class="entree" data-o="${o.id}"><div class="hd"><span class="cv">${num}</span><span class="ti">${esc(o.titre)}</span>${ph ? `<img class="ph" src="${ph.img}" alt="">` : ''}</div>
-        ${a ? `<div class="an ${immediat ? (a.ok ? 'ok' : 'ko') : ''}">→ ${esc(o.analyse.options[a.idx].t)}</div>` : o.analyse ? `<div class="todo">${E.photoObs.has(o.id) ? '✎ à interpréter' : '📷 à photographier puis interpréter'}</div>` : ''}</div>`;
+        ${a ? `<div class="an ${immediat ? (a.ok ? 'ok' : 'ko') : ''}">→ ${esc(o.analyse.options[a.idx].t)}</div>` : o.analyse ? `<div class="todo">${E.photoObs.has(o.id) ? '✎ à interpréter' : '📷 à photographier puis interpréter'}</div>` : ''}
+        ${o.thermo?.options ? (E.releves.has(o.id) ? `<div class="an ${immediat ? (E.releves.get(o.id).ok ? 'ok' : 'ko') : ''}">🌡️ ${esc(o.thermo.options[E.releves.get(o.id).idx].t)}</div>` : `<div class="todo">🌡️ température à estimer</div>`) : ''}</div>`;
     }).join('')}`).join('') +
       (E.photos.filter(p => !p.obs).length ? `<div class="sous">Vues d'ensemble</div><div class="polas">${E.photos.filter(p => !p.obs).map(p => `<div class="pola"><img src="${p.img}" alt=""><span>n°${p.n}</span></div>`).join('')}</div>` : '');
     $$('[data-o]', b).forEach(x => x.onclick = () => { const o = E.obs(x.dataset.o); cadrer(o); ouvrirFiche(o); });
+  }
+
+  function pThermo(b) {
+    const l = [...E.releves].map(([id, r]) => ({ o: E.obs(id), r, f: fourchette(E.obs(id).thermo.items) }));
+    const reste = [...E.decouverts.keys()].filter(id => E.aEstimer(E.obs(id))).length;
+    const X = t => Math.max(0, Math.min(100, 100 * t / 1600));
+    const barre = (bas, haut, cls = '') => `<div class="th-bar ${cls}"><i style="left:${X(bas ?? 0)}%;right:${100 - X(haut ?? 1600)}%"></i>${[200, 400, 600, 800, 1000, 1200, 1400].map(t => `<u style="left:${X(t)}%"></u>`).join('')}</div>`;
+    const lignes = l.map(({ o, r, f }) => {
+      const z = E.zone(o.zone);
+      const montre = immediat || r.ok;
+      return `<div class="th-l" data-o="${o.id}"><div class="hd">${iconeZone(z)} <b>${esc(z?.nom || '')}</b> · ${esc(o.titre)}</div>
+        ${montre ? barre(f.bas, f.haut, immediat && !r.ok ? 'ko' : '') : ''}<div class="lb ${immediat ? (r.ok ? 'ok' : 'ko') : ''}">${esc(o.thermo.options[r.idx].t)}${immediat && !r.ok ? ` <span style="color:#666">(attendu : ${esc(o.thermo.options.find(x => x.ok).t)})</span>` : ''}</div></div>`;
+    }).join('');
+    const parZone = {};
+    for (const { o, r, f } of l) if ((immediat || r.ok) && f.bas != null) parZone[o.zone] = Math.max(parZone[o.zone] ?? 0, f.bas);
+    const top = Object.entries(parZone).sort((a, b2) => b2[1] - a[1])[0];
+    b.innerHTML = `<div class="mot">Un objet <b>fondu</b> : la température a <b>au moins</b> atteint sa fusion. Un objet <b>intact</b> : elle est restée <b>en dessous</b>. ${ref('6.2.2.4')}</div>
+      ${l.length ? `<div class="th-ech"><span>0</span><span>400</span><span>800</span><span>1 200</span><span>1 600 °C</span></div>${lignes}` : '<div class="mot" style="color:#8a8374">Aucune estimation encore. Cherche ce qui a fondu… et ce qui a résisté.</div>'}
+      ${reste ? `<div class="todo" style="margin:8px 0">🌡️ ${reste} témoin(s) relevé(s) à estimer</div>` : ''}
+      ${top ? `<div class="sous">Ce que j'en retiens</div><div class="mot">Exposition la plus forte relevée : <b>${esc(E.zone(top[0])?.nom || '')}</b> (au moins ${fmt(top[1])}). Attention : la zone la plus chaude n'est pas forcément l'origine — ventilation, charge combustible et durée comptent autant ${ref('6.2.2.3')}.</div>` : ''}
+      <details class="voir" style="margin-top:10px"><summary>📖 Mes repères de fusion</summary>${tableFusions()}</details>`;
+    $$('[data-o]', b).forEach(x => x.onclick = () => { const o = E.obs(x.dataset.o); cadrer(o); ouvrirFiche(o); });
+  }
+  function tableFusions(ids = null, surligner = new Set()) {
+    const l = ids ? FUSIONS.filter(f => ids.has(f.id)) : FUSIONS;
+    return `<table class="reperes">${l.map(f => `<tr class="${surligner.has(f.id) ? 'hl' : ''}"><td><b>${esc(f.nom)}</b><small>${esc(f.ex)}</small></td><td>${f.seuil ? esc(f.seuil) : 'fusion'}</td><td class="t">${esc(f.plage)} °C</td></tr>`).join('')}</table>`;
   }
 
   function pTemoins(b) {
@@ -290,7 +327,7 @@ export function ouvrirEnquete(scnSrc, ctx) {
       const p = scn.prelevements.find(x => x.id === s.prelevement);
       return `<div class="enveloppe"><span class="scel">${s.id}</span><b>${esc(s.nom)}</b><div style="font-size:12.5px">${esc(CONTENANTS.find(c => c.id === s.contenant)?.nom)}${s.temoin ? ' · + comparaison' : ''}</div>
         ${p.analyses.map(a => s.resultats[a.id] ? `<div class="resultat"><span class="tampon ${s.resultats[a.id].fait && !s.resultats[a.id].partiel ? 'ok' : 'ko'}">${s.resultats[a.id].fait && !s.resultats[a.id].partiel ? 'RÉSULTAT' : 'INEXPLOITABLE'}</span><br><b>${esc(a.nom)}</b><br>${esc(s.resultats[a.id].texte)}</div>`
-          : `<button class="btn-j go" style="margin-top:8px" data-s="${s.id}" data-a="${a.id}">📮 Envoyer : ${esc(a.nom)} — ${E.coutAnalyse(a)} cr</button>`).join('')}</div>`;
+          : `<button class="btn-j go" style="margin-top:8px" data-s="${s.id}" data-a="${a.id}">📮 Envoyer : ${esc(a.nom)} — ${E.coutAnalyse(a, p)} cr</button>`).join('')}</div>`;
     }).join('');
     $$('[data-s]', b).forEach(x => x.onclick = () => {
       const r = E.analyserScelle(x.dataset.s, x.dataset.a);
@@ -334,7 +371,8 @@ export function ouvrirEnquete(scnSrc, ctx) {
     const scelle = o.prelevement && E.scelles.find(s => s.prelevement === o.prelevement);
     const mesPhotos = E.photos.filter(p => p.obs === o.id);
     const vraies = (scn.photos || []).filter(p => p.constat === o.id && scn.medias?.[p.media]);
-    const etapes = [['Repéré', true], ['Photo', ph], ...(o.analyse ? [['Lecture', !!a]] : []), ...(o.prelevement ? [['Scellé', !!scelle]] : [])];
+    const rel = E.releves.get(o.id), th = o.thermo?.options?.length ? o.thermo : null;
+    const etapes = [['Repéré', true], ['Photo', ph], ...(o.analyse ? [['Lecture', !!a]] : []), ...(th ? [['Température', !!rel]] : []), ...(o.prelevement ? [['Scellé', !!scelle]] : [])];
     const cur = etapes.findIndex(x => !x[1]);
     el.innerHTML = `<span class="num">${d?.num ?? '?'}</span><h3>${esc(o.titre)}</h3>
       <div class="lieu">${esc(E.zone(o.zone)?.nom || '')}${o.outil ? ` · relevé : ${esc(E.outilNom(o.outil))}` : ''}</div>
@@ -346,18 +384,22 @@ export function ouvrirEnquete(scnSrc, ctx) {
     if (!ph) {
       s.innerHTML = `<button class="btn-j go gros" style="margin-top:12px" data-x="photo">📷 Photographier l'indice</button><div class="small" style="color:#8a8374;margin-top:6px;text-align:center">On photographie toujours avant de toucher ou d'interpréter ${ref('15.2')}</div>`;
       $('[data-x=photo]', s).onclick = () => photoObs(o);
-    } else if (o.analyse && !a) {
-      s.innerHTML = `<div class="question">${esc(o.analyse.question)}</div>${o.analyse.options.map((op, i) => `<button class="choix" data-i="${i}">${esc(op.t)}</button>`).join('')}`;
-      $$('[data-i]', s).forEach(btn => btn.onclick = () => {
-        const r = E.analyser(o.id, +btn.dataset.i);
-        if (immediat) { son(r.ok ? 'ok' : 'ko'); pop(r.ok ? '✔ Bonne lecture !' : '✗ Lecture discutable', r.ok ? 'ok' : 'ko'); }
-        else { son('page'); pop('✍ Lecture notée au carnet'); }
-        renderAll(); ouvrirFiche(o);
-      });
     } else {
-      s.innerHTML = a ? (immediat ? `<div class="verdict ${a.ok ? 'ok' : 'ko'}"><b>${a.ok ? 'Bien vu !' : 'Pas tout à fait…'}</b>${esc(o.analyse.options[a.idx].t)}<div style="margin-top:6px;font-size:13px">${esc(o.analyse.options[a.idx].fb || '')}${!a.ok ? `<br><b style="font:700 14px var(--sans);display:inline">Lecture attendue :</b> ${esc(o.analyse.options.find(x => x.ok)?.t || '')}` : ''}</div><div style="margin-top:4px">${ref(o.analyse.ref || o.ref)}</div>${voirAussiHtml({ ref: o.analyse.ref || o.ref, sources: o.sources, texte: `${o.titre} ${o.description || ''}` }, { max: 3 })}</div>` : `<div class="verdict" style="background:#f1ead6">✍ ${esc(o.analyse.options[a.idx].t)}</div>`) : '';
+      if (o.analyse && !a) {
+        const barree = E.perk('traces') ? o.analyse.options.findIndex(x => !x.ok) : -1;
+        s.innerHTML = `<div class="question">${esc(o.analyse.question)}</div>${o.analyse.options.map((op, i) => `<button class="choix ${i === barree ? 'barree' : ''}" data-i="${i}" ${i === barree ? 'disabled title="Œil exercé : lecture écartée"' : ''}>${esc(op.t)}</button>`).join('')}`;
+        $$('[data-i]', s).forEach(btn => btn.onclick = () => {
+          const r = E.analyser(o.id, +btn.dataset.i);
+          if (immediat) { son(r.ok ? 'ok' : 'ko'); pop(r.ok ? '✔ Bonne lecture !' : '✗ Lecture discutable', r.ok ? 'ok' : 'ko'); }
+          else { son('page'); pop('✍ Lecture notée au carnet'); }
+          renderAll(); ouvrirFiche(o);
+        });
+      } else if (a) {
+        s.innerHTML = immediat ? `<div class="verdict ${a.ok ? 'ok' : 'ko'}"><b>${a.ok ? 'Bien vu !' : 'Pas tout à fait…'}</b>${esc(o.analyse.options[a.idx].t)}<div style="margin-top:6px;font-size:13px">${esc(o.analyse.options[a.idx].fb || '')}${!a.ok ? `<br><b style="font:700 14px var(--sans);display:inline">Lecture attendue :</b> ${esc(o.analyse.options.find(x => x.ok)?.t || '')}` : ''}</div><div style="margin-top:4px">${ref(o.analyse.ref || o.ref)}</div>${voirAussiHtml({ ref: o.analyse.ref || o.ref, sources: o.sources, texte: `${o.titre} ${o.description || ''}` }, { max: 3 })}</div>` : `<div class="verdict" style="background:#f1ead6">✍ ${esc(o.analyse.options[a.idx].t)}</div>`;
+      }
+      if (th && (!o.analyse || a)) blocThermo(o, s);
     }
-    if (ph && o.prelevement && !scelle && (!o.analyse || a)) {
+    if (ph && o.prelevement && !scelle && (!o.analyse || a) && (!th || rel)) {
       const p = scn.prelevements.find(x => x.id === o.prelevement);
       const conts = E.contenantsDisponibles();
       s.insertAdjacentHTML('beforeend', `<div class="question">🧤 Prélever : ${esc(p.nom)}</div><div class="mini-form">${conts.map((c, i) => `<label><input type="radio" name="ct" value="${c.id}" ${i === 0 ? 'checked' : ''}> ${esc(c.nom)}</label>`).join('')}
@@ -373,6 +415,37 @@ export function ouvrirEnquete(scnSrc, ctx) {
     s.insertAdjacentHTML('beforeend', `<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn-j ghost" data-x="close">Fermer ✕</button></div>`);
     $('[data-x=close]', s).onclick = fermerFiche;
     $$('[data-ph]', el).forEach(x => x.onclick = () => voirPhoto(x.dataset.ph));
+  }
+
+  function blocThermo(o, s) {
+    const th = o.thermo, r = E.releves.get(o.id);
+    const ids = new Set(th.items.map(it => it.mat));
+    const autres = FUSIONS.filter(f => !ids.has(f.id)).map(f => ({ f, d: Math.min(...[...ids].map(id => Math.abs((fusion(id)?.t || 0) - f.t))) })).sort((x, y) => x.d - y.d).slice(0, 5).map(x => x.f.id);
+    const visibles = new Set([...ids, ...autres]);
+    const temoins = `<div class="thermo-t">${th.items.map(it => { const m = fusion(it.mat); if (!m) return ''; const at = it.etat === 'fondu'; return `<div class="tm ${at ? 'at' : 'non'}"><span class="ic">${at ? '💧' : '🧊'}</span><div><b>${esc(it.objet || m.ex.split(',')[0])}</b><small>${esc(m.nom)} — <b>${esc(at ? etatAtteint(m) : etatNon(m))}</b></small></div></div>`; }).join('')}</div>`;
+    let html = `<div class="question">🌡️ Témoins de température</div>${temoins}
+      <details class="voir" ${r ? '' : 'open'}><summary>📖 Mes repères de fusion</summary>${tableFusions(visibles, E.perk('thermo') ? ids : new Set())}</details>`;
+    if (!r) {
+      html += `<div class="question" style="margin-top:10px">${esc(th.question)}</div>${th.options.map((op, i) => `<button class="choix" data-ti="${i}">${esc(op.t)}</button>`).join('')}`;
+    } else {
+      const op = th.options[r.idx], f = fourchette(th.items);
+      const X = t => Math.max(0, Math.min(100, 100 * t / 1600));
+      html += immediat ? `<div class="verdict ${r.ok ? 'ok' : 'ko'}"><b>${r.ok ? 'Bien estimé !' : 'Raisonnement à revoir…'}</b>${esc(op.t)}
+        <div class="th-bar ${r.ok ? '' : 'ko'}" style="margin:8px 0 2px"><i style="left:${X(f.bas ?? 0)}%;right:${100 - X(f.haut ?? 1600)}%"></i></div><div class="th-ech"><span>0</span><span>800</span><span>1 600 °C</span></div>
+        <div style="margin-top:6px;font-size:13px">${esc(op.fb || '')}${!r.ok ? `<br><b style="font:700 14px var(--sans);display:inline">Estimation attendue :</b> ${esc(th.options.find(x => x.ok)?.t || '')}` : ''}</div>
+        <div style="margin-top:4px">${ref(th.ref)}</div>${voirAussiHtml({ ref: th.ref, texte: 'fusion température alliage' }, { max: 3 })}</div>` : `<div class="verdict" style="background:#f1ead6">🌡️ ${esc(op.t)}</div>`;
+    }
+    s.insertAdjacentHTML('beforeend', html);
+    $$('[data-ti]', s).forEach(btn => btn.onclick = () => {
+      const res = E.estimerTemperature(o.id, +btn.dataset.ti);
+      if (immediat) { son(res.ok ? 'ok' : 'ko'); pop(res.ok ? '🌡️ Bonne estimation !' : '✗ Estimation discutable', res.ok ? 'ok' : 'ko'); }
+      else { son('page'); pop('🌡️ Estimation notée au carnet'); }
+      renderAll(); ouvrirFiche(o);
+    });
+    if (!r && !ui.thermoExplique) {
+      ui.thermoExplique = true;
+      dire('Ça, c\'est un <b>témoin de température</b>. Regarde ce qui a fondu et ce qui a tenu : un objet fondu prouve qu\'on a <b>au moins</b> atteint sa température de fusion ; un objet intact, qu\'on est resté <b>en dessous</b>. Ouvre tes repères de fusion pour chiffrer.', { refs: '6.2.2.4 / 6.2.8' });
+    }
   }
 
   function ficheIndice(o) {
@@ -463,7 +536,7 @@ export function ouvrirEnquete(scnSrc, ctx) {
     const draw = () => {
       const posees = E.temoins.get(tid) || new Set();
       $('.fil', corps).innerHTML = t.questions.filter(q => posees.has(q.id)).map(q => `<div class="b-q">${esc(q.q)}</div><div class="b-r">${esc(q.r)}</div>${q.info ? `<div class="b-t">💡 ${esc(q.info)}</div>` : ''}${immediat && q.piege ? `<div class="b-t">👨‍🚒 ${esc(q.piege)}</div>` : ''}`).join('') || '<div class="b-t">Prends le temps de te présenter, puis laisse parler la personne.</div>';
-      $('.repliques', corps).innerHTML = t.questions.filter(q => !posees.has(q.id)).map(q => `<button class="replique" data-q="${q.id}">💬 ${esc(q.q)}</button>`).join('') || '<div class="small muted">Tu as fait le tour.</div>';
+      $('.repliques', corps).innerHTML = t.questions.filter(q => !posees.has(q.id)).map(q => `<button class="replique" data-q="${q.id}">💬 ${esc(q.q)}${q.type === 'orientee' && E.perk('enquete') ? ' <span class="orient">⚠ question orientée</span>' : ''}</button>`).join('') || '<div class="small muted">Tu as fait le tour.</div>';
       $('.fil', corps).scrollTop = 1e6;
       $$('[data-q]', corps).forEach(x => x.onclick = () => { const r = E.poserQuestion(tid, x.dataset.q); signaler(r.msgs); if (r.q.fait) pop('✍ Noté au carnet'); son('page'); draw(); renderAll(); });
     };
@@ -517,6 +590,11 @@ export function ouvrirEnquete(scnSrc, ctx) {
   }
 
   // ------------------------------------------------------------ conclusion (assistant)
+  function donneesSuffisantes() {
+    const ps = scn.solution?.probableSi; if (!ps) return false;
+    const has = id => E.faits.has(id) && (E.faitValide(id) || E.faits.get(id).type !== 'constat');
+    return ps.tous.every(has) && ps.unParmi.every(g => g.some(has));
+  }
   function conclure() {
     const ret = k => [...E.hyp[k]].find(([, x]) => x.statut === 'retenue')?.[0] || '';
     const R = { origine: ret('origines'), cause: ret('causes'), certitude: '', classification: '', faitsAppui: ret('causes') ? [...E.hyp.causes.get(ret('causes')).soutien] : [], texte: '' };
@@ -530,7 +608,8 @@ export function ouvrirEnquete(scnSrc, ctx) {
       if (etape === 1) html += `<div class="wiz-q">Comment a-t-il pris ?</div>` + cartes([...scn.hypotheses.causes.map(o => ({ id: o.id, nom: o.nom, sub: o.premierCombustible ? `1er combustible : ${o.premierCombustible}` : '', tag: E.hyp.causes.get(o.id)?.statut === 'retenue' ? 'ta piste' : '' })), { id: '', nom: 'Je ne peux pas la déterminer', sub: 'Cause indéterminée' }], 'cause');
       if (etape === 2) html += `<div class="wiz-q">Quels faits le démontrent ?</div><div class="small muted" style="margin-bottom:8px">Choisis les faits solides. Une rumeur ou une suggestion n'est pas une preuve ${ref('18.6.5')}</div><div class="postits">${[...E.faits.values()].map(f => `<div class="postit ${R.faitsAppui.includes(f.id) ? 's' : ''}" data-f="${f.id}" style="cursor:pointer">${esc(f.court || f.texte)}</div>`).join('')}</div>`;
       if (etape === 3) html += `<div class="wiz-q">Avec quelle certitude ?</div>` + cartes(CERTITUDES.map(c => ({ id: c.id, nom: c.nom, sub: { probable: 'Plus probable que toute autre explication', possible: 'Faisable mais non démontré', suspecte: 'Une impression…' }[c.id] })), 'certitude') +
-        `<div class="wiz-q" style="margin-top:16px">Et la classification ?</div>` + cartes(CLASSIFICATIONS.map(c => ({ id: c.id, nom: c.nom })), 'classification');
+        `<div class="wiz-q" style="margin-top:16px">Et la classification ?</div>` + cartes(CLASSIFICATIONS.map(c => ({ id: c.id, nom: c.nom })), 'classification') +
+        (E.perk('raisonnement') ? `<div class="mot" style="margin-top:12px">🧠 <b>Rigueur</b> : ${donneesSuffisantes() ? 'les faits que tu as réunis permettent d\'aller jusqu\'à « probable », si ta cause est la bonne.' : 'il te manque des faits démontrés pour aller jusqu\'à « probable ».'}</div>` : '');
       if (etape === 4) html += `<div class="wiz-q">Ta conclusion, en quelques mots</div><textarea class="inp" rows="5" style="width:100%;background:#fff;color:#222;border-color:#ddd5c2;font:600 20px var(--hand)" placeholder="Le feu a pris… parce que…">${esc(R.texte)}</textarea>
         <p class="small muted">Tes notes de terrain seront jointes au rapport.</p><button class="btn-j" data-apercu>🖨️ Aperçu du rapport</button>`;
       html += `<div style="display:flex;justify-content:space-between;margin-top:16px"><button class="btn-j ghost" data-nav="-1" ${etape ? '' : 'disabled'}>← Retour</button>${etape < nb - 1 ? '<button class="btn-j go" data-nav="1">Suivant →</button>' : '<button class="btn-j fire" data-fin>⚖️ Déposer mon rapport</button>'}</div>`;
@@ -571,8 +650,9 @@ export function ouvrirEnquete(scnSrc, ctx) {
     for (const p of scn.photos || []) S.setPhotoVisible(p.id, p.constat ? E.decouverts.has(p.constat) : E.zonesVisitees.includes(zonePhoto(p)));
     for (const o of scn.observations) {
       const d = E.decouverts.get(o.id);
-      const lueur = tuto ? focus.has(o.id) : (reg.lueurs && !o.outil);
-      S.updateHotspot(o.id, { actif: E.estActif(o), decouvert: !!d, num: d?.num, photo: E.photoObs.has(o.id), analyse: E.analyses.has(o.id), lueur, toujours: !!d });
+      const lueur = tuto ? focus.has(o.id) : ((reg.lueurs && !o.outil) || (!!o.thermo && E.perk('thermo')));
+      const fini = (!o.analyse || E.analyses.has(o.id)) && (!o.thermo?.options || E.releves.has(o.id)) && (o.analyse || o.thermo);
+      S.updateHotspot(o.id, { actif: E.estActif(o), decouvert: !!d, num: d?.num, photo: E.photoObs.has(o.id), analyse: !!fini, lueur, toujours: !!d });
     }
   }
 

@@ -17,7 +17,13 @@ Le joueur mène des enquêtes sur des scènes d'incendie en **3D low-poly (vue i
 - **Carnet de terrain** (touche C) : mission, indices écrits à la main avec leurs photos, témoins (dialogues), recherches sur le téléphone, scellés et labo, hypothèses, et une page de **notes libres** jointe au rapport.
 - **Tableau d'enquête** : chaque hypothèse est confrontée aux faits (post-it 👍 / 👎), puis retenue ou écartée — jamais sans fait (negative corpus).
 - **Conclusion guidée** en 5 cartes : où, comment, quels faits, quelle certitude et quelle classification, ta conclusion.
-- **Débriefing** : étoiles, badges (Méthodique, Œil de lynx, Lucide, Impartial…), pièges évités ou non, reconstitution 3D.
+- **Témoins de température** : certains indices sont des objets fondus ou restés intacts (aluminium, verre, zamac, PVC, cuivre…). Avec ses repères de fusion (NFPA 921, tableau 6.2.8.2), le joueur en déduit la fourchette de température atteinte : un objet fondu donne un minimum, un objet intact un maximum. Pièges : l'alliage (cuivre « fondu » au contact de zinc ou d'aluminium) et le mythe « température élevée = accélérant ». La page 🌡️ du carnet trace la carte des températures.
+- **Débriefing** : étoiles, badges (Méthodique, Œil de lynx, Lucide, Impartial, Thermomètre…), compétences gagnées, pièges évités ou non, reconstitution 3D.
+
+### Progresser : compétences et entraînement
+
+- **Compétences** (onglet 🎓) : Méthode, Lecture des tracés, Températures, Électricité, Entretiens & sources, Raisonnement, Prélèvements & labo. Chaque analyse juste rapporte des points dans le domaine concerné (5 niveaux, de Novice à Maître). Chaque niveau gagné augmente les honoraires de 1 % ; au **niveau 3**, un avantage se débloque sur le terrain : photo automatique avant fouille, une lecture erronée barrée, témoins de température mis en évidence, analyses de labo moins chères, questions orientées signalées, aide à la certitude.
+- **Salle d'entraînement** (onglet 🎯) : séries courtes et renouvelées — *Le thermomètre* (fourchettes de température générées au hasard), *Mythe ou réalité ?* (les idées reçues passées au crible de la NFPA 921), *Lecture des tracés*, *Arc, feu ou alliage ?*. Elles font progresser les compétences ; la première série du jour de chaque exercice rapporte des crédits.
 
 ### Les enquêtes
 
@@ -25,7 +31,9 @@ Le joueur mène des enquêtes sur des scènes d'incendie en **3D low-poly (vue i
 |---|---|---|
 | 1 | **Feu de cuisine** (tutoriel en doublon) | La méthode pas à pas : sécurité, extérieur, photo avant tout, lecture d'un V, fouille, vérifier les autres sources, témoin, hypothèses, conclusion |
 | 2 | **Pavillon Durand** | Embrasement généralisé, tracés trompeurs, PID, témoignage orienté, produit rappelé, cartographie des arcs |
-| 3 | **Maison à étage — feu de toiture** | Toiture effondrée, feu qui voyage de haut en bas, brûlures par chute de matériaux, charpente et conduit de poêle, pyrolyse lente du bois |
+| 3 | **Maison à étage — feu de toiture** | Toiture effondrée, feu qui voyage de haut en bas, brûlures par chute de matériaux, charpente et conduit de poêle, pyrolyse lente du bois, piège de l'alliage zinc-cuivre |
+| 4 | **Garage — vélo électrique en charge** | Batterie lithium-ion en emballement thermique, cellules projetées et foyers secondaires (≠ foyers multiples volontaires), PID faussé par l'électrolyte, rumeur de quartier, gradient de températures |
+| 5 | **Feu de véhicule** (véhicule d'investigation requis) | Deux foyers au sol indépendants, essence confirmée avec échantillon de comparaison (l'enrobé contient des hydrocarbures), rappel constructeur hors de cause, vidéo à l'horloge décalée, mobile ≠ cause : un incendie **volontaire** démontré par des faits |
 
 ## Boucle de jeu
 
@@ -69,7 +77,7 @@ Cinq modes, de la construction au dossier partagé :
 |---|---|
 | 🏗️ **Construire** | Dessiner les pièces à la souris sur une grille (pas de 25 cm), les déplacer, les redimensionner par les bords ; poser portes, fenêtres, baies, portes de garage sur les murs ; catalogue de mobilier (touche **R** pour pivoter) ; **niveaux** (R+1, R+2… avec reprise de l'emprise), **trémies** et escaliers |
 | 🔥 **Effets du feu** | Par pièce : hauteur de la couche chaude et densité de suie ; pinceaux muraux (tracé en V, clean burn, calcination, zone protégée, démarcation) et au sol (tracés irréguliers, consommation, zone protégée, débris) ; degré de combustion de chaque objet |
-| 📍 **Indices & photos** | Poser les **constats** dans la 3D avec leur **lecture** (interprétation réelle), pièges éventuels, référence NFPA 921 (chapitre / section) et autres sources éventuelles ; **épingler de vraies photos** à l'endroit et dans la direction de la prise de vue, liées ou non à un constat ; zone de fouille |
+| 📍 **Indices & photos** | Poser les **constats** dans la 3D avec leur **lecture** (interprétation réelle), pièges éventuels, référence NFPA 921 (chapitre / section) et autres sources éventuelles ; **témoins de température** (matériau, fondu ou intact, alliage) ; **épingler de vraies photos** à l'endroit et dans la direction de la prise de vue, liées ou non à un constat ; zone de fouille |
 | 🧾 **Enquête** | Mission, compte rendu SDIS, témoins, OSINT, prélèvements et résultats, hypothèses, solution, pièges, chronologie ; génération automatique des zones |
 | 📘 **RETEX** | Auteur, contexte, enseignements, points positifs, axes d'amélioration, recommandations ; **aperçu de la vue Analyse** ; **export HTML autonome** |
 
@@ -102,16 +110,19 @@ js/retex/               Export et point d'entrée du dossier RETEX autonome
 js/stockage.js          IndexedDB (dossiers, brouillon, photos)
 js/data/nfpa.js         Référentiel NFPA 921 (2011), reformulé en français
 js/data/sources.js      Bibliographie et correspondances NFPA 921 → autres sources
+js/data/thermique.js    Témoins de température (fusion, ramollissement, alliages)
+js/game/competences.js  Compétences, niveaux et avantages
+js/screens/entrainement.js  Salle d'entraînement
 js/data/materiaux.js    Températures, puissances, fusion (tableau mnémotechnique de l'auteur)
 js/data/scenarios/      Scénarios d'enquête (JSON)
 ```
 
 ## Feuille de route
 
-- Feux de véhicules (chap. 25), avec le véhicule d'investigation.
 - Variantes du pavillon : autre heure, autre puissance, autre origine (feu de cuisine).
 - Scène avec **victime** (chap. 23) et lecture des **traces d'actions de lance** des sapeurs-pompiers (6.3.2.5).
-- Batteries lithium-ion, enquête complexe en entrepôt (chap. 20 et 27), modélisation.
+- Enquête complexe en entrepôt (chap. 20 et 27), modélisation.
+- Nouveaux exercices d'entraînement (ordre des étapes, niveaux de certitude) et défis chronométrés.
 
 ## Sources
 
@@ -134,4 +145,4 @@ Dans l'Atelier, chaque constat peut recevoir ses propres sources (champ « Autre
 
 ## Avertissement
 
-Les références renvoient à la numérotation de la **NFPA 921, édition 2011**. Les autres ouvrages sont cités par chapitre, section ou page ; leurs contenus sont résumés, jamais reproduits. Les textes du jeu sont des reformulations pédagogiques, pas des extraits de la norme. Les personnes, lieux et produits (dont « VOLTEX ») sont fictifs.
+Les références renvoient à la numérotation de la **NFPA 921, édition 2011**. Les autres ouvrages sont cités par chapitre, section ou page ; leurs contenus sont résumés, jamais reproduits. Les textes du jeu sont des reformulations pédagogiques, pas des extraits de la norme. Les personnes, lieux et produits (dont « VOLTEX », « VOLTIX », « Inoxtub », « Ondine ») sont fictifs.

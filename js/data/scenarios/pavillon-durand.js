@@ -313,6 +313,19 @@ export default {
         { t: 'Le premier site d\'arc (le plus en amont) est au droit du pied du canapé : la rallonge y a été atteinte en premier, ce qui a mis hors tension tout l\'aval.', ok: true, fb: 'Exact : l\'arc le plus en amont désigne la zone atteinte en premier sur le circuit (NFPA 921, chap. 17.4.5.6), cohérent avec le V et la carbonisation.' },
         { t: 'L\'absence d\'arc sur la multiprise prouve qu\'elle n\'était pas branchée.', ok: false, fb: 'Elle était alimentée, mais l\'arc en amont a coupé la rallonge : l\'aval n\'était plus sous tension quand le feu l\'a atteint.' },
       ]}},
+    { id: 'F60', zone: 'sejour', pos: [3.5, 2.3, 6.6], titre: 'Le plafonnier du séjour',
+      description: 'Plafonnier tombé au sol : monture en aluminium fondue en gouttes, vasque en verre affaissée et coulée. La douille en laiton est entière, sans fusion.',
+      thermo: { items: [
+        { mat: 'alu', etat: 'fondu', objet: 'Monture du plafonnier (aluminium)' },
+        { mat: 'verre', etat: 'fondu', objet: 'Vasque en verre, affaissée et coulée' },
+        { mat: 'laiton', etat: 'intact', objet: 'Douille en laiton' },
+      ], fb: 'Exact : le verre a coulé (au moins ≈ 750 °C) mais le laiton a tenu (moins de ≈ 930 °C). Ce sont les températures d\'une pièce en embrasement généralisé : elles ne disent rien d\'un accélérant (NFPA 921, chap. 6.2.2.2).' } },
+    { id: 'F61', zone: 'ch2', pos: [5.1, 1.0, 0.4], titre: 'La lampe de bureau de Kevin',
+      description: 'Lampe de bureau : abat-jour en polystyrène affaissé dans sa partie haute. Vitre de la fenêtre noircie, intacte, non coulée.',
+      thermo: { items: [
+        { mat: 'ps', etat: 'fondu', objet: 'Abat-jour de la lampe (polystyrène), partie haute' },
+        { mat: 'verre', etat: 'intact', objet: 'Vitre de la fenêtre, noircie mais non coulée' },
+      ], fb: 'Exact : les gaz chauds de la couche ont ramolli le polystyrène (au moins ≈ 140 °C) sans jamais approcher le ramollissement du verre (moins de ≈ 750 °C) : la chambre n\'a reçu que les fumées.' } },
   ],
 
   // Lectures PID libres (clic au sol avec le PID)

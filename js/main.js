@@ -10,6 +10,9 @@ import { ouvrirEnquete } from './screens/enqueteView.js';
 import { ouvrirAnalyse } from './screens/analyseView.js';
 import { jouabilite } from './game/prepa.js';
 import { BADGES, etoiles } from './game/badges.js';
+import { DOMAINES, PALIERS, NOMS_NIVEAU, xpDe, progression, bonusHonoraires } from './game/competences.js';
+import { entrainement as salleEntrainement } from './screens/entrainement.js';
+import { FUSIONS } from './data/thermique.js';
 import { son } from './game/sons.js';
 
 const app = { c: charger(), onglet: 'missions', codex: 'methode' };
@@ -39,14 +42,14 @@ function allerQG(onglet) {
         <div class="xpbar"><i style="width:${pct}%"></i></div>
         <div class="small" style="display:flex;justify-content:space-between;margin-top:4px;color:#d7c6a8"><span>${g.suivant ? `prochain : ${esc(g.suivant.nom)}` : 'grade maximal'}</span><span style="color:#ffd23f;font-weight:800">${app.c.credits.toLocaleString('fr-FR')} cr</span></div></div>
     </div>
-    <nav class="qtabs">${[['missions', '🗂️ Enquêtes'], ['equipement', '🧰 Équipement'], ['codex', '📚 Référentiel'], ['carriere', '🏅 Carrière']].map(([id, l]) => `<button class="qtab ${app.onglet === id ? 'on' : ''}" data-o="${id}">${l}</button>`).join('')}
+    <nav class="qtabs">${[['missions', '🗂️ Enquêtes'], ['entrainement', '🎯 Entraînement'], ['competences', '🎓 Compétences'], ['equipement', '🧰 Équipement'], ['codex', '📚 Référentiel'], ['carriere', '🏅 Carrière']].map(([id, l]) => `<button class="qtab ${app.onglet === id ? 'on' : ''}" data-o="${id}">${l}</button>`).join('')}
       <a class="qtab" href="editor.html" style="text-decoration:none;margin-left:auto">🛠️ Atelier de scènes</a></nav>
     <div class="tableau" id="qgBody"></div>
   </div></div>`);
   screen.appendChild(el);
   $$('[data-o]', el).forEach(b => b.onclick = () => { son('page'); allerQG(b.dataset.o); });
   const body = $('#qgBody', el);
-  ({ missions, equipement, codex, carriere })[app.onglet](body);
+  ({ missions, entrainement: b2 => salleEntrainement(b2, ctx), competences, equipement, codex, carriere })[app.onglet](body);
 }
 
 // ------------------------------------------------------------ Enquêtes
@@ -56,14 +59,16 @@ async function missions(b) {
   const deverrouille = s => !s.requiert || (app.c.missions[s.requiert]?.meilleur ?? 0) >= 40;
   const dossier = (s, i, opts = {}) => {
     const m = app.c.missions[s.id];
-    const ok = deverrouille(s);
+    const okNiv = deverrouille(s);
+    const manqueOutil = okNiv && s.outilRequis && !possede(app.c, s.outilRequis) ? OUTILS.find(o => o.id === s.outilRequis) : null;
+    const ok = okNiv && !manqueOutil;
     const jeu = opts.perso ? jouabilite(s) : { ok: true };
     return `<div class="dossier ${ok ? '' : 'verrou'}"><span class="punaise"></span>
       ${ok && !m && !opts.perso ? '<span class="tampon-n">NOUVEAU</span>' : ''}
       <div class="niv">${esc(s.niveauLabel || (opts.perso ? (s.mode === 'retex' ? 'Dossier RETEX' : 'Scénario formateur') : `Niveau ${i + 1}`))}</div>
       <h3>${esc(s.titreCourt || s.titre)}</h3>
       <p>${esc(s.resume || '')}</p>
-      ${!ok ? `<p><b>🔒 Termine d'abord « ${esc(titreDe(s.requiert))} » (au moins 1 ★).</b></p>` : ''}
+      ${!okNiv ? `<p><b>🔒 Termine d'abord « ${esc(titreDe(s.requiert))} » (au moins 1 ★).</b></p>` : manqueOutil ? `<p><b>🔒 Il te faut : ${manqueOutil.icone} ${esc(manqueOutil.nom)}</b> (onglet Équipement, ${manqueOutil.prix.toLocaleString('fr-FR')} cr${manqueOutil.grade ? `, grade « ${esc(GRADES[manqueOutil.grade].nom)} »` : ''}).</p>` : ''}
       <div class="pied"><span class="etoiles">${etoilesHtml(etoiles(m?.meilleur ?? -1))}</span><span style="flex:1"></span>
         ${opts.perso ? `<button class="btn-j" data-ana="${esc(s.id)}">📘 Analyse</button>` : ''}
         ${ok && jeu.ok ? `<button class="btn-j go" data-go="${esc(s.id)}">${m ? '↻ Rejouer' : '▶ Commencer'}</button>` : opts.perso && !jeu.ok ? '<span class="small">non jouable</span>' : ''}
@@ -95,6 +100,20 @@ function lancer(scn) {
     toast('Impossible de lancer ce scénario : ' + esc(e.message), 'ko', 6000);
     allerQG();
   }
+}
+
+// ------------------------------------------------------------ Compétences
+function competences(b) {
+  const bonus = Math.round(bonusHonoraires(app.c) * 100);
+  b.innerHTML = `<div class="hcarte" style="margin-bottom:16px;display:flex;gap:12px;align-items:center"><span style="font-size:36px">🎓</span><div>Tes compétences progressent à chaque analyse juste, en enquête comme à l'entraînement. Chaque niveau gagné augmente tes honoraires de 1 % (bonus actuel : <b>+${bonus} %</b>). Au <b>niveau 3</b>, chaque compétence débloque un avantage sur le terrain.</div></div>
+    <div class="comp-grille">${DOMAINES.map(d => {
+      const xp = xpDe(app.c, d.id), p = progression(xp);
+      return `<div class="comp-carte ${p.n >= 3 ? 'av' : ''}"><div class="hd"><span class="ic">${d.ic}</span><div><b>${esc(d.nom)}</b><small>${esc(d.desc)}</small></div><span class="niv">Niv. ${p.n}</span></div>
+        <div class="xpbar"><i style="width:${p.pct}%"></i></div>
+        <div class="small" style="display:flex;justify-content:space-between;margin-top:3px"><span>${NOMS_NIVEAU[p.n - 1]}</span><span>${xp} pts${p.reste ? ` · encore ${p.reste} pour « ${NOMS_NIVEAU[p.n]} »` : ' · maîtrise'}</span></div>
+        <div class="avant ${p.n >= 3 ? 'ok' : ''}">${p.n >= 3 ? '✅' : '🔒'} <b>${esc(d.avantage.nom)}</b> — ${esc(d.avantage.desc)}${p.n >= 3 ? '' : ' <i>(niveau 3)</i>'}</div></div>`;
+    }).join('')}</div>
+    <p class="hcarte small" style="margin-top:12px">Paliers : ${PALIERS.map((v, i) => `${NOMS_NIVEAU[i]} ${v}`).join(' · ')}. Une enquête rejouée rapporte moitié moins.</p>`;
 }
 
 // ------------------------------------------------------------ Équipement
@@ -146,7 +165,9 @@ function codex(b) {
   } else if (k === 'puissance') {
     cx.innerHTML = `<div class="panel"><table><tr><th>Combustible</th><th>Puissance (kW)</th></tr>${MATERIAUX.puissance.map(p => `<tr><td>${esc(p.combustible)}</td><td>${esc(p.kw)}</td></tr>`).join('')}</table></div>`;
   } else if (k === 'fusion') {
-    cx.innerHTML = `<div class="panel"><input class="inp" id="fq" placeholder="Filtrer (ex. PVC, cuivre, aluminium)…" style="width:100%;margin-bottom:8px"><table id="ft"></table></div>`;
+    cx.innerHTML = `<div class="panel"><h3>Témoins de température ${ref('6.2.8')}</h3><p class="small muted">Un matériau fondu prouve une température <b>minimale</b> atteinte à cet endroit ; un matériau intact, une température <b>maximale</b>. Valeurs approchées (NFPA 921, tableau 6.2.8.2 ; CNPP EP 02-11, § 2.2.2) : la composition réelle varie, seul un laboratoire donne une valeur sûre. Attention aux alliages : un métal à bas point de fusion (aluminium, zinc, plomb) fait « fondre » le cuivre ou l'acier bien plus bas ${ref('6.2.8.6')}.</p>
+      <table><tr><th>Matériau</th><th>On le trouve dans…</th><th style="width:120px">°C</th></tr>${FUSIONS.map(f => `<tr><td><b>${esc(f.nom)}</b>${f.seuil ? ` <span class="small muted">(${esc(f.seuil)})</span>` : ''}</td><td class="small">${esc(f.ex)}</td><td>${esc(f.plage)}</td></tr>`).join('')}</table></div>
+      <div class="panel"><h3>Tableau mnémotechnique (version de l'auteur)</h3><input class="inp" id="fq" placeholder="Filtrer (ex. PVC, cuivre, aluminium)…" style="width:100%;margin-bottom:8px"><table id="ft"></table></div>`;
     const draw = () => {
       const q = $('#fq', cx).value.toLowerCase();
       $('#ft', cx).innerHTML = `<tr><th>Type</th><th>Matériau</th><th>°C</th><th>Usages</th></tr>` + MATERIAUX.fusion.filter(f => !q || (f.mat + f.usage).toLowerCase().includes(q)).map(f => `<tr><td>${esc(f.type)}</td><td>${esc(f.mat)}</td><td>${f.min}${f.max !== f.min ? '–' + f.max : ''}</td><td class="small muted">${esc(f.usage)}</td></tr>`).join('');

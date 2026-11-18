@@ -91,10 +91,16 @@ export const THEMES = [
     ['cnpp', '§ 2.2.1 (p. 37)', 'Les dépôts de fumées et ce qu\'ils indiquent du sens de propagation.'],
     ['usfa', 'unité 2', 'Écoulements aux ouvertures et déplacement des gaz chauds.'],
   ]},
-  { id: 'effets', titre: 'Effets du feu (généralités)', nfpa: ['6', '6.1', '6.2', '6.3', '6.2.1', '6.2.2', '6.2.3', '6.2.6', '6.2.7', '6.2.8', '6.2.9', '6.2.10', '6.2.15', '6.2.16'], voir: [
+  { id: 'effets', titre: 'Effets du feu (généralités)', nfpa: ['6', '6.1', '6.2', '6.3', '6.2.1', '6.2.3', '6.2.6', '6.2.7', '6.2.10', '6.2.15', '6.2.16'], voir: [
     ['cnpp', '§ 2.2 (p. 37 à 61)', 'Catalogue des indices : fumées, ventilation, couche chaude, bois, béton, plâtres, vitres, fusions.'],
     ['chandler', 'chap. 11 (p. 261)', 'Les tracés et leur interprétation, illustrés de photos de terrain.'],
     ['gorbett', 'article complet', 'Ce que la recherche a validé ou non dans l\'usage des dégâts pour trouver l\'origine.'],
+  ]},
+  { id: 'temperatures', titre: 'Températures, fusion et alliages', nfpa: ['6.2.2', '6.2.8', '6.2.9'], voir: [
+    ['cnpp', '§ 2.2.2 (p. 39)', 'Fusion des matériaux : tableau des températures de fusion des métaux et matériaux courants.'],
+    ['cnpp', '§ 2.2.3 (p. 43)', 'Alliages : un métal à bas point de fusion fait « fondre » le cuivre ou le fer bien plus bas.'],
+    ['lentini', 'chap. 8, § 8.11', 'Mythe : temps et température — une température élevée ne désigne ni un accélérant ni l\'origine.'],
+    ['usfa', 'unité 2', 'Températures typiques d\'un feu de compartiment avant et après embrasement généralisé.'],
   ]},
   { id: 'carbonisation', titre: 'Carbonisation du bois', nfpa: ['6.2.4', '6.3.6', '17.4.3'], voir: [
     ['cnpp', '§ 2.2.7 (p. 46)', 'Carbonisation du bois : lecture relative et précautions.'],

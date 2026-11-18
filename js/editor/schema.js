@@ -97,11 +97,12 @@ export function valider(s) {
   dup(ids(s.observations), 'Constatations');
   for (const o of s.observations || []) {
     faits.add(o.id);
+    if (o.thermo?.items?.length) faits.add(o.thermo.fait || `TH-${o.id}`);
     if (!zones.includes(o.zone)) err.push(`Constat ${o.id} : zone « ${o.zone} » inconnue.`);
     if (!Array.isArray(o.pos) || o.pos.length !== 3) err.push(`Constat ${o.id} : position invalide.`);
     const nOk = (o.analyse?.options || []).filter(x => x.ok).length;
     if (!o.lecture && (o.analyse?.options || []).length && nOk !== 1) err.push(`Constat ${o.id} : il faut exactement une interprétation correcte (${nOk}).`);
-    if (!o.lecture && !(o.analyse?.options || []).length) warn.push(`Constat ${o.id} : pas de lecture (interprétation) — non analysable en jeu.`);
+    if (!o.lecture && !(o.analyse?.options || []).length && !o.thermo?.items?.length) warn.push(`Constat ${o.id} : pas de lecture (interprétation) — non analysable en jeu.`);
     if (o.prelevement && !(s.prelevements || []).some(p => p.id === o.prelevement)) err.push(`Constat ${o.id} : prélèvement « ${o.prelevement} » inconnu.`);
     if (o.couche && !s.fouille) err.push(`Constat ${o.id} : couche de fouille sans fouille définie.`);
   }

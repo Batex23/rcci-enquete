@@ -9,6 +9,7 @@ import { migrer, jouabilite } from '../game/prepa.js';
 import { ouvrirAnalyse } from '../screens/analyseView.js';
 import { exporterRetexHtml } from '../retex/export.js';
 import { $, $$, h, esc, toast, modal, confirmer } from '../ui.js';
+import { FUSIONS, fourchette, libelle } from '../data/thermique.js';
 
 // ------------------------------------------------------------------ catalogues
 const CATALOGUE = [
@@ -16,7 +17,7 @@ const CATALOGUE = [
   ['Cuisine', [['cuisine', '🍳', 'Plan de cuisine', { L: 3 }], ['frigo', '🧊', 'Réfrigérateur'], ['table', '🍽️', 'Table'], ['chaise', '🪑', 'Chaise'], ['machineLaver', '🧺', 'Lave-linge']]],
   ['Chambre & bain', [['lit', '🛏️', 'Lit', { L: 2, l: 1.6 }], ['armoire', '🚪', 'Armoire'], ['bureau', '🖥️', 'Bureau'], ['baignoire', '🛁', 'Baignoire']]],
   ['Technique & énergie', [['tableauElec', '⚡', 'Tableau électrique', { y: 1.3 }], ['prise', '🔌', 'Prise murale', { y: 0.3 }], ['multiprise', '🔌', 'Multiprise'], ['chaudiere', '🔥', 'Chaudière'], ['poele', '🪵', 'Poêle'], ['radiateur', '♨️', 'Radiateur'], ['daaf', '🔔', 'DAAF']]],
-  ['Garage & extérieur', [['voiture', '🚗', 'Voiture'], ['trottinette', '🛴', 'Trottinette'], ['tondeuse', '🌱', 'Tondeuse'], ['jerrican', '⛽', 'Jerrican'], ['etabli', '🧰', 'Établi', { L: 2 }]]],
+  ['Garage & extérieur', [['voiture', '🚗', 'Voiture'], ['trottinette', '🛴', 'Trottinette'], ['tondeuse', '🌱', 'Tondeuse'], ['jerrican', '⛽', 'Jerrican'], ['etabli', '🧰', 'Établi', { L: 2 }], ['velo', '🚲', 'Vélo électrique'], ['chargeur', '🔋', 'Chargeur'], ['cellules', '🔩', 'Cellules projetées', { r: 1.5, n: 14 }], ['cartons', '📦', 'Cartons', { n: 3 }]]],
   ['Structure & débris', [['escalier', '🪜', 'Escalier', { L: 3, l: 0.9 }], ['debris', '🪨', 'Débris', { w: 1.5, d: 1 }]]],
 ];
 const OUVERTURES = { porte: { type: 'porte', w: 0.9, h: 2.05 }, fenetre: { type: 'fenetre', w: 1.2, h: 1.15, allege: 0.95 }, baie: { type: 'baie', w: 2.4, h: 2.15, allege: 0 }, garage: { type: 'porte', garage: true, w: 2.4, h: 2.0 } };
@@ -448,6 +449,29 @@ function choisirImage(id) {
 }
 
 // ------------------------------------------------------------------ inspecteur
+function thermoEd(o) {
+  const items = o.thermo?.items || [];
+  const opt = (v, sel) => FUSIONS.map(f => `<option value="${f.id}" ${f.id === sel ? 'selected' : ''}>${esc(f.nom)} (${esc(f.plage)} °C)</option>`).join('');
+  return `<div class="sec-t" style="margin-top:10px">🌡️ Témoins de température</div>
+    <p class="small muted">Objets fondus ou intacts à cet endroit. Le jeu en déduit la fourchette de température et propose l'exercice au joueur.</p>
+    ${items.map((it, i) => `<div class="thermo-ed" data-ti="${i}" style="display:grid;grid-template-columns:1fr auto;gap:4px;margin-bottom:6px;padding:6px;border:1px solid var(--line);border-radius:8px">
+      <select class="inp" data-k="mat">${opt(0, it.mat)}</select><button class="btn btn-sm" data-tdel title="Retirer">✕</button>
+      <select class="inp" data-k="etat"><option value="fondu" ${it.etat === 'fondu' ? 'selected' : ''}>fondu / seuil atteint</option><option value="intact" ${it.etat !== 'fondu' ? 'selected' : ''}>intact / non atteint</option></select>
+      <label class="small" title="Fusion apparente due à un alliage avec un métal à bas point de fusion"><input type="checkbox" data-k="alliage" ${it.alliage ? 'checked' : ''}> alliage</label>
+      <input class="inp" data-k="objet" placeholder="Objet (ex. poignée de porte)" value="${esc(it.objet || '')}" style="grid-column:1/3"></div>`).join('')}
+    <button class="btn btn-sm" data-tadd>＋ Ajouter un témoin</button>
+    ${items.length ? `<p class="small" style="margin-top:6px">Estimation attendue : <b>${esc(libelle(fourchette(items)))}</b></p>` : ''}`;
+}
+function lierThermo(el, o) {
+  const maj = () => { if (o.thermo) { delete o.thermo.options; if (!o.thermo.items.length) delete o.thermo; } changed(); rendreInspecteur(); };
+  $('[data-tadd]', el)?.addEventListener('click', () => { o.thermo ||= { items: [] }; o.thermo.items.push({ mat: 'alu', etat: 'fondu', objet: '' }); maj(); });
+  $$('.thermo-ed', el).forEach(row => {
+    const it = o.thermo.items[+row.dataset.ti];
+    $('[data-tdel]', row).onclick = () => { o.thermo.items.splice(+row.dataset.ti, 1); maj(); };
+    $$('[data-k]', row).forEach(inp => inp.onchange = () => { const k = inp.dataset.k; it[k] = inp.type === 'checkbox' ? inp.checked : inp.value; if (!it.alliage) delete it.alliage; maj(); });
+  });
+}
+
 function rendreInspecteur() {
   const el = $('.insp');
   if (ED.mode === 'enquete' || ED.mode === 'retex') { el.innerHTML = ''; return; }
@@ -502,7 +526,7 @@ function rendreInspecteur() {
       ['distracteurs', 'lines', 'Lectures erronées plausibles (une par ligne, facultatif)', null, 'Pièges'], ['ref', 'text', 'Chapitre / section, ex. 6.3.7.1 (affiché « NFPA 921 – chap. 6.3.7.1 »)', null, 'Réf. NFPA 921'], ['sources', 'lines', 'Autres sources qui illustrent ce constat, une par ligne (ex. « Lentini 2013, chap. 8, § 8.3 — mythe du verre faïencé »). Facultatif : des sources sont proposées automatiquement selon la réf. NFPA 921.', null, 'Autres sources'],
       ['zone', 'select', '', ED.scn.zones.map(z => z.id), 'Zone'], ['outil', 'select', 'Outil nécessaire pour le relever', ['', 'jauge', 'arc', 'pid'], 'Outil'], ['indice', 'text', 'Message si l\'outil manque', null, 'Indice'],
       ['couche', 'number', 'Couche de fouille à retirer (0 = visible)', null, 'Couche'], ['prelevement', 'select', '', ['', ...(ED.scn.prelevements || []).map(p => p.id)], 'Prélèvement'], ['id', 'text', '', null, 'Id du fait']],
-      `<div class="sec-t" style="margin-top:10px">Photos liées</div><div class="thumbs">${photos.map(p => ED.scn.medias[p.media] ? `<img src="${ED.scn.medias[p.media]}" title="${esc(p.titre)}">` : '').join('') || '<span class="small muted">Aucune (outil 📷 puis « constat lié »).</span>'}</div>`);
+      `<div class="sec-t" style="margin-top:10px">Photos liées</div><div class="thumbs">${photos.map(p => ED.scn.medias[p.media] ? `<img src="${ED.scn.medias[p.media]}" title="${esc(p.titre)}">` : '').join('') || '<span class="small muted">Aucune (outil 📷 puis « constat lié »).</span>'}</div>${thermoEd(o)}`, e => lierThermo(e, o));
   }
   if (s.t === 'photo') {
     const p = ED.scn.photos.find(x => x.id === s.id); if (!p) return;

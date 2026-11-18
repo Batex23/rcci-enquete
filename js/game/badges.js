@@ -10,6 +10,10 @@ export const BADGES = [
   { id: 'impartial', ic: '⚖️', nom: 'Impartial', desc: 'Aucune question orientée, aucune donnée contaminée' },
   { id: 'trois', ic: '⭐', nom: 'Expertise', desc: 'Obtenir 3 étoiles' },
   { id: 'tous', ic: '🏆', nom: 'Carrière lancée', desc: 'Réussir les trois premières enquêtes' },
+  { id: 'thermo', ic: '🌡️', nom: 'Thermomètre', desc: 'Estimer juste toutes les températures d\'une scène (au moins 2)' },
+  { id: 'specialiste', ic: '🎓', nom: 'Spécialiste', desc: 'Atteindre le niveau 3 dans une compétence' },
+  { id: 'assidu', ic: '🎯', nom: 'Assidu', desc: 'Réussir un entraînement sans faute' },
+  { id: 'polyvalent', ic: '🧭', nom: 'Polyvalent', desc: 'Atteindre le niveau 2 dans toutes les compétences' },
 ];
 
 export function badgesGagnes(E, ev) {
@@ -22,5 +26,6 @@ export function badgesGagnes(E, ev) {
   if (!ev.pieges.some(p => p.etat === 'tombe')) ids.push('lucide');
   if (!E.violations.some(v => v.type === 'question-orientee') && ev.det.analyse.find(d => d.titre.startsWith('Pas de donnée'))?.ok) ids.push('impartial');
   if (etoiles(ev.total) === 3) ids.push('trois');
+  if (E.releves.size >= 2 && [...E.releves.values()].every(r => r.ok) && E.releves.size >= scn.observations.filter(o => o.thermo?.options?.length && !o.cachee).length) ids.push('thermo');
   return ids;
 }

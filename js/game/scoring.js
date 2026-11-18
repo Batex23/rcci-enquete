@@ -1,4 +1,5 @@
 // Évaluation d'une enquête : méthode (40), analyse (30), conclusion (30)
+import { bonusHonoraires } from './competences.js';
 export function evaluer(E) {
   const scn = E.scn, sol = scn.solution, R = E.rapport;
   const det = { methode: [], analyse: [], conclusion: [] };
@@ -39,13 +40,21 @@ export function evaluer(E) {
   const osintCles = (scn.osint || []).filter(o => sol.faitsCles?.includes(o.fait?.id));
   const osF = !(scn.osint || []).length ? 4 : (osintCles.length ? 2 * osintCles.filter(o => E.faits.has(o.fait.id)).length / osintCles.length : 2) + (E.osint.ajoutes.size >= 2 ? 1 : E.osint.ajoutes.size * 0.5) + (E.osint.ajoutes.size ? 1 : 0);
   add('methode', 'Sources ouvertes', osF, 4, `${E.osint.ajoutes.size} source(s) versée(s) au dossier.`, '13.5 / 17.3.3.1');
-  const ratioAna = decA.length ? E.analyses.size / decA.length : 0;
-  add('methode', 'Toutes les données analysées', 4 * ratioAna, 4, `${E.analyses.size}/${decA.length} constats analysés.`, '4.3.4');
+  const decT = dec.filter(id => E.obs(id)?.thermo?.options?.length);
+  const nAFaire = decA.length + decT.length, nFaits = E.analyses.size + E.releves.size;
+  const ratioAna = nAFaire ? nFaits / nAFaire : 0;
+  add('methode', 'Toutes les données analysées', 4 * ratioAna, 4, `${E.analyses.size}/${decA.length} constats interprétés${decT.length ? ` ; ${E.releves.size}/${decT.length} températures estimées` : ''}.`, '4.3.4');
 
   // ---------------- ANALYSE (30)
   const bonnes = [...E.analyses.values()].filter(a => a.ok).length;
   const totObs = scn.observations.filter(o => o.analyse).length;
-  add('analyse', 'Interprétation des effets du feu', 15 * bonnes / Math.max(1, Math.max(decA.length, totObs * 0.75)), 15, `${bonnes} interprétation(s) correcte(s) sur ${E.analyses.size}.`, '6 / 17.4');
+  const totTh = scn.observations.filter(o => o.thermo?.options?.length).length;
+  const maxInterp = totTh ? 12 : 15;
+  add('analyse', 'Interprétation des effets du feu', maxInterp * bonnes / Math.max(1, Math.max(decA.length, totObs * 0.75)), maxInterp, `${bonnes} interprétation(s) correcte(s) sur ${E.analyses.size}.`, '6 / 17.4');
+  if (totTh) {
+    const okTh = [...E.releves.values()].filter(r => r.ok).length;
+    add('analyse', 'Températures estimées (témoins de fusion)', 3 * okTh / Math.max(1, Math.max(decT.length, totTh * 0.75)), 3, `${okTh} estimation(s) juste(s) sur ${E.releves.size} ; ${totTh} témoin(s) de température dans la scène.`, '6.2.2 / 6.2.8');
+  }
   const all = [...[...E.hyp.origines].map(([id, h]) => ({ kind: 'origines', id, h })), ...[...E.hyp.causes].map(([id, h]) => ({ kind: 'causes', id, h }))];
   const def = (kind, id) => scn.hypotheses[kind].find(x => x.id === id);
   const testees = all.filter(x => x.h.teste);
@@ -106,7 +115,7 @@ export function evaluer(E) {
     if (p.id === 'fumeur' && etat === 'non' && R.cause === 'CA' && !E.hyp.causes.has('CB')) etat = 'oublie';
     if (p.faits || p.origine || p.cause) {
       const vus = (p.faits || []).filter(f => E.faits.has(f));
-      const mal = (p.faits || []).some(f => usedAsSupport(f) || (ana(f) && !ana(f).ok));
+      const mal = (p.faits || []).some(f => usedAsSupport(f) || (ana(f) && !ana(f).ok) || (E.releves.get(f) && !E.releves.get(f).ok));
       etat = (p.origine && R.origine === p.origine) || (p.cause && R.cause === p.cause) || mal ? 'tombe' : vus.length ? 'evite' : 'non';
     }
     return { ...p, etat };
@@ -115,7 +124,8 @@ export function evaluer(E) {
   const ratio = total / 100;
   const deja = !!E.c.missions[scn.id]?.meilleur;
   const fact = deja ? 0.5 : 1;
-  const credits = Math.round((scn.recompense.credits * 0.5 + scn.recompense.credits * 0.5 * ratio + scn.recompense.bonusMax * Math.max(0, ratio - 0.6) / 0.4) * fact);
+  const bonusComp = bonusHonoraires(E.c);
+  const credits = Math.round((scn.recompense.credits * 0.5 + scn.recompense.credits * 0.5 * ratio + scn.recompense.bonusMax * Math.max(0, ratio - 0.6) / 0.4) * fact * (1 + bonusComp));
   const xp = Math.round(scn.recompense.xp * ratio * fact);
-  return { total, methode: m, analyse: a, conclusion: c, det, penalites, ptsViol, pieges, credits, xp, deja, certAttendue, classAttendue };
+  return { total, methode: m, analyse: a, conclusion: c, det, penalites, ptsViol, pieges, credits, xp, deja, certAttendue, classAttendue, bonusComp };
 }

@@ -145,6 +145,7 @@ const SOLS = {
   carrelage: { base: '#d3cfc6', joint: 'rgba(90,90,90,0.35)', lame: [0.45, 0.45] },
   beton:     { base: '#9d9b95', joint: null },
   herbe:     { base: '#6f7d4f', joint: null },
+  enrobe: { base: '#4a4a4c' },
 };
 
 export function peindreSol(piece, traces) {
@@ -181,7 +182,7 @@ export function peindreSol(piece, traces) {
           k ? ctx.lineTo(cx + Math.cos(a) * rv, cz + Math.sin(a) * rv) : ctx.moveTo(cx + Math.cos(a) * rv, cz + Math.sin(a) * rv);
         }
         ctx.closePath();
-        ctx.fillStyle = rr() < 0.25 ? 'rgba(96,92,86,0.95)' : 'rgba(10,7,5,0.92)';
+        ctx.fillStyle = piece.sol === 'enrobe' ? (rr() < 0.4 ? 'rgba(128,112,92,0.9)' : 'rgba(18,14,12,0.95)') : rr() < 0.25 ? 'rgba(96,92,86,0.95)' : 'rgba(10,7,5,0.92)';
         ctx.fill();
       }
     } else if (t.type === 'consomme') {

@@ -328,7 +328,7 @@ export class Scene3D {
     const H = bat.hauteur || this.H, T = bat.epaisseur || 0.16;
     const lines = { h: new Map(), v: new Map() };
     const add = (axe, key, a, b) => { const k = Math.round(key * 100) / 100; if (!lines[axe].has(k)) lines[axe].set(k, []); lines[axe].get(k).push([a, b]); };
-    for (const p of bat.pieces) {
+    for (const p of bat.pieces.filter(p => !p.ouverte)) {
       add('h', p.z, p.x, p.x + p.w); add('h', p.z + p.d, p.x, p.x + p.w);
       add('v', p.x, p.z, p.z + p.d); add('v', p.x + p.w, p.z, p.z + p.d);
     }
@@ -616,9 +616,48 @@ export class Scene3D {
       case 'voiture': {
         box(4.1, 0.75, 1.75, col('#7a8794', b), 0, 0.3, 0);
         box(2.2, 0.55, 1.6, col('#7a8794', b), -0.2, 1.05, 0);
-        for (const [x, z] of [[-1.3, -0.8], [1.3, -0.8], [-1.3, 0.8], [1.3, 0.8]]) { const w = cyl(0.32, 0.32, 0.22, '#1b1b1b', x, 0.0, z, 12); w.rotation.x = Math.PI / 2; w.position.y = 0.32; }
+        const pb = o.pneusBrules || [];
+        [[1.3, -0.8, 'avg'], [1.3, 0.8, 'avd'], [-1.3, -0.8, 'arg'], [-1.3, 0.8, 'ard']].forEach(([x, z, k]) => {
+          const br = pb.includes(k);
+          const w = br ? cyl(0.2, 0.2, 0.14, '#7d7f82', x, 0.0, z, 10) : cyl(0.32, 0.32, 0.22, '#1b1b1b', x, 0.0, z, 12);
+          w.rotation.x = Math.PI / 2; w.position.y = br ? 0.2 : 0.32;
+        });
+        if (o.vitresBrisees) box(2.0, 0.02, 1.5, '#1c1a19', -0.2, 1.62, 0);
         break;
       }
+      case 'velo': {
+        const c = col(o.couleur || '#2d6cb3', b), noir = col('#1d1d1d', Math.min(1, b + 0.3));
+        for (const x of [-0.55, 0.55]) {
+          const w = new THREE.Mesh(new THREE.TorusGeometry(0.33, b > 0.7 ? 0.012 : 0.028, 6, 22), mat(b > 0.7 ? '#5b5b5b' : noir));
+          w.position.set(x, 0.35, 0); g.add(w);
+          box(0.02, 0.02, 0.06, '#777', x, 0.34, 0);
+        }
+        if (o.fondu) { box(0.5, 0.04, 0.05, c, -0.2, 0.42, 0).rotation.z = 0.3; box(0.35, 0.04, 0.05, c, 0.32, 0.52, 0).rotation.z = -0.9; for (let i = 0; i < 7; i++) box(0.05 + (i % 3) * 0.03, 0.012, 0.04 + (i % 2) * 0.04, '#9da3a8', -0.3 + i * 0.09, 0, ((i * 37) % 10 - 5) / 40); }
+        else {
+          box(0.62, 0.045, 0.045, c, -0.02, 0.62, 0).rotation.z = -0.05;
+          const t = box(0.75, 0.05, 0.05, c, -0.05, 0.36, 0); t.rotation.z = 0.62;
+          box(0.045, 0.5, 0.045, c, -0.28, 0.35, 0).rotation.z = -0.2;
+          box(0.05, 0.55, 0.05, c, 0.48, 0.33, 0).rotation.z = 0.35;
+          box(0.22, 0.04, 0.08, noir, -0.3, 0.86, 0);
+          box(0.05, 0.04, 0.5, noir, 0.42, 0.9, 0);
+        }
+        if (!o.sansBatterie) box(0.36, 0.09, 0.08, col('#2b2b2b', b), 0.0, 0.4, 0).rotation.z = 0.62;
+        break;
+      }
+      case 'cellules': {
+        const r = rng(Math.round((o.x + 7) * 31 + (o.z + 3) * 13));
+        for (let i = 0; i < (o.n || 14); i++) {
+          const a = r() * Math.PI * 2, d = (o.r || 1.5) * Math.sqrt(r());
+          const m = cyl(0.009, 0.009, 0.065, r() < 0.35 ? '#8a8f94' : '#3a3634', Math.cos(a) * d, 0, Math.sin(a) * d, 8);
+          m.rotation.z = Math.PI / 2; m.rotation.y = r() * 3; m.position.y = 0.01;
+        }
+        break;
+      }
+      case 'chargeur': box(0.16, 0.05, 0.09, col('#222', b)); break;
+      case 'bidon': { const m = box(0.14, 0.22, 0.1, col('#e8e4d8', b)); m.rotation.z = o.couche ? 1.4 : 0; break; }
+      case 'poubelle': box(0.6, 1.0, 0.7, col('#3a6b3a', b)); break;
+      case 'cartons': { const r = rng(Math.round((o.x + 3) * 19)); for (let i = 0; i < (o.n || 3); i++) box(0.4 + r() * 0.2, 0.3 + r() * 0.2, 0.35, col('#b08a5a', b), (i - (o.n || 3) / 2) * 0.5, 0, r() * 0.1); break; }
+      case 'tableauBat': box(0.05, 0.5, 0.35, col('#e8e8e8', b), 0, 1.2, 0); break;
       default: box(0.4, 0.4, 0.4, '#888');
     }
     g.position.set(o.x || 0, o.y || 0, o.z || 0);
