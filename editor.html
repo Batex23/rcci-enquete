@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RCCI · Éditeur formateur</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛠️</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .ed { flex: 1; display: grid; grid-template-columns: 220px minmax(380px, 1fr) minmax(380px, 1.1fr); min-height: 0; }
+    .ed nav { background: var(--bg2); border-right: 1px solid var(--line); overflow: auto; padding: 10px; display: flex; flex-direction: column; gap: 2px; }
+    .ed nav button { text-align: left; background: none; border: 0; padding: 7px 10px; border-radius: 6px; cursor: pointer; color: var(--txt2); }
+    .ed nav button.on, .ed nav button:hover { background: var(--panel2); color: var(--txt); }
+    #edForm { overflow: auto; padding: 16px 18px; }
+    #edForm .form-row { grid-template-columns: 190px 1fr; }
+    .ed-right { border-left: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+    .ed-ctl { display: flex; gap: 6px; padding: 8px; background: var(--bg2); border-bottom: 1px solid var(--line); flex-wrap: wrap; align-items: center; }
+    #edPrev { flex: 1; position: relative; min-height: 300px; }
+    .ed-item { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 6px; background: var(--panel); }
+    .ed-ih { display: flex; align-items: center; gap: 4px; padding: 5px 8px; }
+    .ed-sum { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%; }
+    .ed-ib { padding: 4px 10px 10px; border-top: 1px solid var(--line); }
+    .ed-sub { margin: 10px 0 0 6px; padding-left: 10px; border-left: 2px solid var(--line); }
+    .inp.bad { border-color: var(--ko); }
+    .mono { font-family: var(--mono); font-size: 12px; }
+    .edbar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    #pickHint { position: absolute; top: 8px; left: 8px; z-index: 5; }
+    @media (max-width: 1100px) { .ed { grid-template-columns: 180px 1fr; } .ed-right { grid-column: span 2; height: 50vh; } }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header id="topbar">
+      <a class="logo" href="index.html" style="text-decoration:none;color:inherit"><div class="logo-mark">🛠️</div><div>Éditeur formateur<small id="edTitre"></small></div></a>
+      <div class="tb-sp"></div>
+      <div class="edbar">
+        <button class="btn btn-sm" id="bNouveau">Nouveau</button>
+        <button class="btn btn-sm" id="bCharger">Ouvrir…</button>
+        <button class="btn btn-sm" id="bVariante" title="Dupliquer le scénario sous un nouvel identifiant">Créer une variante</button>
+        <label class="btn btn-sm">Importer JSON<input type="file" id="bImport" accept=".json" hidden></label>
+        <button class="btn btn-sm" id="bExport">Exporter JSON</button>
+        <button class="btn btn-sm" id="bValider">Contrôler</button>
+        <button class="btn btn-sm btn-primary" id="bPublier">Publier dans le jeu</button>
+        <a class="btn btn-sm btn-ghost" href="index.html" style="text-decoration:none">⟵ Jeu</a>
+      </div>
+    </header>
+    <main id="screen" style="flex:1;display:flex;min-height:0">
+      <div class="ed">
+        <nav id="edNav"></nav>
+        <section id="edForm"></section>
+        <section class="ed-right">
+          <div class="ed-ctl">
+            <select class="inp" id="zoneEd" title="Cadrage"></select>
+            <select class="inp" id="mursEd" title="Murs"><option value="auto">Murs : auto</option><option value="bas">Murs : bas</option><option value="pleins">Murs : pleins</option></select>
+            <label class="small">Fouille <input type="range" id="fouilleEd" min="0" max="3" value="0" style="width:80px"></label>
+            <span class="small muted" id="coords">Cliquez dans la scène pour lire les coordonnées.</span>
+            <span class="small" id="apErr" style="color:var(--ko)"></span>
+          </div>
+          <div id="edPrev"><span id="pickHint" class="chip warn" hidden>📍 Cliquez pour placer le point</span></div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <div id="modal-root"></div>
+  <div id="toasts"></div>
+  <script type="module" src="js/editor/editor.js"></script>
+</body>
+</html>

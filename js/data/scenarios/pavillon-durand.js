@@ -1,0 +1,481 @@
+// Enquête n°1 — Pavillon Durand : feu de séjour nocturne
+// Format de scénario : objet JSON pur (éditable et exportable depuis l'éditeur formateur).
+export default {
+  id: 'pavillon-durand',
+  version: 1,
+  titre: 'Pavillon Durand — feu de séjour nocturne',
+  type: 'habitation',
+  difficulte: 1,
+  gradeMin: 0,
+  recompense: { credits: 3000, bonusMax: 1500, xp: 500 },
+  resume: 'Pavillon de plain-pied, feu de nuit dans le séjour, deux occupants évacués. Une voisine évoque une dispute familiale. Le mandant veut l\'origine et la cause.',
+
+  mission: {
+    mandant: 'Cabinet d\'expertise Garonne Assurances (pour le compte de l\'assureur MRH)',
+    reference: 'GA-2026-1187',
+    dateSinistre: 'Nuit du 6 au 7 novembre 2026',
+    heureAlerte: '02h05 (appel 18 de la voisine)',
+    adresse: '14 allée des Pins, lotissement Les Bruyères, 33610 Lescourre (commune fictive)',
+    ordre: 'Rechercher l\'origine et la cause de l\'incendie ayant affecté la maison d\'habitation de M. et Mme Durand, conformément à la méthodologie NFPA 921. Scène préservée et gardiennée depuis l\'extinction ; accès autorisé par les propriétaires et l\'OPJ en charge.',
+    preservation: 'Scène préservée, accès contrôlés. Seules interventions depuis le sinistre : extinction, déblai léger par les sapeurs-pompiers, mise en sécurité électrique par Enedis.',
+  },
+
+  rapportSdis: [
+    '02h05 — Appel 18 de Mme Lacoste (voisine) : « flammes dans le salon du voisin ».',
+    '02h14 — Arrivée FPT Lescourre : séjour embrasé, flammes sortant par la baie vitrée sud (vitrage déjà rompu).',
+    '02h15 — Occupants (2) déjà sortis par la fenêtre de leur chambre. Pas de victime.',
+    '02h16 — Ouverture forcée de la porte d\'entrée (pied de biche), attaque par le couloir, 1 LDV 500.',
+    '02h25 — Coupure générale électrique au disjoncteur de branchement (garage).',
+    '02h31 — Feu éteint. Déblai limité au séjour : rideaux tombés, canapé non déplacé.',
+    '03h40 — Fin d\'intervention, mise en sécurité Enedis, scène confiée à la gendarmerie.',
+  ],
+
+  meteo: 'Nuit calme, ciel couvert, 6 °C, vent faible de nord-est (8 km/h), pas d\'orage.',
+
+  securite: {
+    ref: '12.2 / 12.3 / 12.6',
+    options: [
+      { id: 'apr', t: 'Port d\'une protection respiratoire (masque FFP3 / ARI selon atmosphère) et de gants nitrile sous gants de protection', ok: true },
+      { id: 'casque', t: 'Casque, chaussures de sécurité, combinaison jetable', ok: true },
+      { id: 'plafond', t: 'Évaluer le plafond du séjour (plaques effondrées) avant d\'y travailler et purger les parties instables', ok: true },
+      { id: 'energie', t: 'Vérifier la coupure électrique (Enedis) et l\'absence d\'alimentation gaz', ok: true },
+      { id: 'binome', t: 'Ne pas travailler seul : prévenir le gardien de scène de ses entrées/sorties', ok: true },
+      { id: 'sansmasque', t: 'Travailler sans protection respiratoire : les fumées sont dissipées depuis plusieurs jours', ok: false, fb: 'Les débris d\'incendie restent chargés en particules, HAP, isocyanates, fibres. La protection respiratoire reste nécessaire (12.5 / 12.6).' },
+      { id: 'rearmer', t: 'Réarmer le disjoncteur pour tester les circuits sur place', ok: false, fb: 'Danger et altération des preuves : on ne remet jamais sous tension une installation sinistrée avant la fin des constatations (12.3, 16.3).' },
+    ],
+  },
+
+  batiment: {
+    hauteur: 2.5,
+    epaisseur: 0.16,
+    terrasse: { x: 0, z: 9, w: 7.5, d: 2.2 },
+    allee: { x: 12, z: 3, w: 5, d: 1.4 },
+    pieces: [
+      { id: 'garage',  nom: 'Garage',          x: -4, z: 0,   w: 4,  d: 6,   sol: 'beton',    peinture: '#cfcac0', couche: 2.1, suie: 0.12 },
+      { id: 'ch1',     nom: 'Chambre parents', x: 0,  z: 0,   w: 4,  d: 3,   sol: 'parquet',  peinture: '#d8d2c4', couche: 2.15, suie: 0.18 },
+      { id: 'ch2',     nom: 'Chambre Kevin',   x: 4,  z: 0,   w: 4,  d: 3,   sol: 'parquet',  peinture: '#c9d3d6', couche: 1.1, suie: 0.55 },
+      { id: 'sdb',     nom: 'Salle de bains',  x: 8,  z: 0,   w: 4,  d: 3,   sol: 'carrelage',peinture: '#e2e2de', couche: 1.5, suie: 0.35 },
+      { id: 'couloir', nom: 'Couloir',         x: 0,  z: 3,   w: 12, d: 1.2, sol: 'stratifie',peinture: '#dcd5c5', couche: { x0: 0, y0: 0.55, x1: 12, y1: 1.4 }, suie: 0.8 },
+      { id: 'sejour',  nom: 'Séjour',          x: 0,  z: 4.2, w: 7,  d: 4.8, sol: 'stratifie',peinture: '#d9cfb8', couche: 0.25, suie: 1.0 },
+      { id: 'cuisine', nom: 'Cuisine',         x: 7,  z: 4.2, w: 5,  d: 4.8, sol: 'carrelage',peinture: '#e3dccb', couche: 1.0, suie: 0.6 },
+    ],
+    ouvertures: [
+      { type: 'porte',   x: 0,    z: 3.6, axe: 'v', w: 0.8, h: 2.0 },
+      { type: 'porte',   x: 12,   z: 3.6, axe: 'v', w: 0.9, h: 2.1 },
+      { type: 'porte',   x: 3.3,  z: 3,   axe: 'h', w: 0.8, h: 2.0, fermee: true },
+      { type: 'porte',   x: 4.7,  z: 3,   axe: 'h', w: 0.8, h: 2.0 },
+      { type: 'porte',   x: 9,    z: 3,   axe: 'h', w: 0.8, h: 2.0 },
+      { type: 'porte',   x: 1.1,  z: 4.2, axe: 'h', w: 0.9, h: 2.0 },
+      { type: 'porte',   x: 9.5,  z: 4.2, axe: 'h', w: 0.8, h: 2.0 },
+      { type: 'baie',    x: 4.8,  z: 9,   axe: 'h', w: 3.0, h: 2.15, allege: 0, brise: true },
+      { type: 'fenetre', x: 9.8,  z: 9,   axe: 'h', w: 1.2, h: 1.0, allege: 1.0 },
+      { type: 'fenetre', x: 2,    z: 0,   axe: 'h', w: 1.2, h: 1.2, allege: 0.9 },
+      { type: 'fenetre', x: 6,    z: 0,   axe: 'h', w: 1.2, h: 1.2, allege: 0.9 },
+      { type: 'fenetre', x: 10.5, z: 0,   axe: 'h', w: 0.6, h: 0.6, allege: 1.4 },
+      { type: 'porte',   x: -2,   z: 6,   axe: 'h', w: 2.4, h: 2.0, garage: true },
+    ],
+    objets: [
+      // Séjour
+      { id: 'canape', type: 'canape', x: 0.48, z: 6.8, rot: 90, L: 2.4, brule: 0.85, brulePente: { cote: 'gauche', valeur: 1 } },
+      { id: 'lampadaire', type: 'lampadaire', x: 0.3, z: 4.75, brule: 0.5 },
+      { id: 'multiprise', type: 'multiprise', x: 0.14, z: 6.9, brule: 0.8 },
+      { id: 'rallonge', type: 'cable', points: [[0.03, 0.3, 8.4], [0.1, 0.03, 8.35], [0.12, 0.03, 7.9], [0.13, 0.03, 6.95]], brule: 1 },
+      { id: 'prise-o', type: 'prise', x: 0.02, z: 8.4, y: 0.3, rot: 90 },
+      { id: 'meubletv', type: 'meubleTV', x: 6.72, z: 6.6, rot: -90, L: 1.6, brule: 0.35 },
+      { id: 'tv', type: 'tv', x: 6.78, z: 6.6, y: 0.5, rot: -90, brule: 0.6 },
+      { id: 'tablebasse', type: 'tableBasse', x: 3.2, z: 6.8, rot: 90, brule: 0.5 },
+      { id: 'tapis', type: 'tapis', x: 3.0, z: 6.8, w: 2.0, d: 2.6, brule: 0.7 },
+      { id: 'etagere', type: 'etagere', x: 4.6, z: 4.38, rot: 0, L: 2.0, brule: 0.4 },
+      { id: 'rideaux', type: 'debris', x: 4.8, z: 8.65, w: 3.2, d: 0.5, brule: 1 },
+      { id: 'debris-plafond', type: 'debris', x: 4.2, z: 7.9, w: 2.4, d: 1.4, brule: 0.6 },
+      // Cuisine
+      { id: 'plan', type: 'cuisine', x: 11.7, z: 6.6, rot: -90, L: 4.0, brule: 0.2 },
+      { id: 'frigo', type: 'frigo', x: 11.6, z: 4.65, rot: -90, brule: 0.15 },
+      { id: 'table', type: 'table', x: 9.2, z: 7.2, brule: 0.1 },
+      // Chambres
+      { id: 'lit1', type: 'lit', x: 1.6, z: 1.15, rot: 0, brule: 0 },
+      { id: 'armoire1', type: 'armoire', x: 3.4, z: 0.35, rot: 0, brule: 0 },
+      { id: 'lit2', type: 'lit', x: 6.9, z: 1.15, rot: 0, L: 1.9, l: 0.95, brule: 0.05 },
+      { id: 'bureau2', type: 'bureau', x: 5.1, z: 0.4, rot: 0, brule: 0.05 },
+      { id: 'baignoire', type: 'baignoire', x: 10.6, z: 0.45, brule: 0 },
+      // Garage
+      { id: 'tableau', type: 'tableauElec', x: -0.08, z: 1.5, y: 1.3, rot: -90 },
+      { id: 'tondeuse', type: 'tondeuse', x: -3.0, z: 1.6, brule: 0 },
+      { id: 'jerrican', type: 'jerrican', x: -3.5, z: 0.7, brule: 0 },
+      { id: 'etabli', type: 'etabli', x: -2, z: 0.35, rot: 0, L: 2.0, brule: 0 },
+      // Couloir
+      { id: 'daaf', type: 'daaf', x: 3.6, z: 3.6, brule: 0.5 },
+    ],
+    traces: [
+      // Séjour — mur ouest : V bas à l'extrémité sud du canapé
+      { piece: 'sejour', cote: 'W', type: 'V', u: 7.9, y0: 0.08, angle: 28, force: 1 },
+      { piece: 'sejour', cote: 'W', type: 'cleanburn', u: 7.75, y: 1.0, rx: 0.55, ry: 0.85 },
+      { piece: 'sejour', cote: 'W', type: 'calcination', u: 7.9, y: 0.8, rx: 0.5, ry: 0.7 },
+      // Séjour — mur est : ombre thermique du téléviseur
+      { piece: 'sejour', cote: 'E', type: 'protegee', u0: 5.85, u1: 7.35, y0: 0.0, y1: 0.55 },
+      // Séjour — mur nord : zone protégée derrière l'étagère
+      { piece: 'sejour', cote: 'N', type: 'protegee', u0: 3.6, u1: 5.6, y0: 1.2, y1: 1.6 },
+      // Façade sud : panache sortant de la baie
+      { piece: 'exterieur', cote: 'S', ligne: 9, type: 'V', u: 4.8, y0: 2.0, angle: 38, force: 0.9, inverse: false },
+      // Sol du séjour
+      { piece: 'sejour', cote: 'sol', type: 'irregulier', x: 4.8, z: 8.3, rx: 1.6, rz: 0.6, seed: 7 },
+      { piece: 'sejour', cote: 'sol', type: 'consomme', x: 0.45, z: 7.95, rx: 0.55, rz: 0.55 },
+      { piece: 'sejour', cote: 'sol', type: 'protegee', x: 3.2, z: 6.8, rx: 0.45, rz: 0.75 },
+      { piece: 'sejour', cote: 'sol', type: 'protegee', x: 6.72, z: 6.6, rx: 0.25, rz: 0.8 },
+      { piece: 'sejour', cote: 'sol', type: 'debris', densite: 0.6 },
+      { piece: 'couloir', cote: 'sol', type: 'debris', densite: 0.15 },
+    ],
+  },
+
+  zones: [
+    { id: 'abords',  nom: 'Abords et environnement', exterieur: true, rang: 0, cible: [4, 0, 5], zoom: 0.55, desc: 'Jardin, clôtures, accès, façade, réseaux.' },
+    { id: 'facade',  nom: 'Façade sud (baie vitrée)', exterieur: true, rang: 0, cible: [4.8, 1, 9.5], zoom: 1.3, desc: 'Façade principale côté jardin.' },
+    { id: 'garage',  nom: 'Garage', piece: 'garage', rang: 1, cible: [-2, 0, 3], zoom: 1.4 },
+    { id: 'ch1',     nom: 'Chambre parents', piece: 'ch1', rang: 1, cible: [2, 0, 1.5], zoom: 1.6 },
+    { id: 'sdb',     nom: 'Salle de bains', piece: 'sdb', rang: 1, cible: [10, 0, 1.5], zoom: 1.6 },
+    { id: 'ch2',     nom: 'Chambre Kevin', piece: 'ch2', rang: 2, cible: [6, 0, 1.5], zoom: 1.6 },
+    { id: 'cuisine', nom: 'Cuisine', piece: 'cuisine', rang: 2, cible: [9.5, 0, 6.6], zoom: 1.3 },
+    { id: 'couloir', nom: 'Couloir', piece: 'couloir', rang: 3, cible: [6, 0, 3.6], zoom: 1.1 },
+    { id: 'sejour',  nom: 'Séjour', piece: 'sejour', rang: 4, cible: [3.5, 0, 6.6], zoom: 1.25 },
+  ],
+
+  observations: [
+    // ---------- Extérieur
+    { id: 'F01', zone: 'abords', pos: [12.15, 1.0, 3.6], titre: 'Porte d\'entrée',
+      description: 'Porte d\'entrée en position fermée, pêne demi-tour et pêne dormant sortis. Enfoncement récent au pied de biche côté gâche, éclats de bois frais non noircis. Aucune autre trace sur les ouvrants du pourtour (fenêtres des chambres ouvertes de l\'intérieur).',
+      analyse: { question: 'Comment interprétez-vous cette constatation ?', ref: '17.3.1.7 / 22.3', options: [
+        { t: 'Effraction : la piste d\'une intrusion criminelle doit être privilégiée.', ok: false, fb: 'Éclats non noircis = ouverture postérieure au feu. Le compte rendu SDIS mentionne l\'ouverture forcée à 02h16 : c\'est une modification post-incendie.' },
+        { t: 'Ouverture forcée par les sapeurs-pompiers (CR SDIS, éclats frais non noircis) ; aucune trace d\'effraction antérieure au feu.', ok: true, fb: 'Exact : il faut toujours corréler les modifications post-incendie avec les actions des secours (17.3.1.7).' },
+        { t: 'Non pertinent pour l\'enquête.', ok: false, fb: 'Toute modification de la scène doit être documentée et expliquée.' },
+      ]}},
+    { id: 'F02', zone: 'facade', pos: [4.8, 2.6, 9.1], titre: 'Traînée de suie au-dessus de la baie',
+      description: 'Façade sud : traînée de suie en V évasé au-dessus de la baie vitrée du séjour, du linteau jusqu\'à l\'égout de toiture. Enduit écaillé au droit du linteau. Menuiserie PVC de la baie fondue et affaissée. Pas de dégâts en pied de façade ni de végétation brûlée devant la baie.',
+      analyse: { question: 'Que traduit ce tracé ?', ref: '6.3.7.1 / 6.3.2.2 / 6.2.5', options: [
+        { t: 'Un départ de feu à l\'extérieur, devant la baie.', ok: false, fb: 'Aucun dégât en pied de façade ni dans la végétation : rien n\'indique un feu extérieur.' },
+        { t: 'Le panache sortant par la baie après rupture du vitrage : effet de ventilation d\'un feu intérieur développé.', ok: true, fb: 'Oui. Ce tracé renseigne sur une phase avancée (flammes sortant par l\'ouvrant), pas sur l\'origine.' },
+        { t: 'L\'écaillage de l\'enduit prouve l\'usage d\'un accélérant.', ok: false, fb: 'Mythe : l\'écaillage a de multiples causes (chaleur, humidité, choc thermique de l\'eau) et n\'est pas un indicateur d\'accélérant (6.2.5).' },
+      ]}},
+    { id: 'F03', zone: 'facade', pos: [4.2, 0.1, 9.5], titre: 'Fragments de vitrage de la baie',
+      description: 'Fragments de verre de la baie répartis des deux côtés du châssis (davantage à l\'intérieur). Bords ondulés de rupture thermique. Surfaces couvertes d\'un réseau de fines fissures superficielles (faïençage). Certains fragments au sol sont exempts de suie sur la face inférieure.',
+      analyse: { question: 'Que retenez-vous du faïençage ?', ref: '6.2.13', options: [
+        { t: 'Le faïençage indique une montée en température très rapide, typique d\'un accélérant.', ok: false, fb: 'Mythe démonté par les essais : le faïençage résulte d\'un refroidissement brutal (eau d\'extinction) sur verre chaud (6.2.13).' },
+        { t: 'Rupture thermique du vitrage pendant le feu, puis faïençage dû au refroidissement par l\'eau d\'extinction.', ok: true, fb: 'Exact. Les fragments sans suie dessous étaient déjà tombés pendant le feu : la baie a cédé avant l\'arrivée des secours (cohérent avec le CR SDIS).' },
+        { t: 'Le vitrage a été brisé par une explosion.', ok: false, fb: 'Aucune projection lointaine ni déformation de la menuiserie compatible avec une surpression.' },
+      ]}},
+    { id: 'F04', zone: 'garage', pos: [-3.5, 0.3, 0.7], titre: 'Jerrican d\'essence',
+      description: 'Jerrican plastique de 5 L contenant environ 3,5 L d\'essence SP95, posé à côté de la tondeuse thermique. Bouchon fermé. Garage non atteint par le feu : léger dépôt de suie en partie haute uniquement.',
+      analyse: { question: 'Quelle place donnez-vous à ce jerrican dans l\'enquête ?', ref: '4.3.8 / 22.2', options: [
+        { t: 'Présence d\'un liquide inflammable sur place : indicateur d\'incendie volontaire.', ok: false, fb: 'Biais d\'attente : un jerrican rangé, plein, hors de la zone sinistrée, près d\'une tondeuse, est un stockage domestique banal.' },
+        { t: 'Stockage domestique cohérent avec la tondeuse, hors zone sinistrée : documenté, sans valeur d\'indicateur à ce stade.', ok: true, fb: 'Oui : on documente, on ne conclut pas. Seule une analyse en laboratoire dans la zone d\'origine pourrait établir la présence d\'un liquide.' },
+      ]}},
+    { id: 'F05', zone: 'garage', pos: [-0.1, 1.3, 1.5], titre: 'Tableau électrique',
+      description: 'Tableau de répartition : disjoncteur de branchement en position ouverte (coupure SDIS 02h25). Disjoncteur divisionnaire 16 A « Prises séjour » déclenché (manette en position intermédiaire). Tous les autres divisionnaires armés. Interrupteur différentiel 30 mA de la rangée armé.',
+      analyse: { question: 'Comment exploitez-vous cette donnée ?', ref: '8.6 / 17.4.5', options: [
+        { t: 'Le déclenchement du disjoncteur prouve une cause électrique.', ok: false, fb: 'Non : un circuit atteint par le feu déclenche aussi (court-circuit par destruction des isolants). C\'est une donnée, pas une conclusion.' },
+        { t: 'Le circuit « prises séjour » était sous tension au début du feu et a déclenché : cela permet une cartographie des arcs sur ce circuit.', ok: true, fb: 'Exact : un circuit sous tension au moment où le feu l\'atteint peut produire des arcs exploitables pour la zone d\'origine (17.4.5).' },
+        { t: 'Sans intérêt, la coupure a été faite par les pompiers.', ok: false, fb: 'La coupure SDIS concerne le branchement. Le divisionnaire déclenché est une donnée indépendante.' },
+      ]}},
+    // ---------- Chambres / couloir / cuisine
+    { id: 'F06', zone: 'ch1', pos: [3.3, 1.6, 2.85], titre: 'Porte de la chambre des parents',
+      description: 'Porte isoplane trouvée fermée par les secours. Face couloir : suie épaisse, peinture cloquée dans le tiers supérieur. Face chambre : dépôts légers ; démarcation de suie limitée au pourtour du vantail et au jour sous la porte. Mobilier de la chambre intact sous un léger voile de suie.',
+      analyse: { question: 'Qu\'apporte cette constatation ?', ref: '6.3.4.2 / 5.12', options: [
+        { t: 'La porte fermée a protégé la chambre ; les fumées venaient du couloir.', ok: true, fb: 'Oui. Cela explique aussi la survie des occupants et confirme le sens d\'écoulement des fumées.' },
+        { t: 'La chambre est une zone d\'origine possible.', ok: false, fb: 'Aucun effet de combustion dans la chambre, seulement des dépôts de fumée entrés par les jours de la porte.' },
+      ]}},
+    { id: 'F07', zone: 'ch2', pos: [6.0, 1.2, 1.2], titre: 'Chambre de Kevin',
+      description: 'Porte ouverte. Dépôts de suie uniformes, démarcation horizontale à 1,10 m sur les quatre murs. Aucun effet de combustion. Bureau et lit intacts sous la suie, ordinateur éteint, multiprise du bureau débranchée.',
+      analyse: { question: 'Comment qualifiez-vous cette zone ?', ref: '6.3.2.3 / 22.2.1', options: [
+        { t: 'Zone de dégâts par les fumées uniquement (couche chaude), sans foyer distinct.', ok: true, fb: 'Exact : démarcation horizontale homogène = couche de fumée, pas de foyer.' },
+        { t: 'Un second foyer : indicateur d\'incendie volontaire (foyers multiples).', ok: false, fb: 'Il n\'y a ici aucun effet de combustion. Des foyers multiples doivent être des feux distincts, non reliés (22.2.1).' },
+      ]}},
+    { id: 'F08', zone: 'couloir', pos: [6.0, 1.0, 3.05], titre: 'Démarcation de suie dans le couloir',
+      description: 'Ligne de démarcation de la couche de suie descendant progressivement de 1,40 m (extrémité est, côté entrée) à 0,55 m (devant la porte du séjour). Plafond calciné uniquement sur 1,5 m devant la porte du séjour. Peinture cloquée au-dessus de l\'huisserie côté séjour.',
+      analyse: { question: 'Que traduit ce gradient ?', ref: '6.3.2.3 / 17.4.2', options: [
+        { t: 'Un écoulement des gaz chauds depuis le séjour vers le reste du logement : vecteur pointant vers le séjour.', ok: true, fb: 'Oui : plus la démarcation est basse, plus l\'exposition est longue/intense ; elle s\'abaisse vers la source.' },
+        { t: 'Un départ de feu dans le couloir.', ok: false, fb: 'Aucun effet de combustion localisé dans le couloir ; les dégâts croissent vers le séjour.' },
+      ]}},
+    { id: 'F09', zone: 'couloir', pos: [3.6, 2.4, 3.6], titre: 'Détecteur de fumée (DAAF)',
+      description: 'DAAF au plafond du couloir face aux chambres : boîtier partiellement fondu, pile 9 V en place, témoin de date « 2023 ». Les occupants déclarent avoir été réveillés par son alarme.',
+      analyse: { question: 'Comment utilisez-vous ce DAAF ?', ref: '20.2', options: [
+        { t: 'Comme repère de chronologie, à corréler avec les témoignages (heure de réveil).', ok: true, fb: 'Exact : la chronologie (time line) est un outil d\'analyse à part entière.' },
+        { t: 'Il n\'a pas d\'intérêt, il est fondu.', ok: false, fb: 'Son déclenchement est une donnée de chronologie, et sa présence a sauvé les occupants.' },
+      ]}},
+    { id: 'F10', zone: 'cuisine', pos: [11.6, 1.0, 6.5], titre: 'Plaque de cuisson et cuisine',
+      description: 'Plaque vitrocéramique : toutes les manettes en position 0. Casseroles propres, rangées. Meubles hauts déformés et façades cloquées ; meubles bas, plan de travail et électroménager intacts. Démarcation horizontale à 1,00 m.',
+      analyse: { question: 'Que retenez-vous ?', ref: '6.3.2.3 / 24.3', options: [
+        { t: 'Pas d\'activité de cuisson ; dégâts du haut vers le bas par la couche chaude venue d\'ailleurs.', ok: true, fb: 'Oui : les dégâts par le haut et des parties basses intactes excluent un foyer dans la cuisine.' },
+        { t: 'Feu de cuisson oublié.', ok: false, fb: 'Manettes à 0, ustensiles propres, partie basse intacte : aucune donnée ne soutient cette hypothèse.' },
+      ]}},
+    // ---------- Séjour
+    { id: 'F11', zone: 'sejour', pos: [3.5, 2.4, 6.6], titre: 'Plafond du séjour',
+      description: 'Plafond en plaques de plâtre : calciné sur toute la surface, plaques effondrées devant la baie. Tous les combustibles du séjour sont atteints, y compris loin du canapé. Démarcation de suie à 0,25 m du sol sur l\'ensemble des murs.',
+      analyse: { question: 'Que traduit cet état ?', ref: '6.3.2.4 / 5.10', options: [
+        { t: 'Un embrasement généralisé (flashover) du séjour : des tracés post-embrasement peuvent masquer ou créer des tracés trompeurs.', ok: true, fb: 'Exact : cela impose une lecture prudente, notamment des tracés au sol et près des ouvrants.' },
+        { t: 'L\'effondrement devant la baie désigne la zone d\'origine.', ok: false, fb: 'L\'effondrement dépend de la ventilation et de la durée d\'exposition après embrasement, pas du point de départ.' },
+      ]}},
+    { id: 'F12', zone: 'sejour', pos: [0.08, 0.9, 7.9], titre: 'Tracé en V sur le mur ouest',
+      description: 'Mur ouest (doublage plâtre) : tracé en V dont le sommet est au niveau de la plinthe, derrière l\'extrémité sud du canapé (à 1,10 m du mur sud). À l\'intérieur du V : plâtre calciné, papier de parement disparu, zone de « clean burn ». Ailleurs sur ce mur : suie épaisse.',
+      analyse: { question: 'Que vous indique ce tracé ?', ref: '6.3.7.1 / 17.4.1', options: [
+        { t: 'Un panache adossé au mur avec une source au niveau du sol, entre le canapé et le mur, à l\'extrémité sud.', ok: true, fb: 'Oui. Le sommet bas du V oriente vers la source ; il reste à le confronter aux autres données (char, calcination, arcs).' },
+        { t: 'Un tracé de ventilation dû à la baie.', ok: false, fb: 'La baie est à plus de 1,5 m et sur le mur sud ; ce tracé est un V net adossé au mur ouest.' },
+        { t: 'Un effet de l\'embrasement généralisé, sans valeur.', ok: false, fb: 'L\'embrasement crée des dégâts généralisés ; un V à sommet bas et localisé conserve une valeur directionnelle (à recouper).' },
+      ]}},
+    { id: 'F13', zone: 'sejour', pos: [0.1, 0.12, 7.2], titre: 'Plinthe bois du mur ouest', outil: 'jauge',
+      indice: 'La plinthe en bois du mur ouest est carbonisée de façon inégale. Une jauge de carbonisation permettrait un relevé.',
+      description: 'Relevé de profondeur de carbonisation sur la plinthe pin du mur ouest (même essence, même section) : 2 mm à z = 5,0 m ; 3 mm à 6,0 m ; 5 mm à 7,0 m ; 11 mm à 7,9 m (consommée) ; 6 mm à 8,6 m. Relevé de calcination du doublage plâtre à 0,5 m de haut : maximum au droit de 7,9 m (épaisseur totale).',
+      analyse: { question: 'Que montrent ces relevés ?', ref: '17.4.3 / 17.4.4', options: [
+        { t: 'Une exposition maximale vers 7,9 m (extrémité sud du canapé), décroissante de part et d\'autre.', ok: true, fb: 'Exact : relevés relatifs sur un même matériau = vecteur fiable, cohérent avec le V.' },
+        { t: 'Des profondeurs absolues permettent de calculer la durée du feu.', ok: false, fb: 'La vitesse de carbonisation varie (ventilation, flux) : on compare les profondeurs relatives, on ne date pas (17.4.3).' },
+      ]}},
+    { id: 'F14', zone: 'sejour', pos: [0.5, 0.5, 6.8], titre: 'Restes du canapé',
+      description: 'Canapé 3 places en tissu et mousse : ossature bois consumée à l\'extrémité sud, résiduelle à l\'extrémité nord. Ressorts ensachés de l\'assise affaissés de façon plus marquée côté sud. Mousse disparue partout, résidus fondus au sol.',
+      analyse: { question: 'Quelle valeur accordez-vous à l\'affaissement des ressorts ?', ref: '6.2.14', options: [
+        { t: 'Un indice d\'exposition plus longue/intense côté sud, à utiliser avec prudence et à recouper.', ok: true, fb: 'Exact : les ressorts dépendent de la charge, du recuit, de l\'exposition. Indice complémentaire, jamais décisif seul.' },
+        { t: 'La preuve que le feu a démarré dans l\'assise, côté sud.', ok: false, fb: 'Les ressorts ne disent pas où le feu a démarré dans le canapé (assise, dossier, sol) : 6.2.14 invite à la prudence.' },
+      ]}},
+    { id: 'F15', zone: 'sejour', pos: [4.8, 0.05, 8.3], titre: 'Tracés irréguliers devant la baie',
+      description: 'Sol stratifié devant la baie : tracés sombres irréguliers « en flaques », brûlures traversantes localisées, limites nettes. Restes de rideaux synthétiques et de leur tringle tombés sur cette zone. Plafond effondré au-dessus.',
+      analyse: { question: 'Comment interprétez-vous ces tracés ?', ref: '6.3.7.8 / 6.3.2.2 / 17.4.1.4', options: [
+        { t: 'Des tracés de déversement de liquide inflammable.', ok: false, fb: 'Piège classique : après embrasement généralisé, la chute de rideaux en feu, le rayonnement et la ventilation produisent des tracés irréguliers (6.3.7.8). Seule une analyse en laboratoire peut établir la présence d\'un liquide.' },
+        { t: 'Des tracés post-embrasement : chute de rideaux enflammés, rayonnement et apport d\'air par la baie. Ils ne désignent ni l\'origine ni un liquide.', ok: true, fb: 'Exact : la ventilation crée une combustion intense loin de l\'origine (17.4.1.4).' },
+        { t: 'La zone d\'origine du feu.', ok: false, fb: 'Zone de ventilation après rupture de la baie : intensité ≠ origine.' },
+      ]},
+      prelevement: 'P4' },
+    { id: 'F16', zone: 'sejour', pos: [6.8, 0.9, 6.6], titre: 'Téléviseur et meuble TV',
+      description: 'Téléviseur LCD : coque fondue et affaissée depuis le haut, dalle tombée vers l\'avant, partie basse du châssis et pied conservés, carte d\'alimentation identifiable et peu atteinte. Meuble en panneau de particules carbonisé en surface sur le dessus, faces basses peu atteintes. Ombre thermique derrière le téléviseur sur le mur est.',
+      analyse: { question: 'Le téléviseur peut-il être l\'origine ?', ref: '6.2.8 / 24.3', options: [
+        { t: 'Non à ce stade : dégâts du haut vers le bas par la couche chaude et le rayonnement ; partie basse et alimentation peu atteintes.', ok: true, fb: 'Exact : un appareil à l\'origine présente en général des dégâts internes les plus importants, souvent du bas ou de l\'intérieur.' },
+        { t: 'Oui : un téléviseur est une source d\'ignition fréquente.', ok: false, fb: 'La fréquence statistique n\'est pas une donnée de la scène (biais d\'attente).' },
+      ]}},
+    { id: 'F17', zone: 'sejour', pos: [3.2, 0.4, 6.8], titre: 'Table basse',
+      description: 'Table basse métal/verre : plateau verre effondré, zone protégée sous le plateau. Sur et sous la table : vide-poche, télécommandes fondues. Aucun cendrier, mégot, briquet ou allumette dans le séjour après tamisage de la zone. Cendrier plein sur la terrasse.',
+      analyse: { question: 'Qu\'en retenez-vous ?', ref: '18.3.3', options: [
+        { t: 'Aucun article de fumeur retrouvé dans le séjour ; un cendrier en usage à l\'extérieur.', ok: true, fb: 'Donnée utile pour tester l\'hypothèse « article de fumeur », sans suffire seule à l\'écarter.' },
+        { t: 'L\'hypothèse de la cigarette est éliminée.', ok: false, fb: 'Un mégot peut être entièrement consumé. L\'absence de trace ne réfute pas seule l\'hypothèse : il faut d\'autres données (localisation de l\'origine, témoignages).' },
+      ]}},
+    { id: 'F18', zone: 'sejour', pos: [4.6, 1.4, 4.45], titre: 'Bougeoirs sur l\'étagère',
+      description: 'Trois bougies décoratives en verrine sur l\'étagère du mur nord : cire fondue dans les verrines, mèches intactes non noircies à la base, verrines en place. Aucune autre bougie dans le séjour.',
+      analyse: { question: 'Que vous apprennent ces bougies ?', ref: '18.3.3', options: [
+        { t: 'Elles n\'étaient pas allumées : cire fondue par la chaleur ambiante, mèches non brûlées, à 6 m de la zone de plus forts dégâts.', ok: true, fb: 'Exact : cela permet de tester (et réfuter) l\'hypothèse « bougie ».' },
+        { t: 'Une bougie est la cause probable.', ok: false, fb: 'Mèches non brûlées et position éloignée : les données contredisent cette hypothèse.' },
+      ]}},
+    { id: 'F19', zone: 'sejour', pos: [0.6, 0.05, 7.6], titre: 'Lecture PID au pied du canapé', outil: 'pid', cachee: true,
+      description: 'Détecteur PID : 38 ppm (équiv. isobutylène) au ras des débris derrière l\'extrémité sud du canapé. 0,4 ppm devant la baie (bruit de fond).',
+      analyse: { question: 'Que concluez-vous de cette lecture ?', ref: '16.5.4', options: [
+        { t: 'Présence d\'un accélérant au pied du canapé.', ok: false, fb: 'Le PID détecte tout composé organique volatil, y compris les produits de pyrolyse de la mousse polyuréthane et des plastiques. C\'est un outil de dépistage, jamais une preuve.' },
+        { t: 'Une réponse de dépistage qui oriente un prélèvement (avec échantillon de comparaison) ; elle peut venir des produits de pyrolyse.', ok: true, fb: 'Exact : seule l\'analyse en laboratoire (GC-MS) permet de conclure.' },
+      ]}},
+    // ---------- Fouille (zone d'intérêt : derrière l'extrémité sud du canapé)
+    { id: 'F20', zone: 'sejour', couche: 2, pos: [0.15, 0.1, 7.9], titre: 'Pied arrière sud du canapé',
+      description: 'Sous les restes du canapé : le pied métallique arrière sud (patin carré 4 × 4 cm) repose directement sur la rallonge, à 5 cm du mur. Le pied est resté en place (pas de déplacement par les secours selon le CR).',
+      analyse: { question: 'Comment exploitez-vous cette position ?', ref: '17.3.2.8 / 8.11.5', options: [
+        { t: 'Reconstitution : le pied écrasait la rallonge avant le feu, possible endommagement mécanique du câble.', ok: true, fb: 'Exact : la remise en place des contenus (17.3.2.8) montre une contrainte mécanique au droit de la zone de plus forts dégâts.' },
+        { t: 'Le pied a pu tomber sur le câble pendant le feu, c\'est sans intérêt.', ok: false, fb: 'Les pieds sont fixés à l\'ossature ; la position est corroborée par d\'autres sources (photo d\'avant sinistre ?). À vérifier, pas à écarter.' },
+      ]}},
+    { id: 'F21', zone: 'sejour', couche: 3, pos: [0.12, 0.04, 7.9], titre: 'Rallonge — perle de fusion',
+      description: 'Rallonge 3G1,5 mm² (prise murale ouest → multiprise) : isolant détruit. À 0,50 m de la fiche, au droit du pied du canapé : conducteur sectionné avec une perle de fusion sphérique à limite nette, brins voisins aplatis. Le reste des conducteurs est recuit mais continu.',
+      analyse: { question: 'Que traduit cette perle ?', ref: '8.11.1 / 8.11.2 / 8.11.10', options: [
+        { t: 'Un arc électrique sur un conducteur sous tension (fusion localisée, limite nette) : à replacer dans une cartographie des arcs.', ok: true, fb: 'Exact. Attention : un arc peut aussi être causé par le feu. C\'est sa position (le plus en amont) et l\'état mécanique du conducteur qui le rendent significatif.' },
+        { t: 'Une fusion due à la chaleur de l\'incendie.', ok: false, fb: 'La fusion par le feu donne des gouttes, des amincissements et des zones étendues, sans limite nette (8.11.2).' },
+        { t: 'La preuve définitive d\'une cause électrique.', ok: false, fb: 'Un arc prouve que le conducteur était sous tension quand l\'isolant a cédé, pas à lui seul qu\'il est la cause (8.11.3).' },
+      ]},
+      prelevement: 'P2' },
+    { id: 'F22', zone: 'sejour', couche: 3, pos: [0.15, 0.05, 6.9], titre: 'Restes de la multiprise',
+      description: 'Multiprise 4 postes à interrupteur, marquage « VOLTEX 4P-S » lisible sur le socle. Boîtier fondu, barrettes laiton en place. Située à 1,0 m au nord du point de plus forts dégâts. Branchés : box internet, chargeur de téléphone, lampadaire.',
+      analyse: { question: 'Que retenez-vous ?', ref: '24.3 / 17.4.5', options: [
+        { t: 'Un appareil présent dans la zone, à examiner (barrettes, interrupteur) ; il est en aval de la rallonge.', ok: true, fb: 'Exact : position dans le circuit et examen interne sont nécessaires avant toute conclusion.' },
+        { t: 'Les multiprises sont dangereuses : c\'est la cause.', ok: false, fb: 'Biais d\'attente : aucune donnée ne relie encore cet objet à l\'ignition.' },
+      ]},
+      prelevement: 'P3' },
+    { id: 'F23', zone: 'sejour', couche: 3, pos: [0.4, 0.03, 8.1], titre: 'Sol sous les débris',
+      description: 'Après enlèvement des débris : stratifié et sous-couche consumés jusqu\'à la dalle béton sur 0,6 × 0,5 m entre le mur ouest et l\'emplacement de l\'extrémité sud du canapé. Zone protégée nette sous le patin du pied (4 × 4 cm) et le long du tracé de la rallonge.',
+      analyse: { question: 'Que vous indique ce sol ?', ref: '6.3.3.2 / 6.3.4.2', options: [
+        { t: 'Une combustion au sol longue et intense derrière l\'extrémité sud du canapé, avec le pied et la rallonge en place pendant le feu.', ok: true, fb: 'Exact : cohérent avec le V bas et le relevé de carbonisation.' },
+        { t: 'Un trou dans le sol prouve un liquide inflammable.', ok: false, fb: 'Une combustion prolongée du canapé au sol suffit à consumer un stratifié (6.3.5).' },
+      ]}},
+    { id: 'F24', zone: 'sejour', couche: 3, pos: [0.4, 0.04, 7.75], titre: 'Débris de sol (zone de consommation maximale)',
+      description: 'Débris carbonisés de sous-couche, mousse fondue et textile, prélevables au pied du canapé.',
+      analyse: { question: 'Faut-il prélever ici pour une recherche d\'accélérant ?', ref: '16.5.4', options: [
+        { t: 'Oui, dans un contenant adapté, avec un échantillon de comparaison du même matériau hors zone.', ok: true, fb: 'Exact : tester l\'hypothèse « liquide inflammable » plutôt que la supposer ou l\'écarter.' },
+        { t: 'Non, il n\'y a pas d\'odeur d\'hydrocarbure.', ok: false, fb: 'L\'odorat n\'est pas un instrument de mesure ; une hypothèse doit être testée.' },
+      ]},
+      prelevement: 'P1' },
+    { id: 'F25', zone: 'sejour', couche: 3, pos: [0.3, 0.06, 7.4], titre: 'Cartographie des arcs du circuit « prises séjour »', outil: 'arc',
+      indice: 'Les conducteurs du circuit « prises séjour » sont accessibles. Un kit de cartographie des arcs permettrait un relevé systématique.',
+      description: 'Relevé systématique du circuit « prises séjour » (disjoncteur 16 A déclenché) : câble encastré, prises murales ouest et est, rallonge, multiprise, cordons. UN SEUL site d\'arc : rallonge à 0,50 m de la fiche, au droit du pied du canapé. Aucun arc en aval (multiprise, cordons lampadaire/box/chargeur) ni sur le cordon du téléviseur (prise murale est), malgré leur exposition au feu.',
+      analyse: { question: 'Que vous apprend la cartographie ?', ref: '17.4.5', options: [
+        { t: 'Le premier site d\'arc (le plus en amont) est au droit du pied du canapé : la rallonge y a été atteinte en premier, ce qui a mis hors tension tout l\'aval.', ok: true, fb: 'Exact : l\'arc le plus en amont désigne la zone atteinte en premier sur le circuit (17.4.5.6), cohérent avec le V et la carbonisation.' },
+        { t: 'L\'absence d\'arc sur la multiprise prouve qu\'elle n\'était pas branchée.', ok: false, fb: 'Elle était alimentée, mais l\'arc en amont a coupé la rallonge : l\'aval n\'était plus sous tension quand le feu l\'a atteint.' },
+      ]}},
+  ],
+
+  // Lectures PID libres (clic au sol avec le PID)
+  pid: [
+    { x: 0.45, z: 7.85, r: 0.75, valeur: '38 ppm', fait: 'F19' },
+    { x: 4.8, z: 8.3, r: 1.6, valeur: '0,4 ppm (bruit de fond)' },
+  ],
+
+  fouille: {
+    zone: 'sejour',
+    aire: { x: 0, z: 7.05, w: 1.35, d: 1.75 },
+    ref: '17.3.2',
+    couches: [
+      { n: 1, nom: 'Débris de plafond', description: 'Plaques de plâtre effondrées, laine de verre, suspentes métalliques. Épaisseur 8 à 12 cm.', h: 0.12, couleur: '#8d8a84' },
+      { n: 2, nom: 'Restes du canapé', description: 'Ressorts ensachés, agrafes, fragments d\'ossature carbonisée, mousse fondue solidifiée. Épaisseur 10 à 15 cm.', h: 0.13, couleur: '#2a2522' },
+      { n: 3, nom: 'Niveau du sol', description: 'Couche de cendres fines et de résidus fondus sur le support : niveau d\'origine probable des premiers combustibles au sol.', h: 0.04, couleur: '#3b3632' },
+    ],
+  },
+
+  prelevements: [
+    { id: 'P1', nom: 'Débris de sol au pied du canapé (recherche de liquide inflammable)', type: 'liquide', contenantsOK: ['potMetal', 'bocal', 'sachetNylon'], temoinRequis: true,
+      temoin: 'Sous-couche et stratifié sous l\'étagère nord (même matériau, hors zone de consommation)',
+      analyses: [{ id: 'gcms', nom: 'Recherche de résidus de liquides inflammables (GC-MS)', cout: 300,
+        resultats: {
+          ok: { fait: 'F26', texte: 'Absence de résidus de liquide inflammable identifiable. Présence de produits de pyrolyse (styrène, toluène, alkylbenzènes légers) retrouvés dans les mêmes proportions dans l\'échantillon de comparaison : profil caractéristique de la décomposition thermique des polymères (mousse PU, stratifié).' },
+          sansTemoin: { fait: 'F26', partiel: true, texte: 'Présence de composés aromatiques légers (styrène, toluène). Sans échantillon de comparaison, impossible de distinguer des produits de pyrolyse d\'un résidu de liquide inflammable : résultat non conclusif.' },
+          mauvaisContenant: { texte: 'Échantillon non exploitable : contenant polyéthylène perméable aux composés volatils et source possible de contamination. Résultat non interprétable.' },
+        } }] },
+    { id: 'P2', nom: 'Tronçon de rallonge avec perle de fusion', type: 'electrique', contenantsOK: ['carton', 'sachetPapier', 'potMetal', 'bocal', 'sachetNylon'],
+      analyses: [{ id: 'cond', nom: 'Examen des conducteurs (stéréomicroscope, coupe métallographique)', cout: 450,
+        resultats: {
+          ok: { fait: 'F27', texte: 'Perle à limite nette, porosités internes, structure de solidification rapide : caractéristiques d\'un arc électrique. Au droit de la perle, les brins présentent un aplatissement mécanique et une réduction de section ANTÉRIEURS à l\'incendie (déformation recouverte par la couche d\'oxydation). Compatible avec un écrasement prolongé de la rallonge.' },
+          mauvaisContenant: { fait: 'F27', partiel: true, texte: 'Perle d\'arc identifiée, mais l\'échantillon a été écrasé dans un sachet souple : l\'état mécanique antérieur des brins n\'est plus interprétable.' },
+        } }] },
+    { id: 'P3', nom: 'Multiprise VOLTEX 4P-S', type: 'objet', contenantsOK: ['carton', 'potMetal', 'sachetNylon', 'sachetPapier'],
+      analyses: [{ id: 'objet', nom: 'Examen d\'objet (radiographie, démontage contradictoire)', cout: 350,
+        resultats: {
+          ok: { fait: 'F28', texte: 'Barrettes et interrupteur sans fusion localisée ni trace d\'arc ; dégâts thermiques exclusivement externes. Le défaut visé par le rappel (échauffement de l\'interrupteur) n\'est pas retrouvé.' },
+        } }] },
+    { id: 'P4', nom: 'Débris de sol devant la baie (recherche de liquide inflammable)', type: 'liquide', contenantsOK: ['potMetal', 'bocal', 'sachetNylon'], temoinRequis: true,
+      temoin: 'Stratifié sous l\'étagère nord',
+      analyses: [{ id: 'gcms', nom: 'Recherche de résidus de liquides inflammables (GC-MS)', cout: 300,
+        resultats: {
+          ok: { fait: 'F29', texte: 'Absence de résidus de liquide inflammable. Produits de pyrolyse identiques à l\'échantillon de comparaison.' },
+          sansTemoin: { fait: 'F29', partiel: true, texte: 'Composés aromatiques légers présents ; sans comparaison, résultat non conclusif.' },
+          mauvaisContenant: { texte: 'Échantillon non exploitable (contenant inadapté).' },
+        } }] },
+  ],
+
+  temoins: [
+    { id: 'T1', nom: 'Patrick Durand', role: 'Occupant, propriétaire (52 ans)', avatar: '👨', questions: [
+      { id: 'q1', type: 'ouverte', q: 'Pouvez-vous me raconter votre soirée, depuis le dîner jusqu\'à votre sortie de la maison ?', r: 'On a dîné vers 20h. J\'ai regardé un match dans le canapé, assis côté nord comme d\'habitude, près du lampadaire. J\'ai éteint la télé vers 23h15, on s\'est couchés à 23h30. L\'alarme du couloir nous a réveillés, il était 1h58 sur le réveil. Le couloir était plein de fumée noire, on a refermé la porte et on est sortis par la fenêtre.', fait: { id: 'F30', texte: 'M. Durand : assis côté NORD du canapé ; TV éteinte 23h15 ; coucher 23h30 ; réveil par le DAAF à 01h58 ; fumée dans le couloir.' } },
+      { id: 'q2', type: 'fermee', q: 'Fumez-vous ?', r: 'Oui, mais toujours dehors, sur la terrasse. Jamais dans la maison.', fait: { id: 'F31', texte: 'M. Durand déclare fumer uniquement sur la terrasse.' } },
+      { id: 'q3', type: 'ouverte', q: 'Quels appareils restaient branchés ou allumés dans le séjour la nuit ?', r: 'Le lampadaire était éteint. La box et le chargeur du téléphone restent branchés tout le temps sur la multiprise derrière le canapé. La télé est en veille, sur sa propre prise.', fait: { id: 'F32', texte: 'Multiprise derrière le canapé alimentée en permanence (box, chargeur, lampadaire éteint) ; TV en veille sur la prise du mur est.' } },
+      { id: 'q4', type: 'ouverte', q: 'Y a-t-il eu des changements récents dans le séjour ?', r: 'On a acheté un nouveau canapé il y a trois semaines. On a tout réorganisé, j\'ai mis une rallonge pour atteindre la prise du coin.', fait: { id: 'F33', texte: 'Nouveau canapé et réorganisation du séjour il y a 3 semaines ; rallonge ajoutée pour rejoindre la prise du coin sud-ouest.' } },
+      { id: 'q5', type: 'orientee', q: 'Votre fils vous en voulait-il au point de mettre le feu ?', r: '(Il se ferme) Qu\'est-ce que vous insinuez ? Je ne réponds pas à ça.', fait: null, piege: 'Question orientée et accusatoire : elle ferme le dialogue et n\'apporte aucune donnée (13.4).' },
+    ]},
+    { id: 'T2', nom: 'Sandrine Durand', role: 'Occupante (49 ans)', avatar: '👩', questions: [
+      { id: 'q1', type: 'ouverte', q: 'Avez-vous remarqué quelque chose d\'inhabituel ces derniers jours dans la maison ?', r: 'Le lampadaire clignotait depuis une semaine, surtout quand on s\'asseyait du côté droit du canapé, côté baie. Je l\'ai dit à Patrick, il pensait que c\'était l\'ampoule.', fait: { id: 'F35', texte: 'Mme Durand : le lampadaire (alimenté par la multiprise, via la rallonge) clignotait depuis une semaine quand on s\'asseyait côté sud du canapé.' } },
+      { id: 'q2', type: 'fermee', q: 'Votre mari fume-t-il à l\'intérieur ?', r: 'En principe non… Mais l\'hiver, quand il fait froid, il lui arrive de fumer une cigarette dans le canapé, le soir. Je ne sais pas pour hier.', fait: { id: 'F36', texte: 'Mme Durand : son mari fume PARFOIS dans le canapé l\'hiver (contredit F31). Ne sait pas pour la nuit du sinistre.' } },
+      { id: 'q3', type: 'fermee', q: 'Des bougies étaient-elles allumées ce soir-là ?', r: 'Non, ce sont des bougies de déco sur l\'étagère, on ne les allume jamais.', fait: { id: 'F37', texte: 'Mme Durand : aucune bougie allumée, bougies décoratives sur l\'étagère nord.' } },
+      { id: 'q4', type: 'ouverte', q: 'Avez-vous des photos du séjour avant le sinistre ?', r: 'J\'ai posté des photos du nouveau salon sur Facebook, il y a trois semaines. Mon profil est public.', fait: null, info: 'Piste OSINT : réseaux sociaux de Mme Durand.' },
+    ]},
+    { id: 'T3', nom: 'Josette Lacoste', role: 'Voisine, auteure de l\'appel 18 (71 ans)', avatar: '👵', questions: [
+      { id: 'q1', type: 'ouverte', q: 'Racontez-moi ce que vous avez vu et entendu cette nuit-là.', r: 'Je dors mal. Vers 2h, j\'ai vu une lueur orange par la grande baie des Durand, puis des flammes. J\'ai appelé le 18 tout de suite.', fait: { id: 'F38', texte: 'Mme Lacoste : lueur puis flammes visibles par la baie vers 02h05, appel 18 immédiat.' } },
+      { id: 'q2', type: 'ouverte', q: 'Avez-vous vu quelqu\'un ou un véhicule dans la rue ?', r: 'Non, personne. La rue était calme, aucune voiture.', fait: { id: 'F39', texte: 'Mme Lacoste : personne ni aucun véhicule vu dans la rue.' } },
+      { id: 'q3', type: 'ouverte', q: 'Comment décririez-vous la famille et le quartier ?', r: 'Des gens bien. Il y a eu une dispute entre le fils et le père il y a deux jours, ça criait fort, j\'ai entendu par la fenêtre. Mais bon, les jeunes…', fait: { id: 'F41', texte: 'Mme Lacoste : dispute père/fils entendue deux jours avant le sinistre.' } },
+      { id: 'q4', type: 'orientee', q: 'Pensez-vous que le fils aurait pu mettre le feu ?', r: 'Oh, ça ne m\'étonnerait pas ! Maintenant que vous le dites… il a crié qu\'il allait « tout brûler », je crois. Oui, j\'en suis presque sûre.', fait: { id: 'F40', texte: 'Mme Lacoste (sur question orientée) : le fils aurait crié qu\'il allait « tout brûler » — propos incertain, apparu après suggestion.', contamine: true }, piege: 'Question orientée : le témoin « reconstruit » un souvenir conforme à la suggestion. Donnée contaminée (13.4, biais d\'attente 4.3.8).' },
+    ]},
+    { id: 'T4', nom: 'Sergent-chef Morel', role: 'Chef d\'agrès FPT Lescourre', avatar: '🧑‍🚒', questions: [
+      { id: 'q1', type: 'ouverte', q: 'Décrivez la situation à votre arrivée.', r: 'Séjour totalement embrasé, flammes qui sortaient par la baie, le vitrage avait déjà cédé. Couloir enfumé jusqu\'au sol. Les occupants étaient dehors. On a forcé la porte d\'entrée et attaqué par le couloir.', fait: { id: 'F42', texte: 'CA Morel : séjour embrasé à 02h14, vitrage de la baie déjà rompu, attaque par le couloir après ouverture forcée.' } },
+      { id: 'q2', type: 'ouverte', q: 'Qu\'avez-vous déplacé ou modifié dans le séjour pendant l\'extinction et le déblai ?', r: 'Peu de choses : on a arrosé, fait tomber ce qui restait des rideaux, dégagé le plafond devant la baie. On n\'a pas bougé le canapé, on savait qu\'il y aurait une enquête.', fait: { id: 'F43', texte: 'CA Morel : rideaux tombés, plafond dégagé devant la baie, canapé NON déplacé. Ventilation par la baie pendant l\'attaque.' } },
+      { id: 'q3', type: 'fermee', q: 'Le logement avait-il une alimentation gaz ?', r: 'Non, tout électrique. Coupure au disjoncteur de branchement à 2h25.', fait: { id: 'F44', texte: 'Logement tout électrique, pas de gaz. Coupure générale à 02h25.' } },
+    ]},
+    { id: 'T5', nom: 'Kevin Durand', role: 'Fils (19 ans), joint par téléphone', avatar: '🧑', questions: [
+      { id: 'q1', type: 'ouverte', q: 'Où étiez-vous la nuit du sinistre ?', r: 'À un concert à Bordeaux, à la Rock School Barbey, avec des potes. Ma mère m\'a appelé vers 2h30, je suis rentré directement.', fait: { id: 'F45', texte: 'Kevin Durand : à un concert à Bordeaux toute la soirée, prévenu vers 02h30.' } },
+      { id: 'q2', type: 'ouverte', q: 'Parlez-moi de la dispute avec votre père.', r: 'C\'était pour la voiture, il ne voulait pas me la prêter. J\'ai crié, j\'ai dit des trucs idiots, mais c\'est réglé.', fait: { id: 'F46', texte: 'Kevin : dispute pour un prêt de voiture, déclarée « réglée ».' } },
+    ]},
+  ],
+
+  osint: [
+    { id: 'O1', source: 'reseaux', motsCles: [['durand', 'salon'], ['nouveau', 'salon'], ['sandrine', 'durand']], titre: 'Facebook — Sandrine Durand (public) · il y a 3 semaines',
+      extrait: '« Nouveau salon !! 😍 Merci chéri pour le montage ». Photo : canapé gris contre le mur, lampadaire à gauche. On distingue nettement une rallonge blanche partant de la prise du coin, passant SOUS le pied arrière droit du canapé.',
+      fait: { id: 'F50', texte: 'Photo Facebook d\'avant sinistre (3 semaines) : la rallonge passe sous le pied arrière sud du canapé.' }, fiabilite: 'Source primaire, métadonnées de publication cohérentes.' },
+    { id: 'O2', source: 'reseaux', motsCles: [['kevin', 'durand'], ['concert', 'barbey'], ['kevin', 'concert']], titre: 'Instagram — @kev.drd · stories du 6–7 novembre',
+      extrait: 'Deux stories géolocalisées « Rock School Barbey, Bordeaux » à 23h48 et 01h37, Kevin visible sur scène/fosse avec des amis.',
+      fait: { id: 'F51', texte: 'Stories Instagram géolocalisées de Kevin à Bordeaux à 23h48 et 01h37.' }, fiabilite: 'Horodatage plateforme ; géolocalisation déclarative, à corroborer.' },
+    { id: 'O3', source: 'meteo', motsCles: [['meteo'], ['météo'], ['orage'], ['vent']], titre: 'Archives météo — station de Mérignac · 6/7 novembre',
+      extrait: 'Nuit couverte, 6 °C, vent NE 8 km/h, aucune activité orageuse détectée par le réseau de foudroiement dans un rayon de 50 km.',
+      fait: { id: 'F52', texte: 'Météo : nuit calme, aucune activité orageuse (réseau foudre) dans un rayon de 50 km.' }, fiabilite: 'Source institutionnelle.' },
+    { id: 'O4', source: 'rappel', motsCles: [['voltex'], ['multiprise', 'rappel'], ['4p-s']], titre: 'RappelConso — Multiprise VOLTEX 4P-S',
+      extrait: 'Rappel du lot 2023-11 : risque d\'échauffement de l\'interrupteur lumineux pouvant entraîner une fusion du boîtier. Mesure : cesser d\'utiliser, retour magasin.',
+      fait: { id: 'F53', texte: 'RappelConso : la multiprise VOLTEX 4P-S fait l\'objet d\'un rappel (échauffement de l\'interrupteur).' }, fiabilite: 'Source officielle ; ne dit rien de l\'exemplaire de la scène.', piege: true },
+    { id: 'O5', source: 'presse', motsCles: [['lescourre'], ['incendie', 'pavillon'], ['bruyeres'], ['bruyères']], titre: 'Sud-Info · « Lescourre : un pavillon ravagé par les flammes »',
+      extrait: '« … Selon des voisins, une violente dispute aurait éclaté dans la famille quelques jours plus tôt. La piste criminelle n\'est pas écartée. »',
+      fait: { id: 'F54', texte: 'Article de presse locale évoquant une « piste criminelle » sur la foi de voisins.' }, fiabilite: 'Source secondaire, rumeur rapportée, aucune donnée technique.', piege: true },
+    { id: 'O6', source: 'cadastre', motsCles: [['allee', 'pins'], ['allée', 'pins'], ['cadastre'], ['parcelle']], titre: 'Géoportail / cadastre — parcelle AB 214',
+      extrait: 'Pavillon de plain-pied de 1998, 108 m², garage accolé ouest. Baie du séjour orientée plein sud sur jardin.',
+      fait: { id: 'F55', texte: 'Cadastre : pavillon de 1998, plain-pied, baie du séjour au sud.' }, fiabilite: 'Source institutionnelle.' },
+    { id: 'O7', source: 'societes', pro: true, motsCles: [['durand', 'patrick'], ['durand', 'finance'], ['durand']], titre: 'Registres sociétés & annonces légales — Patrick Durand',
+      extrait: 'Salarié (aucune société détenue), aucune procédure collective, aucune annonce de vente du bien, pas de saisie publiée.',
+      fait: { id: 'F56', texte: 'Aucune difficulté financière publique ni mise en vente du bien.' }, fiabilite: 'Registres officiels.' },
+  ],
+
+  hypotheses: {
+    origines: [
+      { id: 'OA', nom: 'Au sol, entre le mur ouest et l\'extrémité sud du canapé', pos: [0.3, 0.1, 7.9], ok: true,
+        soutien: ['F12', 'F13', 'F23', 'F25', 'F21', 'F20', 'F14'], refute: [] },
+      { id: 'OB', nom: 'Au sol devant la baie vitrée', pos: [4.8, 0.1, 8.3],
+        soutien: ['F15'], refute: ['F15', 'F11', 'F13', 'F25', 'F43', 'F03', 'F29'] },
+      { id: 'OC', nom: 'Téléviseur / meuble TV (mur est)', pos: [6.7, 0.8, 6.6],
+        soutien: [], refute: ['F16', 'F25', 'F13', 'F12'] },
+      { id: 'OD', nom: 'Assise du canapé, côté nord (place de M. Durand)', pos: [0.5, 0.5, 5.9],
+        soutien: ['F30'], refute: ['F12', 'F13', 'F14', 'F23'] },
+      { id: 'OE', nom: 'Couloir ou chambre de Kevin', pos: [6, 0.5, 2],
+        soutien: [], refute: ['F07', 'F08'] },
+      { id: 'OF', nom: 'Cuisine (plaque de cuisson)', pos: [11.6, 0.9, 6.5],
+        soutien: [], refute: ['F10', 'F08'] },
+    ],
+    causes: [
+      { id: 'CA', nom: 'Rallonge écrasée sous le pied du canapé → dégradation des conducteurs et de l\'isolant → arc → inflammation de l\'isolant puis du canapé',
+        premierCombustible: 'Isolant PVC de la rallonge, puis tissu et mousse PU du canapé', source: 'Arc électrique sur conducteur endommagé mécaniquement',
+        classification: 'accidentelle', ok: true, origine: 'OA', soutien: ['F21', 'F25', 'F27', 'F20', 'F35', 'F50', 'F33', 'F05'], refute: [],
+        competence: { source: 'Arc électrique', tSource: 3750, combustible: 'Polychlorure de vinyle PVC', tCombustible: 105 } },
+      { id: 'CB', nom: 'Article de fumeur (cigarette) tombé dans l\'assise du canapé', premierCombustible: 'Tissu/mousse de l\'assise', source: 'Cigarette',
+        classification: 'accidentelle', origine: 'OD', soutien: ['F36'], refute: ['F12', 'F13', 'F23', 'F30', 'F25'],
+        competence: { source: 'Cigarette - insulated and smoldering', tSource: 565, combustible: 'Mousse PU', tCombustible: 370 } },
+      { id: 'CC', nom: 'Défaillance interne de la multiprise VOLTEX (produit rappelé)', premierCombustible: 'Boîtier plastique de la multiprise', source: 'Échauffement de l\'interrupteur',
+        classification: 'accidentelle', origine: 'OA', soutien: ['F53', 'F22'], refute: ['F28', 'F25', 'F13'] },
+      { id: 'CD', nom: 'Défaillance du téléviseur', premierCombustible: 'Composants et coque du téléviseur', source: 'Défaut électronique',
+        classification: 'accidentelle', origine: 'OC', soutien: [], refute: ['F16', 'F25'] },
+      { id: 'CE', nom: 'Mise à feu volontaire avec un liquide inflammable', premierCombustible: 'Liquide inflammable versé', source: 'Flamme nue',
+        classification: 'volontaire', origine: 'OB', soutien: ['F15', 'F19', 'F40', 'F41', 'F54', 'F04'], refute: ['F26', 'F29', 'F15', 'F01', 'F39'] },
+      { id: 'CF', nom: 'Bougie allumée', premierCombustible: 'Objets proches de la bougie', source: 'Flamme de bougie',
+        classification: 'accidentelle', origine: null, soutien: [], refute: ['F18', 'F37'] },
+      { id: 'CG', nom: 'Cause naturelle (foudre / surtension)', premierCombustible: '—', source: 'Foudre',
+        classification: 'naturelle', origine: null, soutien: [], refute: ['F52'] },
+    ],
+  },
+
+  solution: {
+    origine: 'OA',
+    cause: 'CA',
+    classification: 'accidentelle',
+    certitude: 'probable',
+    // Conditions pour qu'un niveau « probable » soit justifié par les données réunies
+    probableSi: { tous: ['F21'], unParmi: [['F25', 'F27'], ['F20', 'F35', 'F50']] },
+    faitsCles: ['F12', 'F13', 'F21', 'F25', 'F27', 'F20', 'F35', 'F50', 'F26'],
+    pieges: [
+      { id: 'irregulier', titre: 'Tracés irréguliers devant la baie', ref: '6.3.7.8 / 17.4.1.4', texte: 'Après embrasement généralisé, ventilation et chute de rideaux créent des tracés « en flaques » sans liquide inflammable.' },
+      { id: 'pid', titre: 'Lecture PID positive', ref: '16.5.4', texte: 'Le PID réagit aux produits de pyrolyse. Il oriente un prélèvement, il ne prouve rien.' },
+      { id: 'temoin', titre: 'Témoignage orienté de la voisine', ref: '13.4 / 4.3.8', texte: 'Une question suggestive fabrique un souvenir. Le mobile n\'est pas une preuve de cause.' },
+      { id: 'rappel', titre: 'Multiprise rappelée', ref: '18.6.5.2 / 17.4.5', texte: 'Un produit rappelé dans la zone n\'est pas une cause : il faut une donnée physique au point de défaillance.' },
+      { id: 'verre', titre: 'Faïençage du verre', ref: '6.2.13', texte: 'Le faïençage vient du refroidissement par l\'eau, pas d\'un feu rapide.' },
+      { id: 'fumeur', titre: 'Contradiction sur le tabac', ref: '18.6 / 18.7', texte: 'L\'hypothèse cigarette est crédible (chronologie compatible) : elle doit être testée, puis réfutée par la localisation de l\'origine (au sol derrière le canapé, place côté nord).' },
+    ],
+  },
+
+  // Chronologie de référence pour la reconstitution 3D
+  reconstitution: [
+    { t: '23:30', titre: 'Coucher des occupants. Rallonge sous tension, écrasée par le pied du canapé.', feu: 0, fumee: {} },
+    { t: '01:30', titre: 'Arc sur la rallonge endommagée : inflammation de l\'isolant et des textiles au sol.', feu: 0.15, fumee: { sejour: 0.1 } },
+    { t: '01:45', titre: 'Le canapé s\'embrase par l\'arrière ; panache contre le mur ouest (tracé en V).', feu: 0.5, fumee: { sejour: 0.45, couloir: 0.2 } },
+    { t: '01:58', titre: 'Fumées dans le couloir : déclenchement du DAAF, réveil des occupants.', feu: 0.65, fumee: { sejour: 0.6, couloir: 0.45, ch2: 0.3, cuisine: 0.3 } },
+    { t: '02:04', titre: 'Rupture du vitrage de la baie, apport d\'air : embrasement généralisé du séjour.', feu: 1, flash: ['sejour'], fumee: { sejour: 0.9, couloir: 0.7, ch2: 0.55, cuisine: 0.6, sdb: 0.4 } },
+    { t: '02:14', titre: 'Arrivée des secours : flammes par la baie. Attaque par le couloir.', feu: 1, flash: ['sejour'], fumee: { sejour: 0.9, couloir: 0.75, ch2: 0.56, cuisine: 0.6, sdb: 0.45 } },
+    { t: '02:31', titre: 'Feu éteint. Ventilation par la baie, rideaux tombés au sol.', feu: 0, fumee: { sejour: 0.3, couloir: 0.3 } },
+  ],
+
+  // Données pour le calculateur de dynamique du feu
+  dynamique: { piece: 'sejour', L: 7, l: 4.8, H: 2.5, ouvertures: [{ nom: 'Porte du couloir', w: 0.9, h: 2.0 }, { nom: 'Baie vitrée (après rupture)', w: 3.0, h: 2.15 }], combustible: 'Canapé Polyuréthanne' },
+};
