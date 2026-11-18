@@ -4,6 +4,7 @@ import { Scene3D, altitudeDe } from '../engine/scene3d.js';
 import { grade } from '../state.js';
 import { $, $$, h, esc, ref, toast } from '../ui.js';
 import { apercuRapport } from './rapport.js';
+import { voirAussiHtml } from '../data/sources.js';
 import { BADGES, badgesGagnes, etoiles } from '../game/badges.js';
 import { SCENARIOS } from '../data/scenarios/index.js';
 
@@ -75,9 +76,9 @@ export function ouvrirDebrief(E, ctx) {
       <div class="panel"><h3>Analyse</h3>${table(ev.det.analyse)}<h3 style="margin-top:14px">Conclusion</h3>${table(ev.det.conclusion)}</div>
     </div>
     ${ev.penalites.length ? `<div class="panel"><h3>Pénalités</h3>${ev.penalites.map(p => `<div class="fait contamine"><div class="hd"><b>${esc(p.titre)}</b> ${ref(p.ref)} <span class="chip ko">−${p.pts}</span></div>${esc(p.texte)}</div>`).join('')}</div>` : ''}
-    <div class="panel"><h3>Pièges de la scène</h3>${ev.pieges.map(p => `<div class="piege"><div>${etatChip[p.etat]}</div><div><b>${esc(p.titre)}</b> ${ref(p.ref)}<div class="small muted">${esc(p.texte)}</div></div></div>`).join('')}</div>
+    <div class="panel"><h3>Pièges de la scène</h3>${ev.pieges.map(p => `<div class="piege"><div>${etatChip[p.etat]}</div><div><b>${esc(p.titre)}</b> ${ref(p.ref)}<div class="small muted">${esc(p.texte)}</div>${voirAussiHtml({ ref: p.ref, texte: `${p.titre} ${p.texte}` }, { max: 3 })}</div></div>`).join('')}</div>
     <div class="panel"><h3>Écarts de méthode (${E.violations.length})</h3>${E.violations.map(v => `<div class="small" style="padding:4px 0;border-bottom:1px solid var(--line)">⚠ ${esc(v.texte)} ${ref(v.ref)}</div>`).join('') || '<p class="muted">Aucun.</p>'}</div>
-    <div class="panel"><h3>Analyses discutables</h3>${[...E.analyses].filter(([, a]) => !a.ok).map(([id, a]) => { const o = E.obs(id); const bon = o.analyse.options.find(x => x.ok); return `<div class="fait"><div class="hd"><b>${esc(o.titre)}</b>${ref(o.analyse.ref)}</div><div class="small">Votre réponse : ${esc(o.analyse.options[a.idx].t)}</div><div class="small" style="color:var(--ok)">Attendu : ${esc(bon.t)}</div><div class="small muted">${esc(o.analyse.options[a.idx].fb || bon.fb || '')}</div></div>`; }).join('') || '<p class="muted">Toutes vos analyses sont correctes.</p>'}</div>
+    <div class="panel"><h3>Analyses discutables</h3>${[...E.analyses].filter(([, a]) => !a.ok).map(([id, a]) => { const o = E.obs(id); const bon = o.analyse.options.find(x => x.ok); return `<div class="fait"><div class="hd"><b>${esc(o.titre)}</b>${ref(o.analyse.ref)}</div><div class="small">Votre réponse : ${esc(o.analyse.options[a.idx].t)}</div><div class="small" style="color:var(--ok)">Attendu : ${esc(bon.t)}</div><div class="small muted">${esc(o.analyse.options[a.idx].fb || bon.fb || '')}</div>${voirAussiHtml({ ref: o.analyse.ref || o.ref, sources: o.sources, texte: `${o.titre} ${o.description || ''}` }, { max: 3 })}</div>`; }).join('') || '<p class="muted">Toutes vos analyses sont correctes.</p>'}</div>
   </div></div>`);
   screen.appendChild(el);
 

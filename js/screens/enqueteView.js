@@ -6,6 +6,7 @@ import { OUTILS, CONTENANTS } from '../data/outils.js';
 import { CLASSIFICATIONS, CERTITUDES } from '../data/nfpa.js';
 import { $, $$, h, esc, toast, modal, confirmer, ref } from '../ui.js';
 import { calculateur, testCompetence } from './outilsAnalyse.js';
+import { voirAussiHtml } from '../data/sources.js';
 import { ouvrirDebrief } from './debrief.js';
 import { apercuRapport } from './rapport.js';
 import { son, basculerSon, estMuet } from '../game/sons.js';
@@ -354,7 +355,7 @@ export function ouvrirEnquete(scnSrc, ctx) {
         renderAll(); ouvrirFiche(o);
       });
     } else {
-      s.innerHTML = a ? (immediat ? `<div class="verdict ${a.ok ? 'ok' : 'ko'}"><b>${a.ok ? 'Bien vu !' : 'Pas tout à fait…'}</b>${esc(o.analyse.options[a.idx].t)}<div style="margin-top:6px;font-size:13px">${esc(o.analyse.options[a.idx].fb || '')}${!a.ok ? `<br><b style="font:700 14px var(--sans);display:inline">Lecture attendue :</b> ${esc(o.analyse.options.find(x => x.ok)?.t || '')}` : ''}</div><div style="margin-top:4px">${ref(o.analyse.ref)}</div></div>` : `<div class="verdict" style="background:#f1ead6">✍ ${esc(o.analyse.options[a.idx].t)}</div>`) : '';
+      s.innerHTML = a ? (immediat ? `<div class="verdict ${a.ok ? 'ok' : 'ko'}"><b>${a.ok ? 'Bien vu !' : 'Pas tout à fait…'}</b>${esc(o.analyse.options[a.idx].t)}<div style="margin-top:6px;font-size:13px">${esc(o.analyse.options[a.idx].fb || '')}${!a.ok ? `<br><b style="font:700 14px var(--sans);display:inline">Lecture attendue :</b> ${esc(o.analyse.options.find(x => x.ok)?.t || '')}` : ''}</div><div style="margin-top:4px">${ref(o.analyse.ref || o.ref)}</div>${voirAussiHtml({ ref: o.analyse.ref || o.ref, sources: o.sources, texte: `${o.titre} ${o.description || ''}` }, { max: 3 })}</div>` : `<div class="verdict" style="background:#f1ead6">✍ ${esc(o.analyse.options[a.idx].t)}</div>`) : '';
     }
     if (ph && o.prelevement && !scelle && (!o.analyse || a)) {
       const p = scn.prelevements.find(x => x.id === o.prelevement);
@@ -507,7 +508,7 @@ export function ouvrirEnquete(scnSrc, ctx) {
       const st = b.dataset.st;
       const s = [...val].filter(([, v]) => v === 's').map(([k]) => k), r = [...val].filter(([, v]) => v === 'r').map(([k]) => k);
       if (st === 'refutee' && !r.length) { son('ko'); toast('Pour écarter une hypothèse, désigne au moins un fait qui la contredit.', 'ko', 4500); return; }
-      if (st === 'retenue' && !s.length) { son('ko'); toast('On ne retient jamais une hypothèse sans fait qui la démontre (negative corpus, 18.6.5).', 'ko', 5000); return; }
+      if (st === 'retenue' && !s.length) { son('ko'); toast('On ne retient jamais une hypothèse sans fait qui la démontre (negative corpus, NFPA 921, chap. 18.6.5).', 'ko', 5000); return; }
       if (st === 'retenue') for (const [oid, hh] of E.hyp[kind]) if (oid !== id && hh.statut === 'retenue') hh.statut = 'ouverte';
       E.testerHypothese(kind, id, s, r, st);
       son(st === 'ouverte' ? 'page' : 'ok'); pop(st === 'retenue' ? '✔ Hypothèse retenue' : st === 'refutee' ? '✖ Hypothèse écartée' : '… En suspens', st === 'refutee' ? 'ko' : 'ok');

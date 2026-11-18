@@ -1,7 +1,8 @@
 // Aperçu imprimable du rapport d'enquête (structure inspirée du modèle de rapport RCCI)
 import { CLASSIFICATIONS, CERTITUDES, NFPA_EDITION } from '../data/nfpa.js';
 import { CONTENANTS } from '../data/outils.js';
-import { modal, esc } from '../ui.js';
+import { modal, esc, refTexte } from '../ui.js';
+import { bibliographie } from '../data/sources.js';
 
 export function rapportHtml(E, R, carriere) {
   const scn = E.scn;
@@ -26,7 +27,7 @@ export function rapportHtml(E, R, carriere) {
     <p><b>Adresse :</b> ${esc(scn.mission.adresse)}<br><b>Sinistre :</b> ${esc(scn.mission.dateSinistre)} — alerte ${esc(scn.mission.heureAlerte)}<br><b>Préservation :</b> ${esc(scn.mission.preservation)}<br><b>Météo :</b> ${esc(scn.meteo)}</p>
     <p><b>Intervention des sapeurs-pompiers :</b></p><ul>${scn.rapportSdis.map(l => `<li>${esc(l)}</li>`).join('')}</ul>
     <h2>3. Constatations</h2>
-    ${scn.zones.filter(z => parZone(z).length).map(z => `<p><b>${esc(z.nom)}</b></p><table><tr><th style="width:40px">N°</th><th>Constatation</th><th>Analyse</th></tr>${parZone(z).map(c => { const a = E.analyses.get(c.o.id); return `<tr><td>${c.num}</td><td>${esc(c.o.description)}</td><td>${a ? esc(c.o.analyse.options[a.idx].t) : '<i>non analysé</i>'}</td></tr>`; }).join('')}</table>`).join('')}
+    ${scn.zones.filter(z => parZone(z).length).map(z => `<p><b>${esc(z.nom)}</b></p><table><tr><th style="width:40px">N°</th><th>Constatation</th><th>Analyse</th></tr>${parZone(z).map(c => { const a = E.analyses.get(c.o.id); return `<tr><td>${c.num}</td><td>${esc(c.o.description)}</td><td>${a ? esc(c.o.analyse.options[a.idx].t) : '<i>non analysé</i>'}${c.o.analyse?.ref || c.o.ref ? `<br><small>${esc(refTexte(c.o.analyse?.ref || c.o.ref))}</small>` : ''}</td></tr>`; }).join('')}</table>`).join('')}
     <h2>4. Fouille de la zone d'intérêt</h2>
     <p>${scn.fouille ? `${E.fouille.retirees} couche(s) sur ${scn.fouille.couches.length} retirée(s) : ${scn.fouille.couches.filter(c => c.n <= E.fouille.retirees).map(c => esc(c.nom)).join(' ; ') || '—'}.` : '—'}</p>
     <h2>5. Prélèvements et analyses</h2>
@@ -47,6 +48,9 @@ export function rapportHtml(E, R, carriere) {
       <tr><th>Faits à l'appui</th><td>${(R.faitsAppui || []).map(id => esc(E.faits.get(id)?.court || id)).join(' ; ') || '—'}</td></tr>
     </table>
     ${R.texte ? `<p style="margin-top:10px">${esc(R.texte).replace(/\n/g, '<br>')}</p>` : ''}
+    <h2>Références</h2>
+    <p>Méthode et numérotation : <b>${NFPA_EDITION}</b> (référence de base). Ouvrages complémentaires en lien avec les constatations :</p>
+    <ul>${bibliographie(constats.map(c => ({ ref: c.o.analyse?.ref || c.o.ref, sources: c.o.sources, texte: `${c.o.titre} ${c.o.description || ''}` }))).map(b => `<li>${esc(b.ref)}</li>`).join('')}</ul>
     <h2>Annexe — planche photographique</h2>
     ${E.photos.length ? `<div class="ph">${E.photos.map(p => `<figure><img src="${p.img}" alt=""><figcaption><b>Photo ${p.n}</b> — ${esc(p.legende)}</figcaption></figure>`).join('')}</div>` : '<p>Aucune photo.</p>'}
   </div>`;

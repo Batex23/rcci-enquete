@@ -122,6 +122,9 @@ body { font: 15px/1.5 var(--sans); }
 .verdict { border-radius: 10px; padding: 10px 12px; margin-top: 8px; font-size: 14px; }
 .verdict.ok { background: #e3f5ea; color: #165c37; }
 .verdict.ko { background: #fde8e5; color: #8b2018; }
+.verdict details.voir { border-top: 1px dashed rgba(0,0,0,.18); padding-top: 6px; margin-top: 8px; color: #3d3a33; font-family: var(--sans); }
+.verdict details.voir summary { font-size: 13px; }
+.verdict details.voir b { display: inline; font: 700 13px var(--sans); margin: 0; }
 .verdict b { display: block; font: 700 22px var(--hand); }
 .gros { display: flex; align-items: center; gap: 8px; width: 100%; justify-content: center; padding: 11px; font-size: 15px; border-radius: 12px; }
 .mini-form label { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 8px; border: 1px solid #e4ddcb; margin-bottom: 5px; font-size: 13.5px; background: #fff; cursor: pointer; }

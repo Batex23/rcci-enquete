@@ -4,6 +4,7 @@ import { SCENARIOS, A_VENIR } from './data/scenarios/index.js';
 import { OUTILS, GRADES } from './data/outils.js';
 import { CHAPITRES, TRACES, METHODE_SCIENTIFIQUE, NFPA_EDITION } from './data/nfpa.js';
 import { MATERIAUX } from './data/materiaux.js';
+import { BIBLIO, THEMES, voirAussiHtml } from './data/sources.js';
 import { $, $$, h, esc, toast, modal, confirmer, ref } from './ui.js';
 import { ouvrirEnquete } from './screens/enqueteView.js';
 import { ouvrirAnalyse } from './screens/analyseView.js';
@@ -117,19 +118,28 @@ function equipement(b) {
 
 // ------------------------------------------------------------ Référentiel
 function codex(b) {
-  const nav = [['methode', 'Méthode scientifique'], ...CHAPITRES.map(c => [`ch${c.n}`, `Chap. ${c.n} — ${c.titre}`]), ['traces', 'Glossaire des tracés'], ['ignition', 'Sources d\'ignition (°C)'], ['puissance', 'Puissances (HRR)'], ['fusion', 'Fusion / inflammation'], ['reperes', 'Repères thermiques']];
+  const nav = [['methode', 'Méthode scientifique'], ['biblio', '📚 Sources et bibliographie'], ...CHAPITRES.map(c => [`ch${c.n}`, `Chap. ${c.n} — ${c.titre}`]), ['traces', 'Glossaire des tracés'], ['ignition', 'Sources d\'ignition (°C)'], ['puissance', 'Puissances (HRR)'], ['fusion', 'Fusion / inflammation'], ['reperes', 'Repères thermiques']];
   b.innerHTML = `<div class="codex" style="background:var(--bg);border-radius:12px;padding:14px;color:var(--txt)"><nav>${nav.map(([id, l]) => `<button class="${app.codex === id ? 'on' : ''}" data-c="${id}">${esc(l)}</button>`).join('')}</nav><div id="cx"></div></div>`;
   $$('[data-c]', b).forEach(x => x.onclick = () => { app.codex = x.dataset.c; codex(b); });
   const cx = $('#cx', b);
   const k = app.codex;
   if (k === 'methode') {
     cx.innerHTML = `<div class="panel"><h3>Méthode scientifique ${ref('4.3')}</h3>${METHODE_SCIENTIFIQUE.map((m, i) => `<p><b>${i + 1}. ${esc(m.titre)}</b> ${ref(m.ref)}<br><span class="muted">${esc(m.texte)}</span></p>`).join('')}
-      <p class="small muted">Textes reformulés à des fins pédagogiques. Numérotation : ${NFPA_EDITION}.</p></div>`;
+      ${voirAussiHtml('4.3', { max: 5, ouvert: true })}
+      <p class="small muted">Textes reformulés à des fins pédagogiques. Numérotation : ${NFPA_EDITION}. « NFPA 921 – chap. 4.3.6 » se lit : chapitre 4, section 4.3.6.</p></div>`;
+  } else if (k === 'biblio') {
+    const autres = Object.entries(BIBLIO).filter(([, b]) => !b.base);
+    const nb = id => THEMES.filter(t => t.voir.some(v => v[0] === id)).length;
+    cx.innerHTML = `<div class="panel"><h3>La référence de base : NFPA 921</h3>
+      <p>Tout le jeu suit la <b>${esc(BIBLIO.nfpa921.ref)}</b> Chaque référence s'écrit <span class="ref">NFPA 921 – chap. 6.3.7.1</span> : chapitre 6, section 6.3.7.1 de l'édition 2011.</p>
+      <p class="muted small">Les autres ouvrages ci-dessous ne remplacent pas la NFPA 921 : ils l'illustrent, la complètent par des essais, des cas réels et la pratique française. Ils apparaissent dans les fiches d'indices (« 📚 Ce qu'en disent d'autres références »), au débriefing et dans les dossiers d'analyse.</p></div>
+      <div class="panel"><h3>Pour aller plus loin</h3><table><tr><th>Ouvrage</th><th>Ce qu'on y trouve</th><th style="width:70px">Thèmes</th></tr>${autres.map(([id, b]) => `<tr><td><b>${esc(b.court)}${b.annee ? ` (${b.annee})` : ''}</b> <span class="small muted">${b.langue === 'fr' ? '🇫🇷' : '🇬🇧'}</span><div class="small muted">${esc(b.ref)}</div></td><td>${esc(b.role)}</td><td>${nb(id)}</td></tr>`).join('')}</table></div>
+      <div class="panel"><h3>Correspondances par thème</h3>${THEMES.map(t => `<details class="voir"><summary><b>${esc(t.titre)}</b> ${ref(t.nfpa.join(' / '))}</summary><ul>${t.voir.map(([sid, loc, note]) => `<li><b title="${esc(BIBLIO[sid].ref)}">${esc(BIBLIO[sid].court)}${BIBLIO[sid].annee ? ` (${BIBLIO[sid].annee})` : ''}</b>, ${esc(loc)} — ${esc(note)}</li>`).join('')}</ul></details>`).join('')}</div>`;
   } else if (k.startsWith('ch')) {
     const c = CHAPITRES.find(x => `ch${x.n}` === k);
-    cx.innerHTML = `<div class="panel"><h3>Chapitre ${c.n} — ${esc(c.titre)}</h3><table><tr><th style="width:90px">Réf.</th><th>Notion clé</th></tr>${c.cle.map(([r, t]) => `<tr><td>${ref(r)}</td><td>${esc(t)}</td></tr>`).join('')}</table></div>`;
+    cx.innerHTML = `<div class="panel"><h3>Chapitre ${c.n} — ${esc(c.titre)}</h3><table><tr><th style="width:175px">Réf.</th><th>Notion clé</th></tr>${c.cle.map(([r, t]) => `<tr><td>${ref(r)}</td><td>${esc(t)}${voirAussiHtml({ ref: r, texte: t }, { max: 3, titre: '📚 Voir aussi' })}</td></tr>`).join('')}</table></div>`;
   } else if (k === 'traces') {
-    cx.innerHTML = `<div class="panel"><table><tr><th>Tracé</th><th>Réf.</th><th>Lecture</th></tr>${TRACES.map(t => `<tr><td><b>${esc(t.nom)}</b></td><td>${ref(t.ref)}</td><td>${esc(t.def)}</td></tr>`).join('')}</table></div>`;
+    cx.innerHTML = `<div class="panel"><table><tr><th>Tracé</th><th>Réf.</th><th>Lecture</th></tr>${TRACES.map(t => `<tr><td><b>${esc(t.nom)}</b></td><td>${ref(t.ref)}</td><td>${esc(t.def)}${voirAussiHtml({ ref: t.ref, texte: t.nom }, { max: 3, titre: '📚 Voir aussi' })}</td></tr>`).join('')}</table></div>`;
   } else if (k === 'ignition') {
     cx.innerHTML = `<div class="panel"><table><tr><th>Source</th><th>Min (°C)</th><th>Max (°C)</th></tr>${MATERIAUX.ignition.map(s => `<tr><td>${esc(s.source)}</td><td>${s.min ?? ''}</td><td>${s.max ?? ''}</td></tr>`).join('')}</table>
       <h3 style="margin-top:14px">Couleur de flamme</h3><table>${MATERIAUX.flamme.map(f => `<tr><td>${esc(f.couleur)}</td><td>${esc(f.temp)}</td></tr>`).join('')}</table></div>`;

@@ -39,7 +39,7 @@ export default {
       { id: 'epi', t: 'Casque, protection respiratoire, gants, chaussures de sécurité', ok: true },
       { id: 'chute', t: 'Inspecter la toiture depuis l\'échelle des secours ou une nacelle, jamais en marchant dessus', ok: true },
       { id: 'elec', t: 'Vérifier la coupure électrique', ok: true },
-      { id: 'toit', t: 'Monter sur le toit pour voir de plus près, il a tenu jusqu\'ici', ok: false, fb: 'Une charpente carbonisée peut céder sous ton poids : jamais de déplacement sur une toiture sinistrée (12.3).' },
+      { id: 'toit', t: 'Monter sur le toit pour voir de plus près, il a tenu jusqu\'ici', ok: false, fb: 'Une charpente carbonisée peut céder sous ton poids : jamais de déplacement sur une toiture sinistrée (NFPA 921, chap. 12.3).' },
     ],
   },
 
@@ -190,7 +190,7 @@ export default {
       analyse: { question: 'Comment lis-tu ces brûlures ?', ref: '6.3.7.8 / 17.4.1', options: [
         { t: 'Brûlures par chute de matériaux enflammés (« drop-down ») : elles ne désignent pas l\'origine.', ok: true, fb: 'Exact : quand le feu vient d\'en haut, les débris qui tombent brûlent le sol. Intensité au sol ≠ origine.' },
         { t: 'Le feu est parti du parquet : les trous en sont la preuve.', ok: false, fb: 'Piège : ces trous sont sous les débris tombés du toit.' },
-        { t: 'Un liquide inflammable a été répandu.', ok: false, fb: 'Des tracés irréguliers ne prouvent jamais seuls un liquide (6.3.7.8).' },
+        { t: 'Un liquide inflammable a été répandu.', ok: false, fb: 'Des tracés irréguliers ne prouvent jamais seuls un liquide (NFPA 921, chap. 6.3.7.8).' },
       ] } },
     { id: 'M08', zone: 'ch1', pos: [3.0, 1.9, 0.1], titre: 'Mur nord de la chambre 1',
       description: 'Dégâts du haut vers le bas : plâtre calciné en partie haute, surtout près du conduit ; partie basse seulement noircie. Pas de V partant du sol.',
@@ -209,7 +209,7 @@ export default {
       description: 'Relevé sur chevrons et solives restants : 32 mm au contact du conduit, 18 mm à 0,5 m, 9 mm à 1 m, 4 mm à 2 m. Même décroissance de l\'autre côté de la souche.',
       analyse: { question: 'Que montrent ces mesures ?', ref: '17.4.3', options: [
         { t: 'Exposition maximale au contact du conduit, décroissante tout autour : la charpente a brûlé à partir du conduit.', ok: true, fb: 'Exact : tes mesures dessinent une cible centrée sur le conduit.' },
-        { t: 'On peut en déduire la durée exacte du feu.', ok: false, fb: 'Non : on compare des profondeurs relatives, on ne date pas (17.4.3).' },
+        { t: 'On peut en déduire la durée exacte du feu.', ok: false, fb: 'Non : on compare des profondeurs relatives, on ne date pas (NFPA 921, chap. 17.4.3).' },
       ] } },
     { id: 'M11', zone: 'combles', pos: [3.0, 2.8, 0.55], titre: 'Traversée du conduit',
       description: 'Tubage inox simple paroi passant dans un coffrage en planches de pin. Aucun isolant, pas de plaque de distance. Distance mesurée entre le conduit et le chevron le plus proche : 2 cm.',
@@ -262,7 +262,7 @@ export default {
       { id: 'q1', type: 'ouverte', q: 'Racontez-moi votre soirée.', r: 'J\'ai allumé le poêle vers 17h, il faisait froid. Je l\'ai rechargé plusieurs fois, la dernière bûche vers 22h30. On s\'est couchés vers 23h30 dans la chambre 2 — la 1, c\'est la chambre d\'amis. C\'est le voisin qui nous a réveillés vers 1h, en tapant à la porte.', fait: { id: 'MF1', texte: 'Poêle en chauffe soutenue de 17h à 23h ; alerte vers 1h par le voisin.' } },
       { id: 'q2', type: 'ouverte', q: 'Parlez-moi de l\'installation du poêle.', r: 'Je l\'ai posé moi-même l\'an dernier, avec un tubage acheté sur internet. Pour la traversée du plafond, j\'ai fait un coffrage en planches, c\'était plus propre.', fait: { id: 'MF2', texte: 'Poêle et tubage installés par le propriétaire ; traversée du plafond coffrée en planches de bois.' } },
       { id: 'q3', type: 'fermee', q: 'Avez-vous fait ramoner cette année ?', r: 'Pas encore, je comptais le faire à Noël.', fait: { id: 'MF3', texte: 'Pas de ramonage cette saison.' } },
-      { id: 'q4', type: 'orientee', q: 'Vous n\'auriez pas un peu aidé le feu, pour l\'assurance ?', r: '(Furieux) Ça va pas ? On aurait pu y rester !', fait: null, piege: 'Accuser sans élément ferme le dialogue et n\'apporte rien (13.4).' },
+      { id: 'q4', type: 'orientee', q: 'Vous n\'auriez pas un peu aidé le feu, pour l\'assurance ?', r: '(Furieux) Ça va pas ? On aurait pu y rester !', fait: null, piege: 'Accuser sans élément ferme le dialogue et n\'apporte rien (NFPA 921, chap. 13.4).' },
     ] },
     { id: 'T2', nom: 'M. Ortiz', role: 'Voisin, auteur de l\'appel', avatar: '👨', questions: [
       { id: 'q1', type: 'ouverte', q: 'Qu\'avez-vous vu ?', r: 'Vers 0h50, en sortant le chien, j\'ai vu de la fumée qui sortait d\'entre les tuiles, juste autour de la cheminée. Puis des flammes sur le toit. J\'ai appelé et j\'ai couru taper chez eux.', fait: { id: 'MF4', texte: 'Premières fumées entre les tuiles, autour de la cheminée, puis flammes en toiture.' } },

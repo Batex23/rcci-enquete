@@ -2,7 +2,8 @@
 import { Scene3D, altitudeDe, niveauIndex, niveauxDe } from '../engine/scene3d.js';
 import { migrer } from '../game/prepa.js';
 import { CLASSIFICATIONS, CERTITUDES, NFPA_EDITION } from '../data/nfpa.js';
-import { $, $$, h, esc, modal } from '../ui.js';
+import { $, $$, h, esc, modal, refTexte } from '../ui.js';
+import { voirAussi, bibliographie } from '../data/sources.js';
 
 export function catalogueFaits(scn) {
   const m = new Map();
@@ -24,6 +25,9 @@ export function ouvrirAnalyse(src, container, opts = {}) {
   const niv = niveauxDe(bat);
   const cert = CERTITUDES.find(c => c.id === sol.certitude)?.nom || sol.certitude || '—';
   const cls = CLASSIFICATIONS.find(c => c.id === sol.classification)?.nom || sol.classification || '—';
+  const cibleDe = o => ({ ref: o.ref || o.analyse?.ref, sources: o.sources, texte: `${o.titre || ''} ${o.description || ''}` });
+  const cibles = (scn.observations || []).map(cibleDe);
+  const voirLigne = o => { const v = voirAussi(cibleDe(o), 3); return v.length ? `<p class="small ana-voir">📚 Voir aussi : ${v.map(x => x.libre ? esc(x.libre) : `${esc(x.b.court)}${x.b.annee ? ` (${x.b.annee})` : ''}, ${esc(x.loc)}`).join(' ; ')}</p>` : ''; };
   const fl = ids => (ids || []).map(id => faits.get(id)?.court || id).map(t => `<li>${esc(t)}</li>`).join('');
 
   const el = h(`<div class="ana">
@@ -38,7 +42,7 @@ export function ouvrirAnalyse(src, container, opts = {}) {
     </section>
     <section class="ana-doc">
       <div class="ana-bar">${opts.onClose ? '<button class="btn btn-sm" data-close>⟵ Retour</button>' : ''}<span class="chip">${scn.mode === 'retex' ? 'Dossier RETEX' : 'Dossier d\'analyse'}</span><span style="flex:1"></span><button class="btn btn-sm" data-print>🖨️ Imprimer / PDF</button></div>
-      <div class="ana-nav">${['synthese:Synthèse', 'contexte:Contexte', 'chrono:Chronologie', 'constats:Constatations', 'photos:Photos', 'labo:Analyses', 'temoins:Déclarations', 'hyp:Hypothèses', 'retex:Enseignements'].map(x => { const [k, l] = x.split(':'); return `<a href="#a-${k}" data-nav="${k}">${l}</a>`; }).join('')}</div>
+      <div class="ana-nav">${['synthese:Synthèse', 'contexte:Contexte', 'chrono:Chronologie', 'constats:Constatations', 'photos:Photos', 'labo:Analyses', 'temoins:Déclarations', 'hyp:Hypothèses', 'retex:Enseignements', 'refs:Références'].map(x => { const [k, l] = x.split(':'); return `<a href="#a-${k}" data-nav="${k}">${l}</a>`; }).join('')}</div>
       <article class="rapport-doc ana-article">
         <h1>${esc(scn.titre)}</h1>
         <p class="small">${esc([R.auteur && `Rédigé par ${R.auteur}`, R.service, R.date].filter(Boolean).join(' · '))}${R.confidentialite ? `<br><b>${esc(R.confidentialite)}</b>` : ''}</p>
@@ -66,8 +70,8 @@ export function ouvrirAnalyse(src, container, opts = {}) {
 
         <h2 id="a-constats">Constatations</h2>
         ${(scn.zones || []).map(z => { const l = scn.observations.filter(o => o.zone === z.id); return l.length ? `<h3 class="ana-z">${esc(z.nom)}</h3>${l.map(o => { const n = scn.observations.indexOf(o) + 1; return `<div class="ana-c" id="c-${esc(o.id)}" data-obs="${esc(o.id)}">
-          <div class="ana-ch"><span class="cav">${n}</span><b>${esc(o.titre)}</b>${o.analyse?.ref || o.ref ? `<span class="small"> · NFPA ${esc(o.ref || o.analyse.ref)}</span>` : ''}</div>
-          <p>${esc(o.description)}</p>${lecture(o) ? `<p><i>Analyse :</i> ${esc(lecture(o))}</p>` : ''}
+          <div class="ana-ch"><span class="cav">${n}</span><b>${esc(o.titre)}</b>${o.analyse?.ref || o.ref ? `<span class="small"> · ${esc(refTexte(o.ref || o.analyse.ref))}</span>` : ''}</div>
+          <p>${esc(o.description)}</p>${lecture(o) ? `<p><i>Analyse :</i> ${esc(lecture(o))}</p>` : ''}${voirLigne(o)}
           ${photosDe(o.id).length ? `<div class="ph">${photosDe(o.id).map(p => `<figure><img src="${scn.medias[p.media]}" data-ph="${esc(p.id)}" alt=""><figcaption>${esc(p.titre || '')}</figcaption></figure>`).join('')}</div>` : ''}
         </div>`; }).join('')}` : ''; }).join('')}
         ${scn.observations.filter(o => !(scn.zones || []).some(z => z.id === o.zone)).map(o => `<div class="ana-c" id="c-${esc(o.id)}" data-obs="${esc(o.id)}"><b>${esc(o.titre)}</b><p>${esc(o.description)}</p></div>`).join('')}
@@ -87,6 +91,9 @@ export function ouvrirAnalyse(src, container, opts = {}) {
 
         <h2 id="a-retex">Enseignements</h2>
         ${[['Enseignements', R.enseignements], ['Points positifs', R.positifs], ['Axes d\'amélioration', R.ameliorations], ['Recommandations (prévention)', R.recommandations]].filter(x => x[1]?.length).map(([t, l]) => `<p><b>${t}</b></p><ul>${l.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`).join('') || '<p>—</p>'}
+        <h2 id="a-refs">Références</h2>
+        <p class="small">Méthode et numérotation : <b>${esc(NFPA_EDITION)}</b> (référence de base). Ouvrages complémentaires cités dans ce dossier :</p>
+        <ul class="small">${bibliographie(cibles).map(b => `<li>${esc(b.ref)}</li>`).join('')}</ul>
         <p class="small" style="margin-top:20px;color:#666">Méthodologie : ${NFPA_EDITION} (recherche des causes et circonstances d'incendie, méthode scientifique). Document généré avec « RCCI · L'Enquêteur ».</p>
       </article>
     </section>

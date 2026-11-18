@@ -1,3 +1,4 @@
+import { refParts } from './data/sources.js';
 // Petits utilitaires d'interface
 export const $ = (s, r = document) => r.querySelector(s);
 export const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -51,7 +52,18 @@ export function confirmer(titre, texte, labelOk = 'Confirmer') {
   });
 }
 
-export function ref(r) { return r ? `<span class="ref" title="NFPA 921 (2011)">NFPA ${esc(r)}</span>` : ''; }
+// Référence à la NFPA 921 (2011) : « NFPA 921 – chap. 6.3.7.1 » (plusieurs sections séparées par « · »)
+export function refTexte(r, long = false) {
+  const parts = refParts(r);
+  if (!parts.length) return r ? `NFPA 921 – ${r}` : '';
+  return long ? `NFPA 921 (éd. 2011), chapitre ${parts.join(' ; chapitre ')}` : `NFPA 921 – chap. ${parts.join(' · ')}`;
+}
+export function ref(r) {
+  if (!r) return '';
+  const parts = refParts(r);
+  const tip = parts.map(p => p.includes('.') ? `chapitre ${p.split('.')[0]}, section ${p}` : `chapitre ${p}`).join(' ; ');
+  return `<span class="ref" title="NFPA 921, édition 2011${tip ? ' — ' + tip : ''}">${esc(refTexte(r)).replace(/ (?!·)/g, '&nbsp;').replace(/&nbsp;·/g, ' ·')}</span>`;
+}
 
 export function norm(s) {
   return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9\- ]/g, ' ');

@@ -45,8 +45,8 @@ export default {
       { id: 'plafond', t: 'Évaluer le plafond du séjour (plaques effondrées) avant d\'y travailler et purger les parties instables', ok: true },
       { id: 'energie', t: 'Vérifier la coupure électrique (Enedis) et l\'absence d\'alimentation gaz', ok: true },
       { id: 'binome', t: 'Ne pas travailler seul : prévenir le gardien de scène de ses entrées/sorties', ok: true },
-      { id: 'sansmasque', t: 'Travailler sans protection respiratoire : les fumées sont dissipées depuis plusieurs jours', ok: false, fb: 'Les débris d\'incendie restent chargés en particules, HAP, isocyanates, fibres. La protection respiratoire reste nécessaire (12.5 / 12.6).' },
-      { id: 'rearmer', t: 'Réarmer le disjoncteur pour tester les circuits sur place', ok: false, fb: 'Danger et altération des preuves : on ne remet jamais sous tension une installation sinistrée avant la fin des constatations (12.3, 16.3).' },
+      { id: 'sansmasque', t: 'Travailler sans protection respiratoire : les fumées sont dissipées depuis plusieurs jours', ok: false, fb: 'Les débris d\'incendie restent chargés en particules, HAP, isocyanates, fibres. La protection respiratoire reste nécessaire (NFPA 921, chap. 12.5 et 12.6).' },
+      { id: 'rearmer', t: 'Réarmer le disjoncteur pour tester les circuits sur place', ok: false, fb: 'Danger et altération des preuves : on ne remet jamais sous tension une installation sinistrée avant la fin des constatations (NFPA 921, chap. 12.3 et 16.3).' },
     ],
   },
 
@@ -151,7 +151,7 @@ export default {
       description: 'Porte d\'entrée en position fermée, pêne demi-tour et pêne dormant sortis. Enfoncement récent au pied de biche côté gâche, éclats de bois frais non noircis. Aucune autre trace sur les ouvrants du pourtour (fenêtres des chambres ouvertes de l\'intérieur).',
       analyse: { question: 'Comment interprétez-vous cette constatation ?', ref: '17.3.1.7 / 22.3', options: [
         { t: 'Effraction : la piste d\'une intrusion criminelle doit être privilégiée.', ok: false, fb: 'Éclats non noircis = ouverture postérieure au feu. Le compte rendu SDIS mentionne l\'ouverture forcée à 02h16 : c\'est une modification post-incendie.' },
-        { t: 'Ouverture forcée par les sapeurs-pompiers (CR SDIS, éclats frais non noircis) ; aucune trace d\'effraction antérieure au feu.', ok: true, fb: 'Exact : il faut toujours corréler les modifications post-incendie avec les actions des secours (17.3.1.7).' },
+        { t: 'Ouverture forcée par les sapeurs-pompiers (CR SDIS, éclats frais non noircis) ; aucune trace d\'effraction antérieure au feu.', ok: true, fb: 'Exact : il faut toujours corréler les modifications post-incendie avec les actions des secours (NFPA 921, chap. 17.3.1.7).' },
         { t: 'Non pertinent pour l\'enquête.', ok: false, fb: 'Toute modification de la scène doit être documentée et expliquée.' },
       ]}},
     { id: 'F02', zone: 'facade', pos: [4.8, 2.6, 9.1], titre: 'Traînée de suie au-dessus de la baie',
@@ -159,12 +159,12 @@ export default {
       analyse: { question: 'Que traduit ce tracé ?', ref: '6.3.7.1 / 6.3.2.2 / 6.2.5', options: [
         { t: 'Un départ de feu à l\'extérieur, devant la baie.', ok: false, fb: 'Aucun dégât en pied de façade ni dans la végétation : rien n\'indique un feu extérieur.' },
         { t: 'Le panache sortant par la baie après rupture du vitrage : effet de ventilation d\'un feu intérieur développé.', ok: true, fb: 'Oui. Ce tracé renseigne sur une phase avancée (flammes sortant par l\'ouvrant), pas sur l\'origine.' },
-        { t: 'L\'écaillage de l\'enduit prouve l\'usage d\'un accélérant.', ok: false, fb: 'Mythe : l\'écaillage a de multiples causes (chaleur, humidité, choc thermique de l\'eau) et n\'est pas un indicateur d\'accélérant (6.2.5).' },
+        { t: 'L\'écaillage de l\'enduit prouve l\'usage d\'un accélérant.', ok: false, fb: 'Mythe : l\'écaillage a de multiples causes (chaleur, humidité, choc thermique de l\'eau) et n\'est pas un indicateur d\'accélérant (NFPA 921, chap. 6.2.5).' },
       ]}},
     { id: 'F03', zone: 'facade', pos: [4.2, 0.1, 9.5], titre: 'Fragments de vitrage de la baie',
       description: 'Fragments de verre de la baie répartis des deux côtés du châssis (davantage à l\'intérieur). Bords ondulés de rupture thermique. Surfaces couvertes d\'un réseau de fines fissures superficielles (faïençage). Certains fragments au sol sont exempts de suie sur la face inférieure.',
       analyse: { question: 'Que retenez-vous du faïençage ?', ref: '6.2.13', options: [
-        { t: 'Le faïençage indique une montée en température très rapide, typique d\'un accélérant.', ok: false, fb: 'Mythe démonté par les essais : le faïençage résulte d\'un refroidissement brutal (eau d\'extinction) sur verre chaud (6.2.13).' },
+        { t: 'Le faïençage indique une montée en température très rapide, typique d\'un accélérant.', ok: false, fb: 'Mythe démonté par les essais : le faïençage résulte d\'un refroidissement brutal (eau d\'extinction) sur verre chaud (NFPA 921, chap. 6.2.13).' },
         { t: 'Rupture thermique du vitrage pendant le feu, puis faïençage dû au refroidissement par l\'eau d\'extinction.', ok: true, fb: 'Exact. Les fragments sans suie dessous étaient déjà tombés pendant le feu : la baie a cédé avant l\'arrivée des secours (cohérent avec le CR SDIS).' },
         { t: 'Le vitrage a été brisé par une explosion.', ok: false, fb: 'Aucune projection lointaine ni déformation de la menuiserie compatible avec une surpression.' },
       ]}},
@@ -178,7 +178,7 @@ export default {
       description: 'Tableau de répartition : disjoncteur de branchement en position ouverte (coupure SDIS 02h25). Disjoncteur divisionnaire 16 A « Prises séjour » déclenché (manette en position intermédiaire). Tous les autres divisionnaires armés. Interrupteur différentiel 30 mA de la rangée armé.',
       analyse: { question: 'Comment exploitez-vous cette donnée ?', ref: '8.6 / 17.4.5', options: [
         { t: 'Le déclenchement du disjoncteur prouve une cause électrique.', ok: false, fb: 'Non : un circuit atteint par le feu déclenche aussi (court-circuit par destruction des isolants). C\'est une donnée, pas une conclusion.' },
-        { t: 'Le circuit « prises séjour » était sous tension au début du feu et a déclenché : cela permet une cartographie des arcs sur ce circuit.', ok: true, fb: 'Exact : un circuit sous tension au moment où le feu l\'atteint peut produire des arcs exploitables pour la zone d\'origine (17.4.5).' },
+        { t: 'Le circuit « prises séjour » était sous tension au début du feu et a déclenché : cela permet une cartographie des arcs sur ce circuit.', ok: true, fb: 'Exact : un circuit sous tension au moment où le feu l\'atteint peut produire des arcs exploitables pour la zone d\'origine (NFPA 921, chap. 17.4.5).' },
         { t: 'Sans intérêt, la coupure a été faite par les pompiers.', ok: false, fb: 'La coupure SDIS concerne le branchement. Le divisionnaire déclenché est une donnée indépendante.' },
       ]}},
     // ---------- Chambres / couloir / cuisine
@@ -192,7 +192,7 @@ export default {
       description: 'Porte ouverte. Dépôts de suie uniformes, démarcation horizontale à 1,10 m sur les quatre murs. Aucun effet de combustion. Bureau et lit intacts sous la suie, ordinateur éteint, multiprise du bureau débranchée.',
       analyse: { question: 'Comment qualifiez-vous cette zone ?', ref: '6.3.2.3 / 22.2.1', options: [
         { t: 'Zone de dégâts par les fumées uniquement (couche chaude), sans foyer distinct.', ok: true, fb: 'Exact : démarcation horizontale homogène = couche de fumée, pas de foyer.' },
-        { t: 'Un second foyer : indicateur d\'incendie volontaire (foyers multiples).', ok: false, fb: 'Il n\'y a ici aucun effet de combustion. Des foyers multiples doivent être des feux distincts, non reliés (22.2.1).' },
+        { t: 'Un second foyer : indicateur d\'incendie volontaire (foyers multiples).', ok: false, fb: 'Il n\'y a ici aucun effet de combustion. Des foyers multiples doivent être des feux distincts, non reliés (NFPA 921, chap. 22.2.1).' },
       ]}},
     { id: 'F08', zone: 'couloir', pos: [6.0, 1.0, 3.05], titre: 'Démarcation de suie dans le couloir',
       description: 'Ligne de démarcation de la couche de suie descendant progressivement de 1,40 m (extrémité est, côté entrée) à 0,55 m (devant la porte du séjour). Plafond calciné uniquement sur 1,5 m devant la porte du séjour. Peinture cloquée au-dessus de l\'huisserie côté séjour.',
@@ -231,7 +231,7 @@ export default {
       description: 'Relevé de profondeur de carbonisation sur la plinthe pin du mur ouest (même essence, même section) : 2 mm à z = 5,0 m ; 3 mm à 6,0 m ; 5 mm à 7,0 m ; 11 mm à 7,9 m (consommée) ; 6 mm à 8,6 m. Relevé de calcination du doublage plâtre à 0,5 m de haut : maximum au droit de 7,9 m (épaisseur totale).',
       analyse: { question: 'Que montrent ces relevés ?', ref: '17.4.3 / 17.4.4', options: [
         { t: 'Une exposition maximale vers 7,9 m (extrémité sud du canapé), décroissante de part et d\'autre.', ok: true, fb: 'Exact : relevés relatifs sur un même matériau = vecteur fiable, cohérent avec le V.' },
-        { t: 'Des profondeurs absolues permettent de calculer la durée du feu.', ok: false, fb: 'La vitesse de carbonisation varie (ventilation, flux) : on compare les profondeurs relatives, on ne date pas (17.4.3).' },
+        { t: 'Des profondeurs absolues permettent de calculer la durée du feu.', ok: false, fb: 'La vitesse de carbonisation varie (ventilation, flux) : on compare les profondeurs relatives, on ne date pas (NFPA 921, chap. 17.4.3).' },
       ]}},
     { id: 'F14', zone: 'sejour', pos: [0.5, 0.5, 6.8], titre: 'Restes du canapé',
       description: 'Canapé 3 places en tissu et mousse : ossature bois consumée à l\'extrémité sud, résiduelle à l\'extrémité nord. Ressorts ensachés de l\'assise affaissés de façon plus marquée côté sud. Mousse disparue partout, résidus fondus au sol.',
@@ -242,8 +242,8 @@ export default {
     { id: 'F15', zone: 'sejour', pos: [4.8, 0.05, 8.3], titre: 'Tracés irréguliers devant la baie',
       description: 'Sol stratifié devant la baie : tracés sombres irréguliers « en flaques », brûlures traversantes localisées, limites nettes. Restes de rideaux synthétiques et de leur tringle tombés sur cette zone. Plafond effondré au-dessus.',
       analyse: { question: 'Comment interprétez-vous ces tracés ?', ref: '6.3.7.8 / 6.3.2.2 / 17.4.1.4', options: [
-        { t: 'Des tracés de déversement de liquide inflammable.', ok: false, fb: 'Piège classique : après embrasement généralisé, la chute de rideaux en feu, le rayonnement et la ventilation produisent des tracés irréguliers (6.3.7.8). Seule une analyse en laboratoire peut établir la présence d\'un liquide.' },
-        { t: 'Des tracés post-embrasement : chute de rideaux enflammés, rayonnement et apport d\'air par la baie. Ils ne désignent ni l\'origine ni un liquide.', ok: true, fb: 'Exact : la ventilation crée une combustion intense loin de l\'origine (17.4.1.4).' },
+        { t: 'Des tracés de déversement de liquide inflammable.', ok: false, fb: 'Piège classique : après embrasement généralisé, la chute de rideaux en feu, le rayonnement et la ventilation produisent des tracés irréguliers (NFPA 921, chap. 6.3.7.8). Seule une analyse en laboratoire peut établir la présence d\'un liquide.' },
+        { t: 'Des tracés post-embrasement : chute de rideaux enflammés, rayonnement et apport d\'air par la baie. Ils ne désignent ni l\'origine ni un liquide.', ok: true, fb: 'Exact : la ventilation crée une combustion intense loin de l\'origine (NFPA 921, chap. 17.4.1.4).' },
         { t: 'La zone d\'origine du feu.', ok: false, fb: 'Zone de ventilation après rupture de la baie : intensité ≠ origine.' },
       ]},
       prelevement: 'P4' },
@@ -275,15 +275,15 @@ export default {
     { id: 'F20', zone: 'sejour', couche: 2, pos: [0.15, 0.1, 7.9], titre: 'Pied arrière sud du canapé',
       description: 'Sous les restes du canapé : le pied métallique arrière sud (patin carré 4 × 4 cm) repose directement sur la rallonge, à 5 cm du mur. Le pied est resté en place (pas de déplacement par les secours selon le CR).',
       analyse: { question: 'Comment exploitez-vous cette position ?', ref: '17.3.2.8 / 8.11.5', options: [
-        { t: 'Reconstitution : le pied écrasait la rallonge avant le feu, possible endommagement mécanique du câble.', ok: true, fb: 'Exact : la remise en place des contenus (17.3.2.8) montre une contrainte mécanique au droit de la zone de plus forts dégâts.' },
+        { t: 'Reconstitution : le pied écrasait la rallonge avant le feu, possible endommagement mécanique du câble.', ok: true, fb: 'Exact : la remise en place des contenus (NFPA 921, chap. 17.3.2.8) montre une contrainte mécanique au droit de la zone de plus forts dégâts.' },
         { t: 'Le pied a pu tomber sur le câble pendant le feu, c\'est sans intérêt.', ok: false, fb: 'Les pieds sont fixés à l\'ossature ; la position est corroborée par d\'autres sources (photo d\'avant sinistre ?). À vérifier, pas à écarter.' },
       ]}},
     { id: 'F21', zone: 'sejour', couche: 3, pos: [0.12, 0.04, 7.9], titre: 'Rallonge — perle de fusion',
       description: 'Rallonge 3G1,5 mm² (prise murale ouest → multiprise) : isolant détruit. À 0,50 m de la fiche, au droit du pied du canapé : conducteur sectionné avec une perle de fusion sphérique à limite nette, brins voisins aplatis. Le reste des conducteurs est recuit mais continu.',
       analyse: { question: 'Que traduit cette perle ?', ref: '8.11.1 / 8.11.2 / 8.11.10', options: [
         { t: 'Un arc électrique sur un conducteur sous tension (fusion localisée, limite nette) : à replacer dans une cartographie des arcs.', ok: true, fb: 'Exact. Attention : un arc peut aussi être causé par le feu. C\'est sa position (le plus en amont) et l\'état mécanique du conducteur qui le rendent significatif.' },
-        { t: 'Une fusion due à la chaleur de l\'incendie.', ok: false, fb: 'La fusion par le feu donne des gouttes, des amincissements et des zones étendues, sans limite nette (8.11.2).' },
-        { t: 'La preuve définitive d\'une cause électrique.', ok: false, fb: 'Un arc prouve que le conducteur était sous tension quand l\'isolant a cédé, pas à lui seul qu\'il est la cause (8.11.3).' },
+        { t: 'Une fusion due à la chaleur de l\'incendie.', ok: false, fb: 'La fusion par le feu donne des gouttes, des amincissements et des zones étendues, sans limite nette (NFPA 921, chap. 8.11.2).' },
+        { t: 'La preuve définitive d\'une cause électrique.', ok: false, fb: 'Un arc prouve que le conducteur était sous tension quand l\'isolant a cédé, pas à lui seul qu\'il est la cause (NFPA 921, chap. 8.11.3).' },
       ]},
       prelevement: 'P2' },
     { id: 'F22', zone: 'sejour', couche: 3, pos: [0.15, 0.05, 6.9], titre: 'Restes de la multiprise',
@@ -297,7 +297,7 @@ export default {
       description: 'Après enlèvement des débris : stratifié et sous-couche consumés jusqu\'à la dalle béton sur 0,6 × 0,5 m entre le mur ouest et l\'emplacement de l\'extrémité sud du canapé. Zone protégée nette sous le patin du pied (4 × 4 cm) et le long du tracé de la rallonge.',
       analyse: { question: 'Que vous indique ce sol ?', ref: '6.3.3.2 / 6.3.4.2', options: [
         { t: 'Une combustion au sol longue et intense derrière l\'extrémité sud du canapé, avec le pied et la rallonge en place pendant le feu.', ok: true, fb: 'Exact : cohérent avec le V bas et le relevé de carbonisation.' },
-        { t: 'Un trou dans le sol prouve un liquide inflammable.', ok: false, fb: 'Une combustion prolongée du canapé au sol suffit à consumer un stratifié (6.3.5).' },
+        { t: 'Un trou dans le sol prouve un liquide inflammable.', ok: false, fb: 'Une combustion prolongée du canapé au sol suffit à consumer un stratifié (NFPA 921, chap. 6.3.5).' },
       ]}},
     { id: 'F24', zone: 'sejour', couche: 3, pos: [0.4, 0.04, 7.75], titre: 'Débris de sol (zone de consommation maximale)',
       description: 'Débris carbonisés de sous-couche, mousse fondue et textile, prélevables au pied du canapé.',
@@ -310,7 +310,7 @@ export default {
       indice: 'Les conducteurs du circuit « prises séjour » sont accessibles. Un kit de cartographie des arcs permettrait un relevé systématique.',
       description: 'Relevé systématique du circuit « prises séjour » (disjoncteur 16 A déclenché) : câble encastré, prises murales ouest et est, rallonge, multiprise, cordons. UN SEUL site d\'arc : rallonge à 0,50 m de la fiche, au droit du pied du canapé. Aucun arc en aval (multiprise, cordons lampadaire/box/chargeur) ni sur le cordon du téléviseur (prise murale est), malgré leur exposition au feu.',
       analyse: { question: 'Que vous apprend la cartographie ?', ref: '17.4.5', options: [
-        { t: 'Le premier site d\'arc (le plus en amont) est au droit du pied du canapé : la rallonge y a été atteinte en premier, ce qui a mis hors tension tout l\'aval.', ok: true, fb: 'Exact : l\'arc le plus en amont désigne la zone atteinte en premier sur le circuit (17.4.5.6), cohérent avec le V et la carbonisation.' },
+        { t: 'Le premier site d\'arc (le plus en amont) est au droit du pied du canapé : la rallonge y a été atteinte en premier, ce qui a mis hors tension tout l\'aval.', ok: true, fb: 'Exact : l\'arc le plus en amont désigne la zone atteinte en premier sur le circuit (NFPA 921, chap. 17.4.5.6), cohérent avec le V et la carbonisation.' },
         { t: 'L\'absence d\'arc sur la multiprise prouve qu\'elle n\'était pas branchée.', ok: false, fb: 'Elle était alimentée, mais l\'arc en amont a coupé la rallonge : l\'aval n\'était plus sous tension quand le feu l\'a atteint.' },
       ]}},
   ],
@@ -368,7 +368,7 @@ export default {
       { id: 'q2', type: 'fermee', q: 'Fumez-vous ?', r: 'Oui, mais toujours dehors, sur la terrasse. Jamais dans la maison.', fait: { id: 'F31', texte: 'M. Durand déclare fumer uniquement sur la terrasse.' } },
       { id: 'q3', type: 'ouverte', q: 'Quels appareils restaient branchés ou allumés dans le séjour la nuit ?', r: 'Le lampadaire était éteint. La box et le chargeur du téléphone restent branchés tout le temps sur la multiprise derrière le canapé. La télé est en veille, sur sa propre prise.', fait: { id: 'F32', texte: 'Multiprise derrière le canapé alimentée en permanence (box, chargeur, lampadaire éteint) ; TV en veille sur la prise du mur est.' } },
       { id: 'q4', type: 'ouverte', q: 'Y a-t-il eu des changements récents dans le séjour ?', r: 'On a acheté un nouveau canapé il y a trois semaines. On a tout réorganisé, j\'ai mis une rallonge pour atteindre la prise du coin.', fait: { id: 'F33', texte: 'Nouveau canapé et réorganisation du séjour il y a 3 semaines ; rallonge ajoutée pour rejoindre la prise du coin sud-ouest.' } },
-      { id: 'q5', type: 'orientee', q: 'Votre fils vous en voulait-il au point de mettre le feu ?', r: '(Il se ferme) Qu\'est-ce que vous insinuez ? Je ne réponds pas à ça.', fait: null, piege: 'Question orientée et accusatoire : elle ferme le dialogue et n\'apporte aucune donnée (13.4).' },
+      { id: 'q5', type: 'orientee', q: 'Votre fils vous en voulait-il au point de mettre le feu ?', r: '(Il se ferme) Qu\'est-ce que vous insinuez ? Je ne réponds pas à ça.', fait: null, piege: 'Question orientée et accusatoire : elle ferme le dialogue et n\'apporte aucune donnée (NFPA 921, chap. 13.4).' },
     ]},
     { id: 'T2', nom: 'Sandrine Durand', role: 'Occupante (49 ans)', avatar: '👩', questions: [
       { id: 'q1', type: 'ouverte', q: 'Avez-vous remarqué quelque chose d\'inhabituel ces derniers jours dans la maison ?', r: 'Le lampadaire clignotait depuis une semaine, surtout quand on s\'asseyait du côté droit du canapé, côté baie. Je l\'ai dit à Patrick, il pensait que c\'était l\'ampoule.', fait: { id: 'F35', texte: 'Mme Durand : le lampadaire (alimenté par la multiprise, via la rallonge) clignotait depuis une semaine quand on s\'asseyait côté sud du canapé.' } },
@@ -380,7 +380,7 @@ export default {
       { id: 'q1', type: 'ouverte', q: 'Racontez-moi ce que vous avez vu et entendu cette nuit-là.', r: 'Je dors mal. Vers 2h, j\'ai vu une lueur orange par la grande baie des Durand, puis des flammes. J\'ai appelé le 18 tout de suite.', fait: { id: 'F38', texte: 'Mme Lacoste : lueur puis flammes visibles par la baie vers 02h05, appel 18 immédiat.' } },
       { id: 'q2', type: 'ouverte', q: 'Avez-vous vu quelqu\'un ou un véhicule dans la rue ?', r: 'Non, personne. La rue était calme, aucune voiture.', fait: { id: 'F39', texte: 'Mme Lacoste : personne ni aucun véhicule vu dans la rue.' } },
       { id: 'q3', type: 'ouverte', q: 'Comment décririez-vous la famille et le quartier ?', r: 'Des gens bien. Il y a eu une dispute entre le fils et le père il y a deux jours, ça criait fort, j\'ai entendu par la fenêtre. Mais bon, les jeunes…', fait: { id: 'F41', texte: 'Mme Lacoste : dispute père/fils entendue deux jours avant le sinistre.' } },
-      { id: 'q4', type: 'orientee', q: 'Pensez-vous que le fils aurait pu mettre le feu ?', r: 'Oh, ça ne m\'étonnerait pas ! Maintenant que vous le dites… il a crié qu\'il allait « tout brûler », je crois. Oui, j\'en suis presque sûre.', fait: { id: 'F40', texte: 'Mme Lacoste (sur question orientée) : le fils aurait crié qu\'il allait « tout brûler » — propos incertain, apparu après suggestion.', contamine: true }, piege: 'Question orientée : le témoin « reconstruit » un souvenir conforme à la suggestion. Donnée contaminée (13.4, biais d\'attente 4.3.8).' },
+      { id: 'q4', type: 'orientee', q: 'Pensez-vous que le fils aurait pu mettre le feu ?', r: 'Oh, ça ne m\'étonnerait pas ! Maintenant que vous le dites… il a crié qu\'il allait « tout brûler », je crois. Oui, j\'en suis presque sûre.', fait: { id: 'F40', texte: 'Mme Lacoste (sur question orientée) : le fils aurait crié qu\'il allait « tout brûler » — propos incertain, apparu après suggestion.', contamine: true }, piege: 'Question orientée : le témoin « reconstruit » un souvenir conforme à la suggestion. Donnée contaminée (NFPA 921, chap. 13.4 ; biais d\'attente : chap. 4.3.8).' },
     ]},
     { id: 'T4', nom: 'Sergent-chef Morel', role: 'Chef d\'agrès FPT Lescourre', avatar: '🧑‍🚒', questions: [
       { id: 'q1', type: 'ouverte', q: 'Décrivez la situation à votre arrivée.', r: 'Séjour totalement embrasé, flammes qui sortaient par la baie, le vitrage avait déjà cédé. Couloir enfumé jusqu\'au sol. Les occupants étaient dehors. On a forcé la porte d\'entrée et attaqué par le couloir.', fait: { id: 'F42', texte: 'CA Morel : séjour embrasé à 02h14, vitrage de la baie déjà rompu, attaque par le couloir après ouverture forcée.' } },

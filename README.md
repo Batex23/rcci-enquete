@@ -29,24 +29,26 @@ Le joueur mène des enquêtes sur des scènes d'incendie en **3D low-poly (vue i
 
 ## Boucle de jeu
 
-| Étape NFPA 921 | Dans le jeu |
+| Étape (NFPA 921, chap. 4.3) | Dans le jeu |
 |---|---|
 | 4.3.1 Reconnaître le besoin | Ordre de mission, compte rendu SDIS, météo |
-| 4.3.2 Définir le problème | Évaluation de sécurité (chap. 12), choix des équipements |
+| 4.3.2 Définir le problème | Évaluation de sécurité (NFPA 921, chap. 12), choix des équipements |
 | 4.3.3 Collecter les données | Zones de l'extérieur vers l'intérieur, cavaliers jaunes numérotés, photos, fouille par couches, scellés, témoins, OSINT |
 | 4.3.4 Analyser les données | Chaque constat doit être **interprété** (cataloguer ≠ analyser) |
 | 4.3.5 Développer des hypothèses | Hypothèses d'origine et de cause |
-| 4.3.6 Tester les hypothèses | Chaque donnée est classée *soutient / neutre / réfute* ; test de compétence de la source (18.4.2) |
-| Hypothèse finale & rapport | Origine, cause, **niveau de certitude** (4.5), **classification** (19.2.1), planche photo, rapport imprimable |
+| 4.3.6 Tester les hypothèses | Chaque donnée est classée *soutient / neutre / réfute* ; test de compétence de la source (chap. 18.4.2) |
+| Hypothèse finale & rapport | Origine, cause, **niveau de certitude** (chap. 4.5), **classification** (chap. 19.2.1), planche photo, rapport imprimable |
 
 ### Ce qui est évalué
+
+Les numéros renvoient aux chapitres et sections de la NFPA 921 (édition 2011).
 
 - **Méthode (40)** : sécurité, ordre d'examen (17.3.1.3), photos avant toute modification (15.2), fouille documentée (17.3.2), contenants et échantillons de comparaison (16.5.4 / 16.6.2), entretiens sans question orientée (13.4), sources ouvertes, analyse de toutes les données.
 - **Analyse (30)** : interprétation des effets du feu, hypothèses alternatives, réfutations fondées sur des faits, pas d'appui sur une rumeur ou un témoignage contaminé, test de compétence.
 - **Conclusion (30)** : origine, cause, certitude **cohérente avec les données réellement réunies**, classification. Une cause seulement « possible » impose « indéterminée ».
 - **Pénalités** : *negative corpus* (18.6.5), conclusion criminelle infondée, écarts de méthode.
 
-### Pièges de l'enquête n°1 (Pavillon Durand)
+### Pièges du Pavillon Durand (niveau 2)
 
 Tracés irréguliers post-embrasement, lecture PID positive due aux produits de pyrolyse, faïençage du verre, jerrican dans le garage, témoignage orienté d'une voisine, article de presse, multiprise faisant l'objet d'un rappel (RappelConso) mais hors du point de défaillance, et une hypothèse « cigarette » crédible à réfuter par la localisation de l'origine.
 
@@ -67,7 +69,7 @@ Cinq modes, de la construction au dossier partagé :
 |---|---|
 | 🏗️ **Construire** | Dessiner les pièces à la souris sur une grille (pas de 25 cm), les déplacer, les redimensionner par les bords ; poser portes, fenêtres, baies, portes de garage sur les murs ; catalogue de mobilier (touche **R** pour pivoter) ; **niveaux** (R+1, R+2… avec reprise de l'emprise), **trémies** et escaliers |
 | 🔥 **Effets du feu** | Par pièce : hauteur de la couche chaude et densité de suie ; pinceaux muraux (tracé en V, clean burn, calcination, zone protégée, démarcation) et au sol (tracés irréguliers, consommation, zone protégée, débris) ; degré de combustion de chaque objet |
-| 📍 **Indices & photos** | Poser les **constats** dans la 3D avec leur **lecture** (interprétation réelle), pièges éventuels et référence NFPA ; **épingler de vraies photos** à l'endroit et dans la direction de la prise de vue, liées ou non à un constat ; zone de fouille |
+| 📍 **Indices & photos** | Poser les **constats** dans la 3D avec leur **lecture** (interprétation réelle), pièges éventuels, référence NFPA 921 (chapitre / section) et autres sources éventuelles ; **épingler de vraies photos** à l'endroit et dans la direction de la prise de vue, liées ou non à un constat ; zone de fouille |
 | 🧾 **Enquête** | Mission, compte rendu SDIS, témoins, OSINT, prélèvements et résultats, hypothèses, solution, pièges, chronologie ; génération automatique des zones |
 | 📘 **RETEX** | Auteur, contexte, enseignements, points positifs, axes d'amélioration, recommandations ; **aperçu de la vue Analyse** ; **export HTML autonome** |
 
@@ -99,6 +101,7 @@ js/editor/              Atelier de scènes (schéma, formulaires, outils)
 js/retex/               Export et point d'entrée du dossier RETEX autonome
 js/stockage.js          IndexedDB (dossiers, brouillon, photos)
 js/data/nfpa.js         Référentiel NFPA 921 (2011), reformulé en français
+js/data/sources.js      Bibliographie et correspondances NFPA 921 → autres sources
 js/data/materiaux.js    Températures, puissances, fusion (tableau mnémotechnique de l'auteur)
 js/data/scenarios/      Scénarios d'enquête (JSON)
 ```
@@ -110,6 +113,25 @@ js/data/scenarios/      Scénarios d'enquête (JSON)
 - Scène avec **victime** (chap. 23) et lecture des **traces d'actions de lance** des sapeurs-pompiers (6.3.2.5).
 - Batteries lithium-ion, enquête complexe en entrepôt (chap. 20 et 27), modélisation.
 
+## Sources
+
+La **NFPA 921 (édition 2011)** est la référence de base : chaque constat, chaque règle et chaque correction renvoie à un chapitre ou une section de ce guide, affiché sous la forme « NFPA 921 – chap. 6.3.7.1 » (chapitre 6, section 6.3.7.1).
+
+Les autres ouvrages de la bibliothèque méthodologique **illustrent** ces notions : ils apparaissent dans les fiches d'indices (« 📚 Ce qu'en disent d'autres références »), au débriefing, dans le Référentiel (page *Sources et bibliographie*, correspondances par thème), dans le rapport et dans les dossiers d'analyse RETEX.
+
+| Ouvrage | Apport dans le jeu |
+|---|---|
+| J. J. Lentini, *Scientific Protocols for Fire Investigation* (2013) | Hypothèse nulle, negative corpus, mythes (verre faïencé, écaillage, angle du V, feux « bas »), sources d'erreur, cas réels d'appareils |
+| R. K. Chandler, *Fire Investigation* (2009) | Sécurité, tracés (verre, sols, zones protégées), électricité, sources d'ignition (conduits, cigarettes), entretiens, rapport |
+| CNPP, EP 02-11 *Méthodologie de recherche des causes d'incendie* | Lecture des indices en français (fumées, couche chaude, bois, béton, plâtres, vitres, fusions), démarche, prélèvements, sécurité |
+| ENFSI, *Best Practice Manual for the Investigation of Fire Scenes* (2017) | Primo-intervenants, examen extérieur → intérieur, fouille stratigraphique, prélèvements de liquides inflammables |
+| AAAS, *Fire Investigation* (2017) ; Gorbett et al., *Fire Science Reviews* (2015) | Ce que la recherche valide ou non : tracés après embrasement, biais, chiens et détecteurs |
+| FEMA/USFA, *Fire Dynamics and Modeling* (2016) ; M. Suzanne, thèse INSA Rouen (2009) ; LCPP (2015) | Dynamique du feu en compartiment, essais, modélisation |
+| G. Leberrera, *La recherche des causes et circonstances des incendies* | Cadre français de la RCCI, examen des lieux, électricité, témoignages, rapport |
+| Forensis (Forensic Architecture, 2014) ; NFPA 1033 ; D. A. Row, *Report Writing* ; NF C 15-100 | Sources ouvertes et reconstitution ; compétences de l'enquêteur ; rédaction du rapport ; installations électriques |
+
+Dans l'Atelier, chaque constat peut recevoir ses propres sources (champ « Autres sources ») ; à défaut, des sources sont proposées à partir de sa référence NFPA 921. La correspondance est dans `js/data/sources.js`.
+
 ## Avertissement
 
-Les références renvoient à la numérotation de la **NFPA 921, édition 2011**. Les textes du jeu sont des reformulations pédagogiques, pas des extraits de la norme. Les personnes, lieux et produits (dont « VOLTEX ») sont fictifs.
+Les références renvoient à la numérotation de la **NFPA 921, édition 2011**. Les autres ouvrages sont cités par chapitre, section ou page ; leurs contenus sont résumés, jamais reproduits. Les textes du jeu sont des reformulations pédagogiques, pas des extraits de la norme. Les personnes, lieux et produits (dont « VOLTEX ») sont fictifs.

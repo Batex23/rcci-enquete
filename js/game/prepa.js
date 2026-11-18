@@ -47,7 +47,7 @@ export function preparerJeu(src) {
   if (!scn.reconstitution?.length || scn.reconstitution.length < 2) {
     scn.reconstitution = [{ t: 'T0', titre: 'Départ de feu', feu: 0.2, fumee: {} }, { t: 'T+', titre: 'Développement', feu: 0.8, fumee: {} }, { t: 'Fin', titre: 'Extinction', feu: 0, fumee: {} }];
   }
-  scn.securite ||= { ref: '12', options: [{ id: 'epi', t: 'Porter les EPI adaptés (protection respiratoire, gants, casque)', ok: true }, { id: 'struct', t: 'Évaluer la stabilité de la structure avant d\'entrer', ok: true }, { id: 'sans', t: 'Entrer sans protection : le feu est éteint', ok: false, fb: 'Les débris restent toxiques (12.5 / 12.6).' }] };
+  scn.securite ||= { ref: '12', options: [{ id: 'epi', t: 'Porter les EPI adaptés (protection respiratoire, gants, casque)', ok: true }, { id: 'struct', t: 'Évaluer la stabilité de la structure avant d\'entrer', ok: true }, { id: 'sans', t: 'Entrer sans protection : le feu est éteint', ok: false, fb: 'Les débris restent toxiques (NFPA 921, chap. 12.5 et 12.6).' }] };
   for (const k of ['rapportSdis', 'temoins', 'osint', 'prelevements', 'pid', 'observations', 'zones']) scn[k] ||= [];
   scn.mission ||= {};
   scn.recompense ||= { credits: 2000, bonusMax: 1000, xp: 300 };
