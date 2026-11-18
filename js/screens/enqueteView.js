@@ -1,5 +1,6 @@
 // Écran d'enquête : scène 3D + panneaux méthode / dossier
-import { Scene3D } from '../engine/scene3d.js';
+import { Scene3D, altitudeDe, niveauIndex, toutesPieces } from '../engine/scene3d.js';
+import { preparerJeu } from '../game/prepa.js';
 import { Enquete } from '../game/enquete.js';
 import { OUTILS, CONTENANTS } from '../data/outils.js';
 import { METHODE_SCIENTIFIQUE, CLASSIFICATIONS, CERTITUDES } from '../data/nfpa.js';
@@ -15,7 +16,7 @@ const SOURCES_OSINT = [
 ];
 
 export function ouvrirEnquete(scnSrc, ctx) {
-  const scn = structuredClone(scnSrc);
+  const scn = preparerJeu(scnSrc);
   const E = new Enquete(scn, ctx.app.c);
   const reg = ctx.app.c.reglages;
   const immediat = reg.feedback !== 'differe';
@@ -43,12 +44,24 @@ export function ouvrirEnquete(scnSrc, ctx) {
   screen.appendChild(root);
   const S = new Scene3D($('.viewport', root));
   S.load(scn);
-  S.setHotspots(scn.observations.map(o => ({ id: o.id, pos: o.pos })));
+  const bat = scn.batiment;
+  S.setHotspots(scn.observations.map(o => ({ id: o.id, pos: o.pos, alt: altitudeDe(bat, o.niveau), niv: niveauIndex(bat, o.niveau) })));
+  // photos réelles épinglées : visibles quand le constat lié est relevé, ou quand leur zone a été examinée
+  const pieces = toutesPieces(bat);
+  const zonePhoto = p => {
+    if (p.zone) return p.zone;
+    const niv = niveauIndex(bat, p.niveau);
+    const r = pieces.find(q => q._niv === niv && p.pos[0] >= q.x && p.pos[0] <= q.x + q.w && p.pos[2] >= q.z && p.pos[2] <= q.z + q.d);
+    return (r && scn.zones.find(z => z.piece === r.id)?.id) || scn.zones.find(z => z.exterieur)?.id;
+  };
+  S.setPhotos((scn.photos || []).map(p => ({ id: p.id, pos: p.pos, yaw: p.yaw, alt: altitudeDe(bat, p.niveau), niv: niveauIndex(bat, p.niveau), visible: false })));
+  const photoVisible = p => p.constat ? E.decouverts.has(p.constat) : E.zonesVisitees.includes(zonePhoto(p));
   S.onPick = onPick;
   ctx.onLeave = () => { S.dispose(); document.removeEventListener('keydown', onKey); };
 
   // ------------------------------------------------------------ rendus
   function refreshHotspots() {
+    for (const p of scn.photos || []) S.setPhotoVisible(p.id, photoVisible(p));
     for (const o of scn.observations) {
       const d = E.decouverts.get(o.id);
       S.updateHotspot(o.id, { actif: E.estActif(o), decouvert: !!d, num: d?.num, photo: E.photoObs.has(o.id), analyse: E.analyses.has(o.id), lueur: reg.lueurs && !o.outil, toujours: !!d });
@@ -135,7 +148,8 @@ export function ouvrirEnquete(scnSrc, ctx) {
 
   function zoneInteretDefinie() {
     const f = scn.fouille;
-    return [...E.analyses.keys()].filter(id => E.obs(id)?.zone === f.zone && !(E.obs(id).couche)).length >= 3;
+    const cand = scn.observations.filter(o => o.zone === f.zone && !o.couche && o.analyse).length;
+    return [...E.analyses.keys()].filter(id => E.obs(id)?.zone === f.zone && !(E.obs(id).couche)).length >= Math.min(3, cand);
   }
 
   // ------------------------------------------------------------ panneau droit
@@ -176,7 +190,7 @@ export function ouvrirEnquete(scnSrc, ctx) {
     return `<div class="fait ${f.contamine ? 'contamine' : ''}" data-f="${f.id}">
       <div class="hd">${num ? `<span class="cav">${num}</span>` : ''}<span class="id">${f.id}</span>${typeChip}${f.contamine ? '<span class="chip ko">contaminé</span>' : ''}${f.speculatif && immediat ? '<span class="chip warn">non probant</span>' : ''}${f.partiel ? '<span class="chip warn">partiel</span>' : ''}${o && E.photoObs.has(o.id) ? '<span class="chip">📷</span>' : ''}${f.ref ? ref(f.ref) : ''}</div>
       <div>${esc(f.court || f.texte)}</div>
-      ${o ? (a ? `<div class="interp ${immediat && !a.ok ? 'ko' : ''}">Analyse : ${esc(o.analyse.options[a.idx].t)}</div>` : `<div style="margin-top:5px"><button class="btn btn-sm btn-primary" data-an="${o.id}">Analyser</button> <button class="btn btn-sm" data-voir="${o.id}">Voir</button></div>`) : ''}
+      ${o && !o.analyse ? '' : o ? (a ? `<div class="interp ${immediat && !a.ok ? 'ko' : ''}">Analyse : ${esc(o.analyse.options[a.idx].t)}</div>` : `<div style="margin-top:5px"><button class="btn btn-sm btn-primary" data-an="${o.id}">Analyser</button> <button class="btn btn-sm" data-voir="${o.id}">Voir</button></div>`) : ''}
       ${f.fiabilite ? `<div class="muted small">Fiabilité : ${esc(f.fiabilite)}</div>` : ''}
     </div>`;
   }
@@ -372,6 +386,7 @@ export function ouvrirEnquete(scnSrc, ctx) {
     const msgs = E.entrerZone(id);
     const z = E.zone(id);
     S.setFocus(z, z.piece || null);
+    S.setNiveauVisible(z.piece ? S._nivDePiece(z.piece) : null);
     if (immediat) msgs.forEach(v => toast(`⚠ ${esc(v.texte)} ${ref(v.ref)}`, 'warn', 5500));
     fermerCarte();
     renderAll();
@@ -399,6 +414,7 @@ export function ouvrirEnquete(scnSrc, ctx) {
   }
 
   function onPick(hit) {
+    if (hit.photo) { voirPhoto(hit.photo); return; }
     if (!E.zoneActive && ui.outil !== 'photo') { toast('Choisissez une zone à examiner (colonne de gauche).', 'warn'); return; }
     // un clic sur un cavalier déjà relevé ouvre sa fiche, quel que soit l'outil (sauf photo/prélèvement)
     if (hit.hotspot && E.decouverts.has(hit.hotspot) && !['photo', 'prelever', 'jauge', 'arc'].includes(ui.outil)) { montrerCarte(E.obs(hit.hotspot)); return; }
@@ -414,6 +430,14 @@ export function ouvrirEnquete(scnSrc, ctx) {
       case 'fouille': retirerCouche(); return;
     }
     renderAll();
+  }
+
+  function voirPhoto(id) {
+    const p = scn.photos.find(x => x.id === id);
+    const src = scn.medias?.[p.media];
+    E.log(`Photo d'intervention consultée : ${p.titre || id}.`);
+    modal({ titre: `📷 ${esc(p.titre || 'Photo')}`, large: true, corps: `${src ? `<img src="${src}" alt="" style="width:100%;border-radius:8px;display:block">` : '<p class="muted">Image absente.</p>'}
+      <p style="margin-top:10px">${esc(p.legende || '')}</p><p class="small muted">${esc([p.date, p.auteur].filter(Boolean).join(' · '))}</p>`, actions: [{ label: 'Fermer' }] });
   }
 
   function photoObs(o) {
@@ -440,14 +464,16 @@ export function ouvrirEnquete(scnSrc, ctx) {
     el.innerHTML = `<h3><span class="cav">${d?.num ?? '?'}</span>${esc(o.titre)}</h3>
       <div class="small muted">${esc(E.zone(o.zone)?.nom)}${o.outil ? ` · relevé : ${esc(E.outilNom(o.outil))}` : ''}${o.couche ? ` · fouille, couche ${o.couche}` : ''}</div>
       <div class="desc">${esc(o.description)}</div>
+      ${(scn.photos || []).filter(p => p.constat === o.id && scn.medias?.[p.media]).map(p => `<img src="${scn.medias[p.media]}" alt="" data-ph="${p.id}" style="width:31%;margin:0 1% 6px 0;border-radius:4px;cursor:zoom-in">`).join('')}
       ${a ? `<div class="fb ${immediat ? (a.ok ? 'ok' : 'ko') : ''} small"><b>Votre analyse :</b> ${esc(o.analyse.options[a.idx].t)}${immediat ? `<br><span class="muted">${esc(o.analyse.options[a.idx].fb || '')}</span>` : ''}</div>` : ''}
       <div class="acts" style="margin-top:10px">
         ${E.photoObs.has(o.id) ? '<span class="chip ok">📷 photographié</span>' : '<button class="btn btn-sm" data-x="photo">📷 Photographier</button>'}
-        ${a ? '' : '<button class="btn btn-sm btn-primary" data-x="ana">Analyser</button>'}
+        ${a || !o.analyse ? '' : '<button class="btn btn-sm btn-primary" data-x="ana">Analyser</button>'}
         ${o.prelevement ? (scelle ? `<span class="chip ok">scellé ${scelle.id}</span>` : '<button class="btn btn-sm" data-x="prel">🧤 Prélever</button>') : ''}
         <button class="btn btn-sm btn-ghost" data-x="close">Fermer</button>
       </div>`;
     $('[data-x=close]', el).onclick = fermerCarte;
+    $$('[data-ph]', el).forEach(i => i.onclick = () => voirPhoto(i.dataset.ph));
     $('[data-x=photo]', el)?.addEventListener('click', () => photoObs(o));
     $('[data-x=ana]', el)?.addEventListener('click', () => analyser(o.id));
     $('[data-x=prel]', el)?.addEventListener('click', () => prelever(o));
@@ -558,7 +584,7 @@ export function ouvrirEnquete(scnSrc, ctx) {
     if (v === 'rotg') S.rotateView(-45);
     if (v === 'rotd') S.rotateView(45);
     if (v === 'murs') { iMur = (iMur + 1) % 3; S.setModeMurs(modesMurs[iMur]); e.target.textContent = `🧱 Murs : ${modesMurs[iMur]}`; }
-    if (v === 'vue') { E.zoneActive = null; S.setFocus(null, null); fermerCarte(); renderAll(); }
+    if (v === 'vue') { E.zoneActive = null; S.setFocus(null, null); S.setNiveauVisible(null); fermerCarte(); renderAll(); }
     if (v === 'dessus') { if (!E.possede('drone')) { toast('🔒 Vue aérienne : équipement « Drone » requis.', 'warn'); return; } ui.dessus = !ui.dessus; S.vueDessus(ui.dessus); }
   });
 

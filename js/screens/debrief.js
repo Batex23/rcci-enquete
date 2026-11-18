@@ -1,6 +1,6 @@
 // Débriefing : notation, pièges, solution, reconstitution 3D
 import { evaluer } from '../game/scoring.js';
-import { Scene3D } from '../engine/scene3d.js';
+import { Scene3D, altitudeDe } from '../engine/scene3d.js';
 import { grade } from '../state.js';
 import { $, $$, h, esc, ref, toast } from '../ui.js';
 import { apercuRapport } from './rapport.js';
@@ -69,11 +69,12 @@ export function ouvrirDebrief(E, ctx) {
   const S = new Scene3D($('.recon-view', el));
   S.load(scn);
   const posRef = O(sol.origine).pos;
-  const pieceRef = S.roomAt(posRef[0], posRef[2]);
+  const pieceRef = S.niveaux.flatMap(n => n.pieces).find(p => posRef[0] >= p.x && posRef[0] <= p.x + p.w && posRef[2] >= p.z && posRef[2] <= p.z + p.d);
   const zoneRef = scn.zones.find(z => z.piece === pieceRef?.id);
   S.setFocus(zoneRef ? { ...zoneRef, zoom: (zoneRef.zoom || 1) * 0.75 } : null, null, false);
   S.setModeMurs('bas');
-  let origine = O(E.rapport.origine)?.pos || O(sol.origine).pos;
+  const opos = h => { if (!h) return null; const p = [...h.pos]; p.alt = altitudeDe(scn.batiment, h.niveau); return p; };
+  let origine = opos(O(E.rapport.origine)) || opos(O(sol.origine));
   const slider = $('input[type=range]', el), lbl = $('.lbl', el);
   const upd = () => {
     const t = +slider.value, f = scn.reconstitution[Math.min(scn.reconstitution.length - 1, Math.round(t))];
@@ -91,8 +92,8 @@ export function ouvrirDebrief(E, ctx) {
     play = requestAnimationFrame(step);
   };
   $$('[data-p]', el).forEach(b => b.onclick = toggle);
-  $('[data-o=joueur]', el).onclick = () => { origine = O(E.rapport.origine)?.pos || O(sol.origine).pos; if (!O(E.rapport.origine)) toast('Aucune origine déterminée dans votre rapport.', 'warn'); upd(); };
-  $('[data-o=ref]', el).onclick = () => { origine = O(sol.origine).pos; upd(); };
+  $('[data-o=joueur]', el).onclick = () => { origine = opos(O(E.rapport.origine)) || opos(O(sol.origine)); if (!O(E.rapport.origine)) toast('Aucune origine déterminée dans votre rapport.', 'warn'); upd(); };
+  $('[data-o=ref]', el).onclick = () => { origine = opos(O(sol.origine)); upd(); };
   ctx.onLeave = () => { if (play) cancelAnimationFrame(play); S.dispose(); };
   $('[data-a=qg]', el).onclick = () => ctx.allerQG();
   $('[data-a=rapport]', el).onclick = () => apercuRapport(E, E.rapport, c);

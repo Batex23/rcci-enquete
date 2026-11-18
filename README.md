@@ -41,20 +41,35 @@ Tracés irréguliers post-embrasement, lecture PID positive due aux produits de 
 - **Équipements** : jauge de carbonisation/calcination, contenants pour liquides inflammables, kit de cartographie des arcs, PID, calculateur de dynamique du feu (Thomas, Babrauskas, Heskestad), OSINT pro, drone, photogrammétrie, véhicule d'investigation, équipe cynophile, laboratoire interne.
 - **Modes** : *Formation* (correction immédiate) ou *Expertise* (tout est révélé au débriefing), aide à la recherche activable.
 
-## Éditeur formateur (`editor.html`)
+## Atelier de scènes (`editor.html`) — façon Les Sims
 
-- Édition complète d'un scénario : pièces, ouvertures, mobilier brûlé, tracés (V, clean burn, calcination, zones protégées, tracés irréguliers…), zones, constats et leurs analyses, fouille, PID, prélèvements et résultats de labo, témoins, OSINT, hypothèses, solution, pièges, chronologie de reconstitution.
-- **Aperçu 3D en direct** et placement des points en cliquant dans la scène (📍).
-- **Créer une variante** : même bâtiment, autre heure, autre puissance, autre origine.
-- Contrôle d'intégrité, import/export JSON, publication dans le tableau des missions du navigateur.
+Cinq modes, de la construction au dossier partagé :
 
-Pour intégrer définitivement un scénario au dépôt : exporter le JSON, le placer dans `js/data/scenarios/`, l'importer dans `js/data/scenarios/index.js`.
+| Mode | Ce qu'on y fait |
+|---|---|
+| 🏗️ **Construire** | Dessiner les pièces à la souris sur une grille (pas de 25 cm), les déplacer, les redimensionner par les bords ; poser portes, fenêtres, baies, portes de garage sur les murs ; catalogue de mobilier (touche **R** pour pivoter) ; **niveaux** (R+1, R+2… avec reprise de l'emprise), **trémies** et escaliers |
+| 🔥 **Effets du feu** | Par pièce : hauteur de la couche chaude et densité de suie ; pinceaux muraux (tracé en V, clean burn, calcination, zone protégée, démarcation) et au sol (tracés irréguliers, consommation, zone protégée, débris) ; degré de combustion de chaque objet |
+| 📍 **Indices & photos** | Poser les **constats** dans la 3D avec leur **lecture** (interprétation réelle), pièges éventuels et référence NFPA ; **épingler de vraies photos** à l'endroit et dans la direction de la prise de vue, liées ou non à un constat ; zone de fouille |
+| 🧾 **Enquête** | Mission, compte rendu SDIS, témoins, OSINT, prélèvements et résultats, hypothèses, solution, pièges, chronologie ; génération automatique des zones |
+| 📘 **RETEX** | Auteur, contexte, enseignements, points positifs, axes d'amélioration, recommandations ; **aperçu de la vue Analyse** ; **export HTML autonome** |
+
+### Un dossier, deux vues
+
+- **Vue Analyse** : tout est visible — scène 3D cliquable (constats numérotés, photos), synthèse, chronologie avec reconstitution, constatations illustrées, analyses, déclarations, hypothèses retenues/écartées et les faits qui les justifient, enseignements. Imprimable en PDF.
+- **Vue Jeu** : la même scène devient une enquête : la conclusion est masquée, les constats sont des indices à trouver, les photos apparaissent quand le constat lié est relevé. Les interprétations proposées au joueur sont générées à partir de vos lectures (vos pièges en priorité).
+
+### Partager un RETEX
+
+« Exporter le dossier (HTML autonome) » produit **un seul fichier** qui s'ouvre hors ligne dans n'importe quel navigateur, photos incluses, avec options d'anonymisation (témoins, adresse, mandant). **Les photos ne passent jamais par GitHub** : elles restent dans le navigateur (IndexedDB) et dans les fichiers que vous exportez.
+
+> Si vous modifiez le moteur ou la vue Analyse, régénérez la visionneuse : `npm install && npm run build:retex` (le jeu lui-même ne nécessite aucune compilation).
 
 ## Structure
 
 ```
 index.html              Jeu (QG, enquête, débriefing)
-editor.html             Éditeur formateur
+editor.html             Atelier de scènes (construction, effets, indices, enquête, RETEX)
+dist/retex-viewer.js    Visionneuse RETEX autonome (générée par esbuild)
 css/style.css
 vendor/                 Three.js r160 (embarqué, hors ligne)
 js/main.js              QG : missions, équipement, référentiel, carrière
@@ -62,7 +77,9 @@ js/state.js             Sauvegarde locale (carrière, scénarios formateur)
 js/engine/              Moteur 3D (scène, textures procédurales des effets du feu)
 js/game/                Logique d'enquête et notation
 js/screens/             Écrans : enquête, débriefing, rapport, outils d'analyse
-js/editor/              Éditeur formateur (schéma, formulaires)
+js/editor/              Atelier de scènes (schéma, formulaires, outils)
+js/retex/               Export et point d'entrée du dossier RETEX autonome
+js/stockage.js          IndexedDB (dossiers, brouillon, photos)
 js/data/nfpa.js         Référentiel NFPA 921 (2011), reformulé en français
 js/data/materiaux.js    Températures, puissances, fusion (tableau mnémotechnique de l'auteur)
 js/data/scenarios/      Scénarios d'enquête (JSON)

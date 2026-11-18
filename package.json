@@ -1,0 +1,9 @@
+{
+  "name": "rcci-enquete",
+  "private": true,
+  "description": "Jeu sérieux RCCI (NFPA 921) — aucune compilation nécessaire pour le jeu ; seule la visionneuse RETEX autonome est compilée.",
+  "scripts": {
+    "build:retex": "esbuild js/retex/standalone.js --bundle --format=iife --minify --outfile=dist/retex-viewer.js"
+  },
+  "devDependencies": { "esbuild": "0.23.1" }
+}

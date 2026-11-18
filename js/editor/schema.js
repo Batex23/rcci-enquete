@@ -1,4 +1,5 @@
 // Schéma des formulaires de l'éditeur formateur
+import { toutesPieces } from '../engine/niveaux.js';
 const SOLS = ['stratifie', 'parquet', 'carrelage', 'beton'];
 const OBJETS = ['canape', 'lampadaire', 'multiprise', 'prise', 'cable', 'meubleTV', 'tv', 'tableBasse', 'tapis', 'etagere', 'debris', 'cuisine', 'frigo', 'table', 'lit', 'armoire', 'bureau', 'baignoire', 'tableauElec', 'tondeuse', 'jerrican', 'etabli', 'daaf', 'voiture'];
 const TRACES = ['V', 'cleanburn', 'calcination', 'protegee', 'demarcation', 'irregulier', 'consomme', 'debris'];
@@ -47,7 +48,7 @@ export const SECTIONS = [
   { id: 'osint', titre: 'Sources ouvertes (OSINT)', liste: { chemin: 'osint', resume: o => o.titre, modele: { id: 'O9', source: 'reseaux', motsCles: [['mot']], titre: 'Résultat', extrait: '', fiabilite: '', fait: { id: 'F97', texte: '' } },
     champs: [['id', 'text'], ['source', 'select', '', SOURCES], ['pro', 'bool', 'Réservé à l\'abonnement OSINT pro'], ['motsCles', 'groupes', 'Groupes de mots-clés : « a, b ; c » = (a ET b) OU c'], ['titre', 'text'], ['extrait', 'textarea'], ['fiabilite', 'text'], ['piege', 'bool'], ['fait', 'json', '{id, texte}']] } },
   { id: 'hyp-o', titre: 'Hypothèses d\'origine', apercu: true, liste: { chemin: 'hypotheses.origines', resume: o => `${o.ok ? '✔ ' : ''}${o.id} — ${o.nom}`, modele: { id: 'OX', nom: 'Origine', pos: [0, 0.1, 0], soutien: [], refute: [] },
-    champs: [['id', 'text'], ['nom', 'text'], ['pos', 'vec3'], ['ok', 'bool', 'Origine réelle'], ['soutien', 'csv', 'Faits qui la soutiennent'], ['refute', 'csv', 'Faits qui la réfutent']] } },
+    champs: [['id', 'text'], ['nom', 'text'], ['niveau', 'text', 'Id du niveau (ex. rdc)'], ['pos', 'vec3'], ['ok', 'bool', 'Origine réelle'], ['soutien', 'csv', 'Faits qui la soutiennent'], ['refute', 'csv', 'Faits qui la réfutent']] } },
   { id: 'hyp-c', titre: 'Hypothèses de cause', liste: { chemin: 'hypotheses.causes', resume: o => `${o.ok ? '✔ ' : ''}${o.id} — ${o.nom}`, modele: { id: 'CX', nom: 'Cause', premierCombustible: '', source: '', classification: 'accidentelle', soutien: [], refute: [] },
     champs: [['id', 'text'], ['nom', 'textarea'], ['premierCombustible', 'text'], ['source', 'text'], ['classification', 'select', '', CLASS], ['ok', 'bool', 'Cause réelle'], ['origine', 'text'], ['soutien', 'csv'], ['refute', 'csv'], ['competence', 'json', '{source, tSource, combustible, tCombustible}']] } },
   { id: 'solution', titre: 'Solution & pièges', champs: [['solution.origine', 'text'], ['solution.cause', 'text'], ['solution.classification', 'select', '', CLASS], ['solution.certitude', 'select', '', ['probable', 'possible']],
@@ -71,8 +72,10 @@ export function nouveauScenario() {
     mission: { mandant: '', reference: '', dateSinistre: '', heureAlerte: '', adresse: '', ordre: '', preservation: '' },
     rapportSdis: [], meteo: '',
     securite: { ref: '12', options: [{ id: 'epi', t: 'Porter les EPI adaptés', ok: true }] },
-    batiment: { hauteur: 2.5, epaisseur: 0.16, pieces: [{ id: 'piece1', nom: 'Pièce', x: 0, z: 0, w: 5, d: 4, sol: 'parquet', peinture: '#ddd6c6', couche: 1.2, suie: 0.6 }], ouvertures: [{ type: 'porte', x: 2.5, z: 4, axe: 'h', w: 0.9, h: 2 }], objets: [], traces: [] },
-    zones: [{ id: 'ext', nom: 'Extérieur', exterieur: true, rang: 0, cible: [2.5, 0, 2], zoom: 0.8 }, { id: 'piece1', nom: 'Pièce', piece: 'piece1', rang: 2, cible: [2.5, 0, 2], zoom: 1.4 }],
+    batiment: { hauteur: 2.5, epaisseur: 0.16, niveaux: [{ id: 'rdc', nom: 'Rez-de-chaussée', altitude: 0, hauteur: 2.5, pieces: [{ id: 'p1', nom: 'Séjour', x: 0, z: 0, w: 5, d: 4, sol: 'parquet', peinture: '#ddd6c6', couche: 2.5, suie: 0 }], ouvertures: [{ type: 'porte', x: 2.5, z: 4, axe: 'h', w: 0.9, h: 2.05 }], objets: [], traces: [], tremies: [] }] },
+    zones: [{ id: 'abords', nom: 'Abords et extérieur', exterieur: true, rang: 0, cible: [2.5, 0, 2], zoom: 0.8 }, { id: 'p1', nom: 'Séjour', piece: 'p1', rang: 2, cible: [2.5, 0, 2], zoom: 1.4 }],
+    photos: [], medias: {}, mode: 'retex',
+    retex: { auteur: '', service: '', date: '', lieuPublic: '', confidentialite: 'Diffusion restreinte', resume: '', contexte: '', enseignements: [], positifs: [], ameliorations: [], recommandations: [] },
     observations: [], pid: [], fouille: null, prelevements: [], temoins: [], osint: [],
     hypotheses: { origines: [], causes: [] },
     solution: { origine: '', cause: '', classification: 'accidentelle', certitude: 'probable', probableSi: { tous: [], unParmi: [] }, faitsCles: [], pieges: [] },
@@ -86,7 +89,7 @@ export function valider(s) {
   const ids = (arr, key = 'id') => (arr || []).map(x => x[key]);
   const dup = (arr, lbl) => { const seen = new Set(); for (const i of arr) { if (seen.has(i)) err.push(`${lbl} : identifiant en double « ${i} »`); seen.add(i); } };
   if (!s.id || /\s/.test(s.id)) err.push('Identifiant du scénario manquant ou avec des espaces.');
-  const pieces = ids(s.batiment?.pieces); dup(pieces, 'Pièces');
+  const pieces = toutesPieces(s.batiment || {}).map(p => p.id); dup(pieces, 'Pièces');
   const zones = ids(s.zones); dup(zones, 'Zones');
   for (const z of s.zones || []) if (z.piece && !pieces.includes(z.piece)) err.push(`Zone « ${z.id} » : pièce « ${z.piece} » inconnue.`);
   if (!(s.zones || []).some(z => z.exterieur)) warn.push('Aucune zone extérieure : l\'ordre extérieur → intérieur ne pourra pas être évalué.');
@@ -97,7 +100,8 @@ export function valider(s) {
     if (!zones.includes(o.zone)) err.push(`Constat ${o.id} : zone « ${o.zone} » inconnue.`);
     if (!Array.isArray(o.pos) || o.pos.length !== 3) err.push(`Constat ${o.id} : position invalide.`);
     const nOk = (o.analyse?.options || []).filter(x => x.ok).length;
-    if (nOk !== 1) err.push(`Constat ${o.id} : il faut exactement une interprétation correcte (${nOk}).`);
+    if (!o.lecture && (o.analyse?.options || []).length && nOk !== 1) err.push(`Constat ${o.id} : il faut exactement une interprétation correcte (${nOk}).`);
+    if (!o.lecture && !(o.analyse?.options || []).length) warn.push(`Constat ${o.id} : pas de lecture (interprétation) — non analysable en jeu.`);
     if (o.prelevement && !(s.prelevements || []).some(p => p.id === o.prelevement)) err.push(`Constat ${o.id} : prélèvement « ${o.prelevement} » inconnu.`);
     if (o.couche && !s.fouille) err.push(`Constat ${o.id} : couche de fouille sans fouille définie.`);
   }

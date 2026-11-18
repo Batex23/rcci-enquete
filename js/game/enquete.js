@@ -294,7 +294,7 @@ export class Enquete {
   faitValide(fid) {
     const f = this.faits.get(fid);
     if (!f || f.contamine || f.speculatif || f.partiel) return false;
-    if (f.type === 'constat') return this.analyses.get(fid)?.ok === true;
+    if (f.type === 'constat') return this.obs(fid)?.analyse ? this.analyses.get(fid)?.ok === true : true;
     return true;
   }
 
@@ -309,7 +309,7 @@ export class Enquete {
       besoin: 1,
       probleme: this.securite.faite ? 1 : 0,
       collecte: Math.min(1, (nDec + this.faits.size / 2) / Math.max(8, this.scn.observations.length)),
-      analyse: nDec ? nAna / nDec : 0,
+      analyse: (() => { const d = [...this.decouverts.keys()].filter(id => this.obs(id)?.analyse).length; return d ? nAna / d : 1; })(),
       hypothese: Math.min(1, nHyp / 4),
       test: nHyp ? nTest / nHyp : 0,
       final: this.rapport ? 1 : final ? 0.6 : 0,

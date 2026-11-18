@@ -2,9 +2,7 @@
 import { GRADES, OUTILS } from './data/outils.js';
 
 const KEY = 'rcci-enquete.carriere.v1';
-const KEY_SCN = 'rcci-enquete.scenarios.v1';
 let memoire = null;
-let memoireScn = null;
 
 export function carriereVide() {
   return {
@@ -49,23 +47,5 @@ export function possede(c, outil) {
   return !!(o?.base || c.outils.includes(outil));
 }
 
-// Scénarios créés avec l'éditeur formateur
-export function scenariosPerso() {
-  try {
-    const raw = localStorage.getItem(KEY_SCN);
-    if (raw) return JSON.parse(raw);
-  } catch (e) { /* ignoré */ }
-  return memoireScn ? structuredClone(memoireScn) : [];
-}
-export function sauverScenarioPerso(scn) {
-  const all = scenariosPerso().filter(s => s.id !== scn.id);
-  all.push(scn);
-  memoireScn = structuredClone(all);
-  try { localStorage.setItem(KEY_SCN, JSON.stringify(all)); } catch (e) { return false; }
-  return true;
-}
-export function supprimerScenarioPerso(id) {
-  const all = scenariosPerso().filter(s => s.id !== id);
-  memoireScn = all;
-  try { localStorage.setItem(KEY_SCN, JSON.stringify(all)); } catch (e) { /* ignoré */ }
-}
+// Scénarios formateur : voir stockage.js (IndexedDB)
+export { scenariosPerso, sauverScenarioPerso, supprimerScenarioPerso } from './stockage.js';

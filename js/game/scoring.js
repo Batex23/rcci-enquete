@@ -20,6 +20,7 @@ export function evaluer(E) {
   const zonesV = E.zonesVisitees.length;
   const ptsPhZ = zonesV ? 3 * [...E.photoZone].length / zonesV : 0;
   const dec = [...E.decouverts.keys()];
+  const decA = dec.filter(id => E.obs(id)?.analyse);
   const ptsPhO = dec.length ? 3 * dec.filter(id => E.photoObs.has(id)).length / dec.length : 0;
   add('methode', 'Documentation photographique', ptsPhZ + ptsPhO - E.violations.filter(v => ['photo-fouille', 'photo-prelevement'].includes(v.type)).length, 6, `${E.photos.length} photos ; vues d'ensemble de ${E.photoZone.size}/${zonesV} zones ; ${dec.filter(id => E.photoObs.has(id)).length}/${dec.length} constats photographiés.`, '15.2');
   const nC = scn.fouille?.couches.length || 0;
@@ -33,15 +34,16 @@ export function evaluer(E) {
   const nT = [...E.temoins.keys()].length;
   const orient = E.violations.filter(v => v.type === 'question-orientee').length;
   add('methode', 'Entretiens', Math.min(2, nT * 0.5) + Math.max(0, 2 - orient), 4, `${nT} personne(s) entendue(s), ${orient} question(s) orientée(s).`, '13.4');
-  const osF = (E.faits.has('F50') ? 2 : 0) + ([...E.osint.ajoutes].length >= 2 ? 1 : 0) + (E.faits.has('F52') ? 1 : 0);
+  const osintCles = (scn.osint || []).filter(o => sol.faitsCles?.includes(o.fait?.id));
+  const osF = !(scn.osint || []).length ? 4 : (osintCles.length ? 2 * osintCles.filter(o => E.faits.has(o.fait.id)).length / osintCles.length : 2) + (E.osint.ajoutes.size >= 2 ? 1 : E.osint.ajoutes.size * 0.5) + (E.osint.ajoutes.size ? 1 : 0);
   add('methode', 'Sources ouvertes', osF, 4, `${E.osint.ajoutes.size} source(s) versée(s) au dossier.`, '13.5 / 17.3.3.1');
-  const ratioAna = dec.length ? E.analyses.size / dec.length : 0;
-  add('methode', 'Toutes les données analysées', 4 * ratioAna, 4, `${E.analyses.size}/${dec.length} constats analysés.`, '4.3.4');
+  const ratioAna = decA.length ? E.analyses.size / decA.length : 0;
+  add('methode', 'Toutes les données analysées', 4 * ratioAna, 4, `${E.analyses.size}/${decA.length} constats analysés.`, '4.3.4');
 
   // ---------------- ANALYSE (30)
   const bonnes = [...E.analyses.values()].filter(a => a.ok).length;
-  const totObs = scn.observations.length;
-  add('analyse', 'Interprétation des effets du feu', 15 * bonnes / Math.max(1, Math.max(dec.length, totObs * 0.75)), 15, `${bonnes} interprétation(s) correcte(s) sur ${E.analyses.size}.`, '6 / 17.4');
+  const totObs = scn.observations.filter(o => o.analyse).length;
+  add('analyse', 'Interprétation des effets du feu', 15 * bonnes / Math.max(1, Math.max(decA.length, totObs * 0.75)), 15, `${bonnes} interprétation(s) correcte(s) sur ${E.analyses.size}.`, '6 / 17.4');
   const all = [...[...E.hyp.origines].map(([id, h]) => ({ kind: 'origines', id, h })), ...[...E.hyp.causes].map(([id, h]) => ({ kind: 'causes', id, h }))];
   const def = (kind, id) => scn.hypotheses[kind].find(x => x.id === id);
   const testees = all.filter(x => x.h.teste);
@@ -55,7 +57,7 @@ export function evaluer(E) {
   }
   add('analyse', 'Réfutations fondées sur des faits', refOk ? 4 * refOk / (refOk + refKo) : 0, 4, `${refOk} réfutation(s) fondée(s), ${refKo} non fondée(s) ou erronée(s).`, '4.3.6 / 18.6');
   let contam = 0;
-  for (const x of all) for (const f of x.h.soutien) if (E.faits.get(f)?.contamine || ['F54', 'F53', 'F40'].includes(f) && def(x.kind, x.id)?.ok !== true) contam++;
+  for (const x of all) for (const f of x.h.soutien) if (E.faits.get(f)?.contamine || E.faits.get(f)?.speculatif) contam++;
   add('analyse', 'Pas de donnée contaminée ou spéculative à l\'appui', Math.max(0, 4 - 2 * contam), 4, contam ? `${contam} appui(s) sur une rumeur, une suggestion ou un rappel produit.` : 'Aucun appui sur une donnée contaminée.', '4.3.8 / 13.4');
   add('analyse', 'Compétence de la source d\'ignition testée', E.competence.size ? 2 : 0, 2, E.competence.size ? 'Test de compétence réalisé.' : 'La compétence de la source vis-à-vis du premier combustible n\'a pas été testée.', '18.4.2 / 18.6.5.2');
 
@@ -100,6 +102,11 @@ export function evaluer(E) {
     if (p.id === 'verre') etat = ana('F03') ? (ana('F03').ok ? 'evite' : 'tombe') : 'non';
     if (p.id === 'fumeur') { const h = E.hyp.causes.get('CB'); etat = R.cause === 'CB' ? 'tombe' : h?.statut === 'refutee' && h.refute.some(f => ['F12', 'F13', 'F23', 'F30', 'F25'].includes(f) && E.faitValide(f)) ? 'evite' : (h ? 'non' : 'non'); }
     if (p.id === 'fumeur' && etat === 'non' && R.cause === 'CA' && !E.hyp.causes.has('CB')) etat = 'oublie';
+    if (p.faits || p.origine || p.cause) {
+      const vus = (p.faits || []).filter(f => E.faits.has(f));
+      const mal = (p.faits || []).some(f => usedAsSupport(f) || (ana(f) && !ana(f).ok));
+      etat = (p.origine && R.origine === p.origine) || (p.cause && R.cause === p.cause) || mal ? 'tombe' : vus.length ? 'evite' : 'non';
+    }
     return { ...p, etat };
   });
 

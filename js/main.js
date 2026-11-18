@@ -6,6 +6,8 @@ import { CHAPITRES, TRACES, METHODE_SCIENTIFIQUE, NFPA_EDITION } from './data/nf
 import { MATERIAUX } from './data/materiaux.js';
 import { $, $$, h, esc, toast, modal, confirmer, ref } from './ui.js';
 import { ouvrirEnquete } from './screens/enqueteView.js';
+import { ouvrirAnalyse } from './screens/analyseView.js';
+import { jouabilite } from './game/prepa.js';
 
 const app = { c: charger(), onglet: 'missions', codex: 'methode' };
 const ctx = {
@@ -60,14 +62,16 @@ function allerQG(onglet) {
 }
 
 // ------------------------------------------------------------ Missions
-function missions(b) {
+async function missions(b) {
   const g = grade(app.c.xp);
-  const perso = scenariosPerso();
+  b.innerHTML = '<p class="muted">Chargement…</p>';
+  const perso = await scenariosPerso();
   const carte = (s, opts = {}) => {
     const best = app.c.missions[s.id]?.meilleur;
     const lock = (s.gradeMin || 0) > g.n;
+    const jeu = opts.perso ? jouabilite(s) : { ok: true };
     return `<div class="mcard ${lock ? 'lock' : ''}">
-      <div class="type">${esc(s.type || 'habitation')}${opts.perso ? ' · formateur' : ''}</div>
+      <div class="type">${esc(s.type || 'habitation')}${s.mode === 'retex' ? ' · RETEX' : opts.perso ? ' · formateur' : ''}${(s.photos || []).length ? ` · ${s.photos.length} photo(s)` : ''}</div>
       <h3>${esc(s.titre)}</h3>
       <p class="small muted">${esc(s.resume || '')}</p>
       <div class="foot">
@@ -75,7 +79,8 @@ function missions(b) {
         ${s.recompense ? `<span class="chip">${s.recompense.credits.toLocaleString('fr-FR')}+ cr</span>` : ''}
         ${best != null ? `<span class="chip ${best >= 70 ? 'ok' : best >= 50 ? 'warn' : 'ko'}">meilleur : ${best}</span>` : ''}
         <span style="flex:1"></span>
-        ${lock ? `<span class="chip">🔒 ${esc(GRADES[s.gradeMin].nom)}</span>` : `<button class="btn btn-primary btn-sm" data-go="${esc(s.id)}">${best != null ? 'Rejouer' : 'Lancer l\'enquête'}</button>`}
+        ${opts.perso ? `<button class="btn btn-sm" data-ana="${esc(s.id)}">📘 Vue analyse</button>` : ''}
+        ${lock ? `<span class="chip">🔒 ${esc(GRADES[s.gradeMin].nom)}</span>` : jeu.ok ? `<button class="btn btn-primary btn-sm" data-go="${esc(s.id)}">${best != null ? 'Rejouer' : 'Lancer l\'enquête'}</button>` : `<span class="chip warn" title="Manque : ${esc(jeu.manques.join(', '))}">non jouable</span>`}
         ${opts.perso ? `<button class="btn btn-sm btn-ghost" data-del="${esc(s.id)}" title="Supprimer">🗑</button>` : ''}
       </div></div>`;
   };
@@ -88,8 +93,14 @@ function missions(b) {
     const s = SCENARIOS.find(y => y.id === x.dataset.go) || perso.find(y => y.id === x.dataset.go);
     lancer(s);
   });
+  $$('[data-ana]', b).forEach(x => x.onclick = () => {
+    const s = perso.find(y => y.id === x.dataset.ana);
+    if (ctx.onLeave) { ctx.onLeave(); ctx.onLeave = null; }
+    const v = ouvrirAnalyse(s, $('#screen'), { onClose: () => allerQG() });
+    ctx.onLeave = () => v.dispose();
+  });
   $$('[data-del]', b).forEach(x => x.onclick = async () => {
-    if (await confirmer('Supprimer ce scénario ?', 'Le scénario formateur sera retiré de ce navigateur.', 'Supprimer')) { supprimerScenarioPerso(x.dataset.del); allerQG(); }
+    if (await confirmer('Supprimer ce scénario ?', 'Le scénario formateur sera retiré de ce navigateur.', 'Supprimer')) { await supprimerScenarioPerso(x.dataset.del); allerQG(); }
   });
 }
 

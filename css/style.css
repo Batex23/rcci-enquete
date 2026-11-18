@@ -244,3 +244,22 @@ p { margin: 0 0 .7em; }
   .ov-card { width: calc(100% - 24px); }
 }
 [hidden] { display: none !important; }
+
+/* ------------------------------------------------ Vue Analyse (RETEX) */
+.ana { flex: 1; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(380px, 1fr); min-height: 0; height: 100%; }
+.ana-3d { position: relative; min-height: 0; overflow: hidden; background: #1a1e23; }
+.ana-3d .scene-canvas { width: 100% !important; height: 100% !important; display: block; }
+.ana-3d .ov-recon { left: 12px; right: 12px; bottom: 12px; }
+.ana-doc { overflow: auto; background: #e9e7e2; min-height: 0; }
+.ana-bar { position: sticky; top: 0; z-index: 3; display: flex; gap: 8px; align-items: center; padding: 8px 12px; background: var(--bg2); border-bottom: 1px solid var(--line); }
+.ana-nav { position: sticky; top: 45px; z-index: 3; display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 12px; background: #d9d6cf; }
+.ana-nav a { color: #222; text-decoration: none; font-size: 12.5px; padding: 3px 8px; border-radius: 4px; background: #f3f1ec; }
+.ana-article { margin: 14px; }
+.ana-z { font-size: 14px; margin: 14px 0 6px; color: #333; }
+.ana-c { border-left: 3px solid #d8c060; padding: 6px 10px; margin: 8px 0; background: #faf9f6; border-radius: 0 6px 6px 0; }
+.ana-c.on { border-left-color: #e2541c; background: #fff3e8; }
+.ana-ch { cursor: pointer; display: flex; gap: 6px; align-items: center; margin-bottom: 4px; }
+.ana-c .ph figure img, .ana-article .ph img { cursor: zoom-in; }
+.ana-article .cav { background: #f5c400; }
+@media print { .ana-3d, .ana-bar, .ana-nav { display: none !important; } .ana { display: block; } .ana-doc { overflow: visible; } }
+@media (max-width: 900px) { .ana { grid-template-columns: 1fr; grid-template-rows: 50vh auto; overflow: auto; } }
