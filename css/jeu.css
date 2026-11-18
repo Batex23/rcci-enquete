@@ -297,3 +297,45 @@ body { font: 15px/1.5 var(--sans); }
 .hcarte { color: #222; }
 .hud-tl .fouille-p .layers { margin: 6px 0; }
 .etape { min-width: 66px; padding: 2px 3px; } .lien { width: 10px; }
+
+/* ---------------------------------------------------------------- écrans étroits (tablette, téléphone) */
+.fiche { width: min(380px, calc(100% - 24px)); overflow-wrap: anywhere; }
+@media (max-width: 1100px) {
+  .fiche, .carnet-ferme .fiche { right: 60px; }
+  .parcours { max-width: calc(100% - 520px); min-width: 0; }
+}
+@media (max-width: 820px) {
+  .hud-tl { left: 8px; right: 8px; width: auto; top: 8px; }
+  .hud-tl .objectifs { display: none; }
+  .hud-tl .mission-chip { padding: 6px 10px; margin-right: 150px; }
+  .hud-tr { top: 8px; right: 8px; }
+  .compteurs .cpt:not(:first-child) { display: none; }
+  .vue-btns .ic-btn { width: 34px; height: 34px; font-size: 15px; }
+  .fiche, .carnet-ferme .fiche { left: 8px; right: 8px; width: auto; top: 64px; max-height: calc(100% - 230px); transform: none; padding: 22px 14px 12px; }
+  .fiche h3 { font-size: 23px; }
+  .carnet { top: 8px; bottom: 8px; right: 8px; left: 8px; width: auto; }
+  .carnet-ferme .carnet { transform: translateX(calc(100% - 46px)); }
+  .page-b { padding-left: 34px; }
+  .parcours { left: 8px; right: 8px; transform: none; max-width: none; bottom: 84px; padding: 4px 6px; }
+  .etape { min-width: 54px; } .etape .rond { width: 30px; height: 30px; font-size: 15px; } .etape small { font-size: 10px; } .dg { display: none; }
+  .ceinture { left: 8px; right: 8px; transform: none; bottom: 8px; padding: 5px; gap: 4px; overflow-x: auto; }
+  .outil { min-width: 58px; padding: 6px 4px; font-size: 10.5px; } .outil .i { font-size: 19px; } .outil.cle { min-width: 80px; }
+  .mentor { left: 8px; right: 8px; width: auto; bottom: 160px; }
+  .mentor .portrait { width: 52px; height: 52px; font-size: 28px; }
+  .bulle { font-size: 13.5px; padding: 10px 12px; }
+  .hud-tl .fouille-p { position: fixed; left: 8px; right: 8px; bottom: 160px; }
+  .dialogue { grid-template-columns: 1fr; } .dialogue .qui .av { width: 80px; height: 80px; font-size: 50px; }
+  .tel { width: 100%; } .tel .ecran { height: 70vh; }
+  .modal-bg { padding: 6px; }
+  .bandeau h1 { font-size: 30px; } .grade-b { margin-left: 0; width: 100%; min-width: 0; }
+  .tableau { padding: 14px; } .bureau-in { padding: 12px; }
+}
+@media (max-width: 1100px) {
+  .mentor { bottom: 190px; width: 340px; }
+  .fiche-ouverte .mentor { opacity: 0; pointer-events: none; }
+}
+@media (max-width: 820px) {
+  .hud-tl .mission-chip { display: none; }
+  .fiche, .carnet-ferme .fiche { right: 56px; }
+  .mentor { bottom: 150px; width: auto; }
+}

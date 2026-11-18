@@ -323,11 +323,12 @@ export function ouvrirEnquete(scnSrc, ctx) {
     const z = E.zone(o.zone);
     if (z && E.zoneActive !== z.id) allerZone(z.id, true);
   }
-  function fermerFiche() { ui.carte = null; $('.fiche', root).hidden = true; }
+  function fermerFiche() { ui.carte = null; $('.fiche', root).hidden = true; root.classList.remove('fiche-ouverte'); }
+  function ficheEtroite() { root.classList.add('fiche-ouverte'); if (innerWidth < 1250 && ui.carnet) { ui.carnet = false; root.classList.add('carnet-ferme'); } }
 
   function ouvrirFiche(o) {
     const el = $('.fiche', root);
-    ui.carte = o.id; el.hidden = false;
+    ui.carte = o.id; el.hidden = false; ficheEtroite();
     const d = E.decouverts.get(o.id), a = E.analyses.get(o.id), ph = E.photoObs.has(o.id);
     const scelle = o.prelevement && E.scelles.find(s => s.prelevement === o.prelevement);
     const mesPhotos = E.photos.filter(p => p.obs === o.id);
@@ -375,7 +376,7 @@ export function ouvrirEnquete(scnSrc, ctx) {
 
   function ficheIndice(o) {
     const el = $('.fiche', root);
-    ui.carte = null; el.hidden = false;
+    ui.carte = null; el.hidden = false; ficheEtroite();
     const poss = E.possede(o.outil), out = OUTILS.find(x => x.id === o.outil);
     el.innerHTML = `<span class="num">?</span><h3>Quelque chose à mesurer…</h3><div class="desc">${esc(o.indice || 'Un relevé instrumental serait utile ici.')}</div>
       ${poss ? `<button class="btn-j go gros" style="margin-top:12px" data-x="use">${out.icone} Utiliser : ${esc(out.nom)}</button>` : `<div class="verdict ko"><b>Il me manque l'outil</b>${out.icone} ${esc(out.nom)} — disponible à l'équipement du QG (${out.prix} cr).</div>`}
