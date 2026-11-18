@@ -3,6 +3,11 @@
 export default {
   id: 'pavillon-durand',
   version: 1,
+  ordre: 2,
+  requiert: 'tuto-cuisine',
+  titreCourt: 'Pavillon Durand',
+  niveauLabel: 'Niveau 2 · Pavillon',
+  intro: 'Niveau 2. Cette fois, c\'est <b>toi</b> qui mènes. Feu de nuit dans un séjour, des occupants, une voisine bavarde… et plusieurs pièges. Suis ta méthode : sécurité, extérieur, puis des zones les moins touchées vers les plus touchées. Clique sur moi si tu veux un conseil.',
   titre: 'Pavillon Durand — feu de séjour nocturne',
   type: 'habitation',
   difficulte: 1,
@@ -49,6 +54,7 @@ export default {
     hauteur: 2.5,
     epaisseur: 0.16,
     terrasse: { x: 0, z: 9, w: 7.5, d: 2.2 },
+    toiture: { axe: 'x', x0: 0, x1: 12, z0: 0, z1: 9, altitude: 2.5, hauteur: 1.9, debord: 0.35, couleur: '#a8573a', effondrement: [{ x: 4.4, z: 7.6, r: 1.5 }] },
     allee: { x: 12, z: 3, w: 5, d: 1.4 },
     pieces: [
       { id: 'garage',  nom: 'Garage',          x: -4, z: 0,   w: 4,  d: 6,   sol: 'beton',    peinture: '#cfcac0', couche: 2.1, suie: 0.12 },
@@ -129,7 +135,7 @@ export default {
 
   zones: [
     { id: 'abords',  nom: 'Abords et environnement', exterieur: true, rang: 0, cible: [4, 0, 5], zoom: 0.55, desc: 'Jardin, clôtures, accès, façade, réseaux.' },
-    { id: 'facade',  nom: 'Façade sud (baie vitrée)', exterieur: true, rang: 0, cible: [4.8, 1, 9.5], zoom: 1.3, desc: 'Façade principale côté jardin.' },
+    { id: 'facade',  nom: 'Façade sud (baie vitrée)', exterieur: true, rang: 0, cible: [4.8, 1, 9.5], zoom: 1.3, toiture: 'cache', desc: 'Façade principale côté jardin.' },
     { id: 'garage',  nom: 'Garage', piece: 'garage', rang: 1, cible: [-2, 0, 3], zoom: 1.4 },
     { id: 'ch1',     nom: 'Chambre parents', piece: 'ch1', rang: 1, cible: [2, 0, 1.5], zoom: 1.6 },
     { id: 'sdb',     nom: 'Salle de bains', piece: 'sdb', rang: 1, cible: [10, 0, 1.5], zoom: 1.6 },

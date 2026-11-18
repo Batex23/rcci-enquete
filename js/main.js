@@ -1,4 +1,4 @@
-// Point d'entrée : QG (missions, équipement, référentiel, carrière)
+// Point d'entrée : bureau de l'enquêteur (missions, équipement, référentiel, carrière)
 import { charger, sauver, grade, possede, reinitialiser, scenariosPerso, supprimerScenarioPerso } from './state.js';
 import { SCENARIOS, A_VENIR } from './data/scenarios/index.js';
 import { OUTILS, GRADES } from './data/outils.js';
@@ -8,91 +8,70 @@ import { $, $$, h, esc, toast, modal, confirmer, ref } from './ui.js';
 import { ouvrirEnquete } from './screens/enqueteView.js';
 import { ouvrirAnalyse } from './screens/analyseView.js';
 import { jouabilite } from './game/prepa.js';
+import { BADGES, etoiles } from './game/badges.js';
+import { son } from './game/sons.js';
 
 const app = { c: charger(), onglet: 'missions', codex: 'methode' };
 const ctx = {
   app,
-  save: () => { sauver(app.c); renderTopbar(); },
+  save: () => sauver(app.c),
   allerQG: (o) => allerQG(o),
   onLeave: null,
 };
 
-function renderTopbar() {
-  const g = grade(app.c.xp);
-  const pct = g.suivant ? Math.round(100 * (app.c.xp - g.xp) / (g.suivant.xp - g.xp)) : 100;
-  $('#topbar').innerHTML = `
-    <div class="logo" data-a="qg"><div class="logo-mark">🔥</div><div>RCCI · L'Enquêteur<small>Méthodologie ${NFPA_EDITION}</small></div></div>
-    <div class="tb-sp"></div>
-    <div class="tb-stat">Grade<b>${esc(g.nom)}</b><span class="xpbar"><i style="width:${pct}%"></i></span></div>
-    <div class="tb-stat">Expérience<b>${app.c.xp.toLocaleString('fr-FR')} XP${g.suivant ? ` <span class="muted small">/ ${g.suivant.xp}</span>` : ''}</b></div>
-    <div class="tb-stat cred">Crédits<b>${app.c.credits.toLocaleString('fr-FR')} cr</b></div>`;
-  $('[data-a=qg]', $('#topbar')).onclick = () => { if (!document.querySelector('.enq')) allerQG(); };
-}
+const etoilesHtml = n => [1, 2, 3].map(i => `<span class="${i <= n ? 'on' : ''}">★</span>`).join('');
+const titreDe = id => SCENARIOS.find(s => s.id === id)?.titreCourt || id;
 
 function allerQG(onglet) {
   if (ctx.onLeave) { ctx.onLeave(); ctx.onLeave = null; }
+  document.body.classList.remove('en-jeu');
   if (onglet) app.onglet = onglet;
-  renderTopbar();
+  const g = grade(app.c.xp);
+  const pct = g.suivant ? Math.round(100 * (app.c.xp - g.xp) / (g.suivant.xp - g.xp)) : 100;
   const screen = $('#screen');
   screen.innerHTML = '';
-  const g = grade(app.c.xp);
-  const el = h(`<div class="qg"><div class="qg-inner">
-    <div class="hero">
-      <div class="hero-card">
-        <div class="kicker">Quartier général</div>
-        <h1>Devenez expert en recherche des causes et circonstances d'incendie</h1>
-        <p class="muted">Chaque enquête se mène selon la méthode scientifique de la NFPA 921 : sécurité, constatations de l'extérieur vers l'intérieur, lecture des tracés, fouille par couches, prélèvements, entretiens, sources ouvertes, hypothèses testées, rapport. Les crédits gagnés financent vos outils, votre véhicule, votre laboratoire.</p>
-        <div class="steps">${METHODE_SCIENTIFIQUE.map((m, i) => `<span>${i + 1}. ${esc(m.titre)}</span>`).join('')}</div>
-      </div>
-      <div class="hero-card">
-        <div class="kicker">Votre dossier</div>
-        <p><b style="font-size:18px">${esc(g.nom)}</b><br><span class="muted">${app.c.xp} XP${g.suivant ? ` · prochain grade : ${esc(g.suivant.nom)} à ${g.suivant.xp} XP` : ''}</span></p>
-        <p>Équipement : ${app.c.outils.length} / ${OUTILS.length} · Enquêtes réussies : ${Object.values(app.c.missions).filter(m => m.meilleur >= 50).length}</p>
-        <p class="small muted">Mode : ${app.c.reglages.feedback === 'differe' ? 'Expertise (correction différée)' : 'Formation (correction immédiate)'} · aide à la recherche ${app.c.reglages.lueurs ? 'activée' : 'désactivée'}</p>
-        <a class="btn btn-sm" href="editor.html" style="text-decoration:none;display:inline-block">🛠️ Éditeur formateur</a>
-      </div>
+  const el = h(`<div class="bureau"><div class="bureau-in">
+    <div class="bandeau">
+      <div class="avatar">🕵️</div>
+      <div><h1>${esc(app.c.nom === 'Enquêteur' ? 'Bureau de l\'enquêteur' : app.c.nom)}</h1><div class="sub">RCCI · L'Enquêteur — méthode ${NFPA_EDITION}</div></div>
+      <div class="grade-b"><div style="display:flex;justify-content:space-between"><b>🎖️ ${esc(g.nom)}</b><span>${app.c.xp} XP</span></div>
+        <div class="xpbar"><i style="width:${pct}%"></i></div>
+        <div class="small" style="display:flex;justify-content:space-between;margin-top:4px;color:#d7c6a8"><span>${g.suivant ? `prochain : ${esc(g.suivant.nom)}` : 'grade maximal'}</span><span style="color:#ffd23f;font-weight:800">${app.c.credits.toLocaleString('fr-FR')} cr</span></div></div>
     </div>
-    <nav class="tabs">${[['missions', '🗂️ Missions'], ['equipement', '🧰 Équipement'], ['codex', '📚 Référentiel'], ['carriere', '🎖️ Carrière & réglages']].map(([id, l]) => `<button class="tab ${app.onglet === id ? 'on' : ''}" data-o="${id}">${l}</button>`).join('')}</nav>
-    <div id="qgBody"></div>
+    <nav class="qtabs">${[['missions', '🗂️ Enquêtes'], ['equipement', '🧰 Équipement'], ['codex', '📚 Référentiel'], ['carriere', '🏅 Carrière']].map(([id, l]) => `<button class="qtab ${app.onglet === id ? 'on' : ''}" data-o="${id}">${l}</button>`).join('')}
+      <a class="qtab" href="editor.html" style="text-decoration:none;margin-left:auto">🛠️ Atelier de scènes</a></nav>
+    <div class="tableau" id="qgBody"></div>
   </div></div>`);
   screen.appendChild(el);
-  $$('[data-o]', el).forEach(b => b.onclick = () => allerQG(b.dataset.o));
+  $$('[data-o]', el).forEach(b => b.onclick = () => { son('page'); allerQG(b.dataset.o); });
   const body = $('#qgBody', el);
   ({ missions, equipement, codex, carriere })[app.onglet](body);
 }
 
-// ------------------------------------------------------------ Missions
+// ------------------------------------------------------------ Enquêtes
 async function missions(b) {
-  const g = grade(app.c.xp);
-  b.innerHTML = '<p class="muted">Chargement…</p>';
   const perso = await scenariosPerso();
-  const carte = (s, opts = {}) => {
-    const best = app.c.missions[s.id]?.meilleur;
-    const lock = (s.gradeMin || 0) > g.n;
+  const jamais = !Object.keys(app.c.missions).length;
+  const deverrouille = s => !s.requiert || (app.c.missions[s.requiert]?.meilleur ?? 0) >= 40;
+  const dossier = (s, i, opts = {}) => {
+    const m = app.c.missions[s.id];
+    const ok = deverrouille(s);
     const jeu = opts.perso ? jouabilite(s) : { ok: true };
-    return `<div class="mcard ${lock ? 'lock' : ''}">
-      <div class="type">${esc(s.type || 'habitation')}${s.mode === 'retex' ? ' · RETEX' : opts.perso ? ' · formateur' : ''}${(s.photos || []).length ? ` · ${s.photos.length} photo(s)` : ''}</div>
-      <h3>${esc(s.titre)}</h3>
-      <p class="small muted">${esc(s.resume || '')}</p>
-      <div class="foot">
-        <span class="chip">Difficulté ${'★'.repeat(s.difficulte || 1)}</span>
-        ${s.recompense ? `<span class="chip">${s.recompense.credits.toLocaleString('fr-FR')}+ cr</span>` : ''}
-        ${best != null ? `<span class="chip ${best >= 70 ? 'ok' : best >= 50 ? 'warn' : 'ko'}">meilleur : ${best}</span>` : ''}
-        <span style="flex:1"></span>
-        ${opts.perso ? `<button class="btn btn-sm" data-ana="${esc(s.id)}">📘 Vue analyse</button>` : ''}
-        ${lock ? `<span class="chip">🔒 ${esc(GRADES[s.gradeMin].nom)}</span>` : jeu.ok ? `<button class="btn btn-primary btn-sm" data-go="${esc(s.id)}">${best != null ? 'Rejouer' : 'Lancer l\'enquête'}</button>` : `<span class="chip warn" title="Manque : ${esc(jeu.manques.join(', '))}">non jouable</span>`}
-        ${opts.perso ? `<button class="btn btn-sm btn-ghost" data-del="${esc(s.id)}" title="Supprimer">🗑</button>` : ''}
-      </div></div>`;
+    return `<div class="dossier ${ok ? '' : 'verrou'}"><span class="punaise"></span>
+      ${ok && !m && !opts.perso ? '<span class="tampon-n">NOUVEAU</span>' : ''}
+      <div class="niv">${esc(s.niveauLabel || (opts.perso ? (s.mode === 'retex' ? 'Dossier RETEX' : 'Scénario formateur') : `Niveau ${i + 1}`))}</div>
+      <h3>${esc(s.titreCourt || s.titre)}</h3>
+      <p>${esc(s.resume || '')}</p>
+      ${!ok ? `<p><b>🔒 Termine d'abord « ${esc(titreDe(s.requiert))} » (au moins 1 ★).</b></p>` : ''}
+      <div class="pied"><span class="etoiles">${etoilesHtml(etoiles(m?.meilleur ?? -1))}</span><span style="flex:1"></span>
+        ${opts.perso ? `<button class="btn-j" data-ana="${esc(s.id)}">📘 Analyse</button>` : ''}
+        ${ok && jeu.ok ? `<button class="btn-j go" data-go="${esc(s.id)}">${m ? '↻ Rejouer' : '▶ Commencer'}</button>` : opts.perso && !jeu.ok ? '<span class="small">non jouable</span>' : ''}
+        ${opts.perso ? `<button class="btn-j ghost" data-del="${esc(s.id)}" title="Supprimer">🗑</button>` : ''}</div></div>`;
   };
-  b.innerHTML = `
-    <div class="grid-missions">${SCENARIOS.map(s => carte(s)).join('')}${perso.map(s => carte(s, { perso: true })).join('')}</div>
-    <h3 style="margin-top:24px">Enquêtes à venir</h3>
-    <div class="grid-missions">${A_VENIR.map(s => `<div class="mcard lock"><div class="type">${esc(s.type)}</div><h3>${esc(s.titre)}</h3><p class="small muted">${esc(s.resume)}</p>
-      <div class="foot"><span class="chip">🔒 ${esc(GRADES[s.gradeMin].nom)}</span>${s.outil ? `<span class="chip">requiert : ${esc(OUTILS.find(o => o.id === s.outil).nom)}</span>` : ''}<span class="ref">${esc(s.ref)}</span></div></div>`).join('')}</div>`;
-  $$('[data-go]', b).forEach(x => x.onclick = () => {
-    const s = SCENARIOS.find(y => y.id === x.dataset.go) || perso.find(y => y.id === x.dataset.go);
-    lancer(s);
-  });
+  b.innerHTML = `${jamais ? `<div class="hcarte" style="max-width:640px;margin:0 auto 22px;display:flex;gap:12px;align-items:center"><span style="font-size:40px">👨‍🚒</span><div><b>Bienvenue, stagiaire !</b><br>Je suis le capitaine Ferrand. On commence ensemble par le <b>niveau 1</b> : un petit feu de cuisine, en doublon. Je te montre la méthode pas à pas.</div></div>` : ''}
+    <div class="chemin">${SCENARIOS.map((s, i) => dossier(s, i)).join('')}${perso.map((s, i) => dossier(s, i, { perso: true })).join('')}
+    ${A_VENIR.map(s => `<div class="dossier verrou"><span class="punaise"></span><div class="niv">Bientôt</div><h3>${esc(s.titre)}</h3><p>${esc(s.resume)}</p></div>`).join('')}</div>`;
+  $$('[data-go]', b).forEach(x => x.onclick = () => lancer(SCENARIOS.find(y => y.id === x.dataset.go) || perso.find(y => y.id === x.dataset.go)));
   $$('[data-ana]', b).forEach(x => x.onclick = () => {
     const s = perso.find(y => y.id === x.dataset.ana);
     if (ctx.onLeave) { ctx.onLeave(); ctx.onLeave = null; }
@@ -100,14 +79,15 @@ async function missions(b) {
     ctx.onLeave = () => v.dispose();
   });
   $$('[data-del]', b).forEach(x => x.onclick = async () => {
-    if (await confirmer('Supprimer ce scénario ?', 'Le scénario formateur sera retiré de ce navigateur.', 'Supprimer')) { await supprimerScenarioPerso(x.dataset.del); allerQG(); }
+    if (await confirmer('Supprimer ce scénario ?', 'Il sera retiré de ce navigateur.', 'Supprimer')) { await supprimerScenarioPerso(x.dataset.del); allerQG(); }
   });
 }
 
 function lancer(scn) {
   try {
     ctx.onLeave = null;
-    renderTopbar();
+    document.body.classList.add('en-jeu');
+    son('page');
     ouvrirEnquete(scn, ctx);
   } catch (e) {
     console.error(e);
@@ -119,18 +99,18 @@ function lancer(scn) {
 // ------------------------------------------------------------ Équipement
 function equipement(b) {
   const g = grade(app.c.xp);
-  b.innerHTML = `<p class="muted">Les outils ouvrent de nouvelles données sur les scènes : sans jauge, pas de relevé de carbonisation ; sans contenants adaptés, pas de recherche d'accélérant exploitable ; sans kit, pas de cartographie des arcs.</p>
-    <div class="shop">${OUTILS.map(o => {
+  b.innerHTML = `<div class="hcarte" style="margin-bottom:16px">🧰 Chaque outil ouvre de nouveaux indices sur les scènes : sans jauge, pas de relevé de carbonisation ; sans contenants adaptés, pas d'analyse d'accélérant exploitable ; sans kit, pas de cartographie des arcs.</div>
+    <div class="boutique">${OUTILS.filter(o => !o.base).map(o => {
       const own = possede(app.c, o.id);
       const lockG = (o.grade || 0) > g.n;
-      return `<div class="tool ${own ? 'owned' : ''}"><div class="ic">${o.icone}</div><h4>${esc(o.nom)}</h4><div class="small muted">${esc(o.desc)}</div><div>${ref(o.ref)}</div>
-        <div class="act">${own ? '<span class="chip ok">✔ acquis</span>' : lockG ? `<span class="chip">🔒 ${esc(GRADES[o.grade].nom)}</span>` : `<button class="btn btn-sm btn-primary" data-buy="${o.id}" ${app.c.credits < o.prix ? 'disabled' : ''}>Acquérir — ${o.prix.toLocaleString('fr-FR')} cr</button>`}</div></div>`;
+      return `<div class="objet-b ${own ? 'owned' : ''}"><span class="ic">${o.icone}</span><h4>${esc(o.nom)}</h4><p>${esc(o.desc)}</p><div>${ref(o.ref)}</div>
+        <div>${own ? '<span class="tampon ok">ACQUIS</span>' : lockG ? `<span class="small">🔒 ${esc(GRADES[o.grade].nom)}</span>` : `<button class="btn-j go" data-buy="${o.id}" ${app.c.credits < o.prix ? 'disabled' : ''}>Acheter · <span class="etiquette-prix">${o.prix.toLocaleString('fr-FR')} cr</span></button>`}</div></div>`;
     }).join('')}</div>`;
   $$('[data-buy]', b).forEach(x => x.onclick = () => {
     const o = OUTILS.find(y => y.id === x.dataset.buy);
     if (app.c.credits < o.prix) return;
     app.c.credits -= o.prix; app.c.outils.push(o.id); ctx.save();
-    toast(`${o.icone} ${esc(o.nom)} acquis.`, 'ok');
+    son('ok'); toast(`${o.icone} ${esc(o.nom)} acquis !`, 'ok');
     allerQG('equipement');
   });
 }
@@ -138,7 +118,7 @@ function equipement(b) {
 // ------------------------------------------------------------ Référentiel
 function codex(b) {
   const nav = [['methode', 'Méthode scientifique'], ...CHAPITRES.map(c => [`ch${c.n}`, `Chap. ${c.n} — ${c.titre}`]), ['traces', 'Glossaire des tracés'], ['ignition', 'Sources d\'ignition (°C)'], ['puissance', 'Puissances (HRR)'], ['fusion', 'Fusion / inflammation'], ['reperes', 'Repères thermiques']];
-  b.innerHTML = `<div class="codex"><nav>${nav.map(([id, l]) => `<button class="${app.codex === id ? 'on' : ''}" data-c="${id}">${esc(l)}</button>`).join('')}</nav><div id="cx"></div></div>`;
+  b.innerHTML = `<div class="codex" style="background:var(--bg);border-radius:12px;padding:14px;color:var(--txt)"><nav>${nav.map(([id, l]) => `<button class="${app.codex === id ? 'on' : ''}" data-c="${id}">${esc(l)}</button>`).join('')}</nav><div id="cx"></div></div>`;
   $$('[data-c]', b).forEach(x => x.onclick = () => { app.codex = x.dataset.c; codex(b); });
   const cx = $('#cx', b);
   const k = app.codex;
@@ -171,7 +151,9 @@ function codex(b) {
 // ------------------------------------------------------------ Carrière
 function carriere(b) {
   const r = app.c.reglages;
-  b.innerHTML = `<div class="hero">
+  const gagnes = new Set(app.c.badges || []);
+  b.innerHTML = `<div class="panel"><h3>🏅 Badges (${gagnes.size}/${BADGES.length})</h3><div class="badges">${BADGES.map(x => `<div class="badge ${gagnes.has(x.id) ? '' : 'off'}"><span class="ic">${x.ic}</span><b>${esc(x.nom)}</b><br>${esc(x.desc)}</div>`).join('')}</div></div>
+  <div class="hero">
     <div class="panel"><h3>Réglages pédagogiques</h3>
       <div class="form-row"><label>Nom de l'enquêteur</label><input class="inp" id="rgN" value="${esc(app.c.nom)}"></div>
       <div class="form-row"><label>Correction</label><select class="inp" id="rgF"><option value="immediat">Formation : correction immédiate de chaque analyse et écart</option><option value="differe">Expertise : tout est révélé au débriefing</option></select></div>
@@ -198,5 +180,4 @@ function carriere(b) {
   $('#rst', b).onclick = async () => { if (await confirmer('Réinitialiser ?', 'XP, crédits, équipements et historique seront effacés.', 'Réinitialiser')) { app.c = reinitialiser(); ctx.app.c = app.c; ctx.save(); allerQG('carriere'); } };
 }
 
-renderTopbar();
 allerQG();

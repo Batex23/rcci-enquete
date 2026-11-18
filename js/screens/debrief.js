@@ -4,6 +4,8 @@ import { Scene3D, altitudeDe } from '../engine/scene3d.js';
 import { grade } from '../state.js';
 import { $, $$, h, esc, ref, toast } from '../ui.js';
 import { apercuRapport } from './rapport.js';
+import { BADGES, badgesGagnes, etoiles } from '../game/badges.js';
+import { SCENARIOS } from '../data/scenarios/index.js';
 
 export function ouvrirDebrief(E, ctx) {
   const scn = E.scn, c = ctx.app.c;
@@ -14,7 +16,14 @@ export function ouvrirDebrief(E, ctx) {
   c.missions[scn.id] = { meilleur: Math.max(m.meilleur || 0, ev.total), tentatives: (m.tentatives || 0) + 1, dernier: ev.total };
   c.journal.unshift({ date: new Date().toLocaleDateString('fr-FR'), mission: scn.titre, score: ev.total });
   c.journal = c.journal.slice(0, 40);
+  const avant = new Set(c.badges || []);
+  const gagnes = badgesGagnes(E, ev);
+  if (SCENARIOS.every(x => (c.missions[x.id]?.meilleur ?? 0) >= 40)) gagnes.push('tous');
+  const nouveaux = gagnes.filter(b => !avant.has(b));
+  c.badges = [...new Set([...avant, ...gagnes])];
   ctx.save();
+  const nbE = etoiles(ev.total);
+  const suivant = SCENARIOS.find(x => x.requiert === scn.id);
   const gApres = grade(c.xp);
 
   const sol = scn.solution;
@@ -24,7 +33,14 @@ export function ouvrirDebrief(E, ctx) {
   const table = arr => `<table class="det">${arr.map(d => `<tr><td>${d.ok ? '✅' : d.pts > 0 ? '🟡' : '❌'} <b>${esc(d.titre)}</b><div class="muted small">${esc(d.texte)}</div></td><td>${ref(d.ref)}</td><td class="p">${Math.min(d.pts, d.max)} / ${d.max}</td></tr>`).join('')}</table>`;
   const screen = $('#screen');
   screen.innerHTML = '';
-  const el = h(`<div class="debrief"><div class="qg-inner">
+  const el = h(`<div class="debrief bureau"><div class="qg-inner">
+    <div class="hcarte" style="text-align:center;padding:22px 18px;margin-bottom:18px;background:var(--paper)">
+      <div style="font:700 40px/1 var(--hand);color:var(--ink)">${nbE === 3 ? 'Expertise remarquable !' : nbE === 2 ? 'Belle enquête !' : nbE === 1 ? 'Enquête bouclée' : 'Enquête à reprendre'}</div>
+      <div class="etoiles-big">${[1, 2, 3].map(i => `<span class="${i <= nbE ? 'on' : ''}">★</span>`).join('')}</div>
+      <div style="font-size:15px">👨‍🚒 <i>${nbE >= 2 ? 'Bon travail. Regarde quand même le détail : on apprend surtout de ses petites erreurs.' : nbE === 1 ? 'La méthode est là, mais certaines lectures ou étapes t\'ont échappé. On reprend ensemble ?' : 'Pas de panique : relis les pièges et les lectures attendues, puis retente.'}</i></div>
+      ${nouveaux.length ? `<div style="margin-top:10px">${nouveaux.map(id => { const b = BADGES.find(x => x.id === id); return `<span class="badge-gagne">${b.ic} ${esc(b.nom)}</span>`; }).join('')}</div>` : ''}
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap">${suivant && nbE >= 1 ? `<button class="btn-j go" data-a="qg">▶ Débloqué : ${esc(suivant.titreCourt || suivant.titre)}</button>` : '<button class="btn-j go" data-a="qg">Retour au bureau</button>'}<button class="btn-j" data-a="rapport">Relire mon rapport</button></div>
+    </div>
     <div class="hero">
       <div class="hero-card">
         <div class="kicker">Débriefing · ${esc(scn.titre)}</div>
@@ -37,7 +53,6 @@ export function ouvrirDebrief(E, ctx) {
         </div>
         <p style="margin-top:14px">+ <b style="color:var(--accent2)">${ev.credits.toLocaleString('fr-FR')} cr</b> · + <b>${ev.xp} XP</b>${ev.deja ? ' <span class="muted small">(rejouée : gains réduits)</span>' : ''}
         ${gApres.n > gAvant.n ? `<br><span class="chip ok" style="margin-top:8px">🎖️ Promotion : ${esc(gApres.nom)}</span>` : ''}</p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" data-a="qg">Retour au QG</button><button class="btn" data-a="rapport">Relire mon rapport</button></div>
       </div>
       <div class="hero-card">
         <div class="kicker">Solution de référence</div>
@@ -95,6 +110,6 @@ export function ouvrirDebrief(E, ctx) {
   $('[data-o=joueur]', el).onclick = () => { origine = opos(O(E.rapport.origine)) || opos(O(sol.origine)); if (!O(E.rapport.origine)) toast('Aucune origine déterminée dans votre rapport.', 'warn'); upd(); };
   $('[data-o=ref]', el).onclick = () => { origine = opos(O(sol.origine)); upd(); };
   ctx.onLeave = () => { if (play) cancelAnimationFrame(play); S.dispose(); };
-  $('[data-a=qg]', el).onclick = () => ctx.allerQG();
-  $('[data-a=rapport]', el).onclick = () => apercuRapport(E, E.rapport, c);
+  $$('[data-a=qg]', el).forEach(b => b.onclick = () => ctx.allerQG());
+  $$('[data-a=rapport]', el)[0].onclick = () => apercuRapport(E, E.rapport, c);
 }

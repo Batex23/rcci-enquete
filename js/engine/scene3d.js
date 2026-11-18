@@ -138,6 +138,8 @@ export class Scene3D {
     });
     this._g = this.root;
     if (fIdx < 0) this._buildFouille(null);
+    this.toiture = null;
+    if (bat.toiture) this._buildToiture(bat.toiture);
     const all = toutesPieces(bat);
     const xs = all.flatMap(p => [p.x, p.x + p.w]), zs = all.flatMap(p => [p.z, p.z + p.d]);
     this.centre = all.length ? new THREE.Vector3((Math.min(...xs) + Math.max(...xs)) / 2, 0, (Math.min(...zs) + Math.max(...zs)) / 2) : new THREE.Vector3();
@@ -154,9 +156,95 @@ export class Scene3D {
     this._cutDirty = true;
   }
 
+  // Toiture : 'visible' | 'charpente' (tuiles masquées) | 'cache'
+  setToiture(mode) {
+    this.modeToiture = mode;
+    if (!this.toiture) return;
+    const top = this.levelGroups.length - 1;
+    const niveauOk = this.niveauVisible == null || this.niveauVisible >= top;
+    this.toiture.visible = mode !== 'cache' && niveauOk;
+    for (const t of this.toitTuiles) t.visible = mode === 'visible';
+  }
+
+  _buildToiture(t) {
+    const g = new THREE.Group(); g.userData.toiture = true;
+    this.toitTuiles = [];
+    const x0 = t.x0 - (t.debord ?? 0.3), x1 = t.x1 + (t.debord ?? 0.3), z0 = t.z0 - (t.debord ?? 0.3), z1 = t.z1 + (t.debord ?? 0.3);
+    const A = t.altitude, Hf = t.hauteur || 2;
+    const axeX = (t.axe || 'x') === 'x'; // faîtage parallèle à x
+    const L = axeX ? x1 - x0 : z1 - z0;           // longueur du faîtage
+    const P = (axeX ? z1 - z0 : x1 - x0) / 2;     // demi-portée
+    const pente = Math.atan2(Hf, P), ram = Math.hypot(P, Hf);
+    const eff = t.effondrement || [];
+    const dansTrou = (x, z, k = 1) => eff.some(e => Math.hypot(x - e.x, z - e.z) < e.r * k);
+    const brule = (x, z) => eff.reduce((m, e) => Math.max(m, 1 - Math.min(1, Math.max(0, (Math.hypot(x - e.x, z - e.z) - e.r) / (e.r * 0.8)))), t.brule || 0);
+    const r = rng(77);
+    const tuileC = t.couleur || '#b5532f';
+    // repère local : u le long du faîtage, v le long de la pente (0 = égout, 1 = faîtage), côté s = ±1
+    const monde = (u, v, s) => {
+      const off = (1 - v) * P * s; const y = A + v * Hf;
+      const c = axeX ? (z0 + z1) / 2 : (x0 + x1) / 2;
+      return axeX ? new THREE.Vector3(x0 + u, y, c + off) : new THREE.Vector3(c + off, y, z0 + u);
+    };
+    const cell = 0.55;
+    const nu = Math.ceil(L / cell), nv = Math.ceil(ram / cell);
+    for (const s of [-1, 1]) {
+      for (let i = 0; i < nu; i++) for (let j = 0; j < nv; j++) {
+        const u = (i + 0.5) * L / nu, v = (j + 0.5) / nv;
+        const p = monde(u, v, s);
+        if (dansTrou(p.x, p.z)) continue;
+        const b = brule(p.x, p.z);
+        const m = new THREE.Mesh(new THREE.BoxGeometry(axeX ? L / nu - 0.01 : 0.04, 0.04, axeX ? 0.04 : L / nu - 0.01), mat(mix(mix(tuileC, '#8f3c22', r() * 0.4), CHAR, b * 0.8)));
+        // orientation selon la pente
+        const len = ram / nv - 0.01;
+        if (axeX) { m.scale.z = len / 0.04; m.rotation.x = s > 0 ? pente : -pente; }
+        else { m.scale.x = len / 0.04; m.rotation.z = s > 0 ? -pente : pente; }
+        m.position.copy(p); m.castShadow = true; m.receiveShadow = true;
+        g.add(m); this.toitTuiles.push(m);
+      }
+      // chevrons
+      const nc = Math.floor(L / 0.6);
+      for (let i = 0; i <= nc; i++) {
+        const u = i * L / nc;
+        let vmax = 1;
+        const pm = monde(u, 0.5, s);
+        if (dansTrou(pm.x, pm.z, 0.6)) continue;
+        if (dansTrou(pm.x, pm.z, 1.05)) vmax = 0.25 + r() * 0.5;
+        const b = brule(pm.x, pm.z);
+        const a = monde(u, 0, s), e = monde(u, vmax, s);
+        const ch = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.12, 1), mat(mix('#9b7448', CHAR, Math.min(1, b + 0.1))));
+        ch.position.copy(a.clone().add(e).multiplyScalar(0.5)).add(new THREE.Vector3(0, -0.08, 0));
+        ch.scale.z = a.distanceTo(e);
+        ch.lookAt(e.x, e.y - 0.08, e.z);
+        ch.castShadow = true; g.add(ch);
+      }
+    }
+    // faîtage (rompu dans la zone effondrée)
+    const nf = 12;
+    for (let i = 0; i < nf; i++) {
+      const u0 = i * L / nf, u1 = (i + 1) * L / nf, pc = monde((u0 + u1) / 2, 1, 1);
+      if (dansTrou(pc.x, pc.z, 0.7)) continue;
+      const f = new THREE.Mesh(new THREE.BoxGeometry(axeX ? L / nf : 0.12, 0.16, axeX ? 0.12 : L / nf), mat(mix('#8a6640', CHAR, brule(pc.x, pc.z))));
+      f.position.set(pc.x, pc.y - 0.1, pc.z); g.add(f);
+    }
+    // pignons
+    for (const bout of [0, 1]) {
+      const sh = new THREE.Shape([new THREE.Vector2(-P + (t.debord ?? 0.3), 0), new THREE.Vector2(P - (t.debord ?? 0.3), 0), new THREE.Vector2(0, Hf - (t.debord ?? 0.3) * Hf / P)]);
+      const pg = new THREE.Mesh(new THREE.ShapeGeometry(sh), mat(t.pignon || '#e3dccd', { side: THREE.DoubleSide }));
+      const c = axeX ? (z0 + z1) / 2 : (x0 + x1) / 2;
+      if (axeX) { pg.position.set(bout ? t.x1 : t.x0, A, c); pg.rotation.y = Math.PI / 2; }
+      else { pg.position.set(c, A, bout ? t.z1 : t.z0); }
+      g.add(pg);
+    }
+    this.root.add(g);
+    this.toiture = g;
+    this.setToiture(this.modeToiture || 'visible');
+  }
+
   setNiveauVisible(idx) {
     this.niveauVisible = idx;
     this.levelGroups.forEach((g, i) => { g.visible = idx == null || i <= idx; });
+    if (this.toiture) this.setToiture(this.modeToiture || 'visible');
     for (const h of this.hotspots.values()) h.group.visible = (h.state.actif || h.state.toujours) && this._nivOk(h.niv);
     for (const ph of this.photos.values()) ph.group.visible = ph.state.visible && this._nivOk(ph.niv);
     this._cutDirty = true;
@@ -507,6 +595,16 @@ export class Scene3D {
         for (let i = 0; i < n; i++) { const st = box(L / n + 0.02, Hs * (i + 1) / n, l, col('#a68a6a', b), -L / 2 + (i + 0.5) * L / n, 0, 0); st.castShadow = true; }
         break;
       }
+      case 'conduit': { const m = cyl(o.r || 0.09, o.r || 0.09, o.H || 6, col('#a9adb1', b * 0.5), 0, o.y0 || 0, 0, 12); m.castShadow = true; break; }
+      case 'gravats': {
+        const r = rng(Math.round((o.x + 5) * 53 + o.z * 17));
+        const n = Math.round((o.w || 1) * (o.d || 1) * 22);
+        const cs = o.couleurs || ['#a34a2a', '#2a2420', '#8d8a84', '#5b4630'];
+        for (let i = 0; i < n; i++) { const m = box(0.1 + r() * 0.35, 0.02 + r() * 0.07, 0.08 + r() * 0.3, cs[Math.floor(r() * cs.length)], (r() - 0.5) * (o.w || 1), r() * 0.08, (r() - 0.5) * (o.d || 1)); m.rotation.set(r() * 0.4, r() * 3, r() * 0.4); }
+        for (let i = 0; i < (o.poutres ?? 3); i++) { const m = box(0.08, 0.12, 1.2 + r() * 1.5, CHAR, (r() - 0.5) * (o.w || 1), 0.05 + r() * 0.2, (r() - 0.5) * (o.d || 1)); m.rotation.set(r() * 0.5, r() * 3, r() * 0.3); }
+        break;
+      }
+      case 'souche': box(o.w || 0.55, o.H || 1.5, o.d || 0.55, '#b9a58c'); box((o.w || 0.55) + 0.1, 0.08, (o.d || 0.55) + 0.1, '#8d7c66', 0, o.H || 1.5, 0); break;
       case 'porteRoom': box(0.9, 2, 0.05, col('#b79d78', b)); break;
       case 'radiateur': box(0.8, 0.6, 0.1, col('#efefef', b)); break;
       case 'chaise': box(0.42, 0.04, 0.42, col('#8a6b4b', b), 0, 0.45, 0); box(0.42, 0.45, 0.04, col('#8a6b4b', b), 0, 0.45, -0.19); for (const [x, z] of [[-0.18, -0.18], [0.18, -0.18], [-0.18, 0.18], [0.18, 0.18]]) box(0.03, 0.45, 0.03, '#444', x, 0, z); break;
@@ -535,7 +633,7 @@ export class Scene3D {
     if (!f) { if (!this.rubanFouille || this.rubanFouille.parent == null) this.rubanFouille = null; return; }
     const a = f.aire;
     const couches = [...f.couches].sort((x, y) => y.n - x.n); // du bas vers le haut
-    let y = 0.006;
+    let y = 0.006 + (a.y || 0);
     for (const c of couches) {
       const grp = new THREE.Group();
       const r = rng(c.n * 77);
@@ -553,7 +651,7 @@ export class Scene3D {
       y += c.h * 0.85;
     }
     // ruban de délimitation de la zone d'intérêt
-    const pts = [[a.x, a.z], [a.x + a.w, a.z], [a.x + a.w, a.z + a.d], [a.x, a.z + a.d], [a.x, a.z]].map(([x, z]) => new THREE.Vector3(x, 0.03, z));
+    const pts = [[a.x, a.z], [a.x + a.w, a.z], [a.x + a.w, a.z + a.d], [a.x, a.z + a.d], [a.x, a.z]].map(([x, z]) => new THREE.Vector3(x, (a.y || 0) + 0.03, z));
     const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: '#ffcc00' }));
     line.visible = false; this.rubanFouille = line; this._g.add(line);
     this.setFouille(0);
@@ -669,7 +767,8 @@ export class Scene3D {
     this.focus = { zone, piece };
     const tgt = new THREE.Vector3(...(zone?.cible || [this.centre.x, 0, this.centre.z]));
     const zoom = zone?.zoom || 0.6;
-    const off = this.camera.position.clone().sub(this.controls.target);
+    let off = this.camera.position.clone().sub(this.controls.target);
+    if (zone?.azimut != null) { const hz = Math.hypot(off.x, off.z), a = zone.azimut * DEG; off = new THREE.Vector3(Math.sin(a) * hz, off.y, Math.cos(a) * hz); }
     if (!animate) { this.controls.target.copy(tgt); this.camera.position.copy(tgt).add(off); this.camera.zoom = zoom; this.camera.updateProjectionMatrix(); this._cutDirty = true; return; }
     this._tween = { t0: performance.now(), dur: 650, fromT: this.controls.target.clone(), toT: tgt, fromZ: this.camera.zoom, toZ: zoom, off };
     this._cutDirty = true;

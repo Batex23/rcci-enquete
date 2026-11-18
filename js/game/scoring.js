@@ -30,10 +30,12 @@ export function evaluer(E) {
   const liqOk = liq.some(s => s.okCont && s.temoin);
   const elec = E.scelles.filter(s => scn.prelevements.find(p => p.id === s.prelevement)?.type !== 'liquide');
   const elecOk = elec.some(s => s.okCont && s.photoAvant);
-  add('methode', 'Prélèvements et scellés', (liqOk ? 3 : liq.length ? 1 : 0) + (elecOk ? 3 : elec.length ? 1 : 0), 6, `${E.scelles.length} scellé(s).${liqOk ? '' : ' Recherche d\'accélérant : contenant étanche + échantillon de comparaison attendus.'}`, '16.5 / 16.6.2');
+  const aLiq = scn.prelevements.some(p => p.type === 'liquide'), aAutre = scn.prelevements.some(p => p.type !== 'liquide');
+  add('methode', 'Prélèvements et scellés', !scn.prelevements.length ? 6 : (aLiq ? (liqOk ? 3 : liq.length ? 1 : 0) : 3) + (aAutre ? (elecOk ? 3 : elec.length ? 1 : 0) : 3), 6, `${E.scelles.length} scellé(s).${liqOk ? '' : ' Recherche d\'accélérant : contenant étanche + échantillon de comparaison attendus.'}`, '16.5 / 16.6.2');
   const nT = [...E.temoins.keys()].length;
   const orient = E.violations.filter(v => v.type === 'question-orientee').length;
-  add('methode', 'Entretiens', Math.min(2, nT * 0.5) + Math.max(0, 2 - orient), 4, `${nT} personne(s) entendue(s), ${orient} question(s) orientée(s).`, '13.4');
+  const totT = scn.temoins.length;
+  add('methode', 'Entretiens', !totT ? 4 : 2 * Math.min(1, nT / Math.ceil(totT / 2)) + Math.max(0, 2 - orient), 4, `${nT} personne(s) entendue(s), ${orient} question(s) orientée(s).`, '13.4');
   const osintCles = (scn.osint || []).filter(o => sol.faitsCles?.includes(o.fait?.id));
   const osF = !(scn.osint || []).length ? 4 : (osintCles.length ? 2 * osintCles.filter(o => E.faits.has(o.fait.id)).length / osintCles.length : 2) + (E.osint.ajoutes.size >= 2 ? 1 : E.osint.ajoutes.size * 0.5) + (E.osint.ajoutes.size ? 1 : 0);
   add('methode', 'Sources ouvertes', osF, 4, `${E.osint.ajoutes.size} source(s) versée(s) au dossier.`, '13.5 / 17.3.3.1');

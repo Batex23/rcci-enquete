@@ -9,6 +9,24 @@ Le joueur mène des enquêtes sur des scènes d'incendie en **3D low-poly (vue i
 
 ---
 
+## Comment ça se joue
+
+- **Bureau de l'enquêteur** : tableau en liège, dossiers punaisés, étoiles (★ ≥ 40, ★★ ≥ 70, ★★★ ≥ 90). Chaque niveau se débloque avec au moins une étoile au précédent.
+- **En enquête** : la scène 3D occupe l'écran ; le **parcours des zones** (en bas) guide de l'extérieur vers l'intérieur, des zones les moins touchées vers les plus touchées ; les **objectifs** (en haut à gauche) se cochent tout seuls ; le **capitaine Ferrand**, ton tuteur, te parle et te conseille (clique sur son portrait).
+- **Fiche d'indice** : clic sur un indice → 📷 photo rapprochée → choix de la lecture → retour immédiat → 🧤 mise sous scellé si besoin. Tout se fait dans la fiche, sans multiplier les clics.
+- **Carnet de terrain** (touche C) : mission, indices écrits à la main avec leurs photos, témoins (dialogues), recherches sur le téléphone, scellés et labo, hypothèses, et une page de **notes libres** jointe au rapport.
+- **Tableau d'enquête** : chaque hypothèse est confrontée aux faits (post-it 👍 / 👎), puis retenue ou écartée — jamais sans fait (negative corpus).
+- **Conclusion guidée** en 5 cartes : où, comment, quels faits, quelle certitude et quelle classification, ta conclusion.
+- **Débriefing** : étoiles, badges (Méthodique, Œil de lynx, Lucide, Impartial…), pièges évités ou non, reconstitution 3D.
+
+### Les enquêtes
+
+| Niveau | Enquête | Ce qu'on apprend |
+|---|---|---|
+| 1 | **Feu de cuisine** (tutoriel en doublon) | La méthode pas à pas : sécurité, extérieur, photo avant tout, lecture d'un V, fouille, vérifier les autres sources, témoin, hypothèses, conclusion |
+| 2 | **Pavillon Durand** | Embrasement généralisé, tracés trompeurs, PID, témoignage orienté, produit rappelé, cartographie des arcs |
+| 3 | **Maison à étage — feu de toiture** | Toiture effondrée, feu qui voyage de haut en bas, brûlures par chute de matériaux, charpente et conduit de poêle, pyrolyse lente du bois |
+
 ## Boucle de jeu
 
 | Étape NFPA 921 | Dans le jeu |

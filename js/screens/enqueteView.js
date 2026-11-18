@@ -1,52 +1,52 @@
-// Écran d'enquête : scène 3D + panneaux méthode / dossier
+// Écran d'enquête « jeu » : 3D plein écran, carnet de terrain, tuteur, objectifs, fiches d'indices
 import { Scene3D, altitudeDe, niveauIndex, toutesPieces } from '../engine/scene3d.js';
 import { preparerJeu } from '../game/prepa.js';
 import { Enquete } from '../game/enquete.js';
 import { OUTILS, CONTENANTS } from '../data/outils.js';
-import { METHODE_SCIENTIFIQUE, CLASSIFICATIONS, CERTITUDES } from '../data/nfpa.js';
+import { CLASSIFICATIONS, CERTITUDES } from '../data/nfpa.js';
 import { $, $$, h, esc, toast, modal, confirmer, ref } from '../ui.js';
 import { calculateur, testCompetence } from './outilsAnalyse.js';
 import { ouvrirDebrief } from './debrief.js';
 import { apercuRapport } from './rapport.js';
+import { son, basculerSon, estMuet } from '../game/sons.js';
 
-const BARRE = ['observer', 'photo', 'jauge', 'pid', 'arc', 'fouille', 'prelever', 'calc'];
-const SOURCES_OSINT = [
-  ['tout', 'Toutes les sources'], ['reseaux', 'Réseaux sociaux'], ['meteo', 'Archives météo'], ['rappel', 'RappelConso'],
-  ['presse', 'Presse locale'], ['cadastre', 'Cadastre / Géoportail'], ['societes', 'Registres sociétés (pro)'],
+const PAGES = [
+  ['mission', '📋', 'Mission', '#f6d365'], ['constats', '🔎', 'Indices', '#fda085'], ['temoins', '🗣️', 'Témoins & recherches', '#a1c4fd'],
+  ['labo', '🧪', 'Scellés & labo', '#c2e9fb'], ['hyp', '🧠', 'Hypothèses', '#d4fc79'], ['notes', '✏️', 'Mes notes', '#fbc2eb'],
 ];
+const ICONES = [[/cuisine/i, '🍳'], [/s[ée]jour|salon/i, '🛋️'], [/chambre/i, '🛏️'], [/bain|sdb|wc/i, '🛁'], [/garage/i, '🚗'], [/couloir|entr[ée]e|palier|d[ée]gagement/i, '🚪'], [/combles|toit/i, '🏚️'], [/fa[çc]ade/i, '🧱'], [/bureau/i, '🖥️']];
+const APPS = [['tout', '🔍 Web'], ['reseaux', '👥 Réseaux'], ['meteo', '☁️ Météo'], ['rappel', '⚠️ RappelConso'], ['presse', '📰 Presse'], ['cadastre', '🗺️ Cadastre'], ['societes', '🏢 Sociétés']];
+const MENTOR = { nom: 'Cne Ferrand · ton tuteur', avatar: '👨‍🚒' };
 
 export function ouvrirEnquete(scnSrc, ctx) {
   const scn = preparerJeu(scnSrc);
   const E = new Enquete(scn, ctx.app.c);
+  E.notes = '';
   const reg = ctx.app.c.reglages;
   const immediat = reg.feedback !== 'differe';
-  const ui = { outil: 'observer', onglet: 'dossier', carte: null, osintRes: [] };
+  const tuto = scn.tutoriel?.length ? scn.tutoriel : null;
+  const bat = scn.batiment;
+  const ui = { outil: 'observer', page: 'mission', carnet: !tuto, carte: null, tutoIdx: 0, app: 'tout', res: [], vu: new Set() };
+  if (tuto) for (const k of ['origines', 'causes']) for (const d of scn.hypotheses[k]) E.ajouterHypothese(k, d.id);
 
+  // ------------------------------------------------------------ squelette
   const screen = $('#screen');
   screen.innerHTML = '';
-  const root = h(`<div class="enq">
-    <aside class="enq-left"></aside>
-    <section class="viewport">
-      <div class="ov ov-zone"></div>
-      <div class="ov ov-view">
-        <button class="btn btn-sm" data-v="rotg" title="Pivoter (Q)">⟲</button>
-        <button class="btn btn-sm" data-v="rotd" title="Pivoter (E)">⟳</button>
-        <button class="btn btn-sm" data-v="murs" title="Affichage des murs">🧱 Murs : auto</button>
-        <button class="btn btn-sm" data-v="vue" title="Vue générale">🏠 Vue générale</button>
-        <button class="btn btn-sm" data-v="dessus" title="Vue aérienne (drone)">🚁 Aérien</button>
-      </div>
-      <div class="ov ov-card" hidden></div>
-      <div class="ov ov-fouille" hidden></div>
-      <div class="ov toolbar"></div>
-    </section>
-    <aside class="enq-right"><nav class="rtabs"></nav><div class="rbody"></div></aside>
+  const root = h(`<div class="jeu ${ui.carnet ? '' : 'carnet-ferme'}">
+    <div class="s3d"></div>
+    <div class="hud hud-tl"><div class="hud-box mission-chip"></div><div class="hud-box objectifs"></div><div class="hud-box fouille-p" hidden style="padding:12px"></div></div>
+    <div class="hud hud-tr"><div class="hud-box compteurs"></div></div>
+    <div class="hud hud-box parcours"></div>
+    <div class="hud hud-box ceinture"></div>
+    <div class="hud mentor cache"><div class="portrait" title="Demander conseil">${MENTOR.avatar}</div><div class="bulle"></div></div>
+    <div class="hud fiche" hidden></div>
+    <div class="hud carnet"><div class="onglets"></div><div class="page"></div></div>
+    <div class="pops"></div>
   </div>`);
   screen.appendChild(root);
-  const S = new Scene3D($('.viewport', root));
+  const S = new Scene3D($('.s3d', root));
   S.load(scn);
-  const bat = scn.batiment;
   S.setHotspots(scn.observations.map(o => ({ id: o.id, pos: o.pos, alt: altitudeDe(bat, o.niveau), niv: niveauIndex(bat, o.niveau) })));
-  // photos réelles épinglées : visibles quand le constat lié est relevé, ou quand leur zone a été examinée
   const pieces = toutesPieces(bat);
   const zonePhoto = p => {
     if (p.zone) return p.zone;
@@ -55,554 +55,535 @@ export function ouvrirEnquete(scnSrc, ctx) {
     return (r && scn.zones.find(z => z.piece === r.id)?.id) || scn.zones.find(z => z.exterieur)?.id;
   };
   S.setPhotos((scn.photos || []).map(p => ({ id: p.id, pos: p.pos, yaw: p.yaw, alt: altitudeDe(bat, p.niveau), niv: niveauIndex(bat, p.niveau), visible: false })));
-  const photoVisible = p => p.constat ? E.decouverts.has(p.constat) : E.zonesVisitees.includes(zonePhoto(p));
   S.onPick = onPick;
+  S.setToiture('visible');
   ctx.onLeave = () => { S.dispose(); document.removeEventListener('keydown', onKey); };
 
-  // ------------------------------------------------------------ rendus
-  function refreshHotspots() {
-    for (const p of scn.photos || []) S.setPhotoVisible(p.id, photoVisible(p));
-    for (const o of scn.observations) {
-      const d = E.decouverts.get(o.id);
-      S.updateHotspot(o.id, { actif: E.estActif(o), decouvert: !!d, num: d?.num, photo: E.photoObs.has(o.id), analyse: E.analyses.has(o.id), lueur: reg.lueurs && !o.outil, toujours: !!d });
+  // ------------------------------------------------------------ effets de jeu
+  function pop(txt, cls = '') {
+    const el = h(`<div class="pop ${cls}">${txt}</div>`);
+    $('.pops', root).appendChild(el);
+    setTimeout(() => el.remove(), 2500);
+  }
+  let mentorActs = [];
+  function dire(html, { refs, actions = [], garder = false } = {}) {
+    const m = $('.mentor', root);
+    m.classList.remove('cache');
+    mentorActs = actions;
+    $('.bulle', m).innerHTML = `<div class="nom">${MENTOR.nom}</div><div class="txt">${html} ${refs ? ref(refs) : ''}</div>
+      <div class="acts">${actions.map((a, i) => `<button class="btn-j ${a.cls || ''}" data-ma="${i}">${a.label}</button>`).join('')}${garder ? '' : '<button class="btn-j ghost" data-ma="x">Compris</button>'}</div>`;
+    $$('[data-ma]', m).forEach(b => b.onclick = () => { if (b.dataset.ma === 'x') m.classList.add('cache'); else mentorActs[+b.dataset.ma].fn(); });
+  }
+  $('.mentor .portrait', root).onclick = conseil;
+  function signaler(msgs) {
+    if (!msgs?.length) return;
+    son('ko');
+    if (immediat) dire(msgs.map(v => `⚠️ ${esc(v.texte)} ${ref(v.ref)}`).join('<br>'), {});
+  }
+
+  // ------------------------------------------------------------ objectifs
+  const nObs = () => scn.observations.filter(o => !o.cachee).length;
+  const zonesOrd = [...scn.zones].sort((a, b) => (b.exterieur ? 1 : 0) - (a.exterieur ? 1 : 0) || (a.rang || 0) - (b.rang || 0));
+  function objectifs() {
+    if (tuto) return tuto.map((s, i) => ({ t: s.objectif, ok: i < ui.tutoIdx, cur: i === ui.tutoIdx }));
+    const ext = scn.zones.filter(z => z.exterieur);
+    const vz = E.zonesVisitees.length, nz = scn.zones.length;
+    const dec = [...E.decouverts.keys()].filter(id => !E.obs(id)?.cachee).length;
+    const ana = E.analyses.size, anaPos = [...E.decouverts.keys()].filter(id => E.obs(id)?.analyse).length;
+    const tn = scn.temoins.length, tv = [...E.temoins.keys()].length;
+    const hy = k => [...E.hyp[k].values()].filter(x => x.teste).length;
+    const l = [
+      { t: 'Sécuriser la scène', ok: E.securite.faite, hint: 'Avant d\'entrer : clique sur <b>⚠ Sécurité</b> dans ta ceinture d\'outils.', ref: '12' },
+      { t: 'Examiner l\'extérieur', ok: ext.some(z => E.photoZone.has(z.id)), hint: 'Commence toujours dehors : choisis une étape 🌳 du parcours en bas et prends une <b>vue d\'ensemble</b>.', ref: '17.3.1.3' },
+      { t: `Parcourir les zones`, n: vz, max: nz, ok: vz >= nz, hint: 'Suis le parcours de gauche à droite : des zones les moins touchées vers les plus touchées.', ref: '17.3.1.3' },
+      { t: `Trouver les indices`, n: dec, max: nObs(), ok: dec >= nObs(), hint: 'Survole la scène et clique sur ce qui t\'intrigue : traces, objets, appareils. Pivote la vue avec Q / E.' },
+      { t: `Interpréter les indices`, n: ana, max: Math.max(anaPos, 1), ok: anaPos > 0 && ana >= anaPos, hint: 'Ouvre chaque indice : photographie-le, puis choisis la bonne lecture.', ref: '4.3.4' },
+    ];
+    if (scn.fouille) l.push({ t: 'Fouiller la zone d\'intérêt', n: E.fouille.retirees, max: scn.fouille.couches.length, ok: E.fouille.retirees >= scn.fouille.couches.length, hint: 'Quand les tracés t\'ont mené à la zone d\'origine, fouille couche par couche : photo, puis retrait.', ref: '17.3.2' });
+    if (tn) l.push({ t: 'Entendre les témoins', n: tv, max: tn, ok: tv >= Math.ceil(tn / 2), hint: 'Carnet → 🗣️ : questions ouvertes d\'abord, jamais de question qui suggère la réponse.', ref: '13.4' });
+    l.push({ t: 'Tester les hypothèses', n: hy('origines') + hy('causes'), max: 4, ok: hy('origines') >= 2 && hy('causes') >= 2, hint: 'Carnet → 🧠 : ajoute au moins deux origines et deux causes possibles, et confronte-les aux faits.', ref: '4.3.6' });
+    l.push({ t: 'Conclure l\'enquête', ok: false, hint: 'Quand tu es sûr de toi : bouton <b>Conclure</b>.' });
+    const i = l.findIndex(x => !x.ok); if (i >= 0) l[i].cur = true;
+    return l;
+  }
+  function renderObjectifs() {
+    const l = objectifs();
+    const fait = l.filter(x => x.ok).length;
+    $('.objectifs', root).innerHTML = `<h4><span>${tuto ? 'Tutoriel' : 'Objectifs'}</span><span>${fait}/${l.length}</span></h4>
+      ${(tuto ? l.slice(Math.max(0, ui.tutoIdx - 2), ui.tutoIdx + 3) : l).map(x => `<div class="obj ${x.ok ? 'fait' : ''} ${x.cur ? 'cur' : ''}"><i>${x.ok ? '✓' : ''}</i><div>${esc(x.t)}${x.max ? ` <small>${x.n} / ${x.max}</small>` : ''}</div></div>`).join('')}
+      <div class="prog"><i style="width:${Math.round(100 * fait / l.length)}%"></i></div>`;
+    $('.mission-chip', root).innerHTML = `<div class="k">${tuto ? 'Niveau 1 · en doublon' : esc(scn.niveauLabel || 'Enquête')}</div><div class="t">${esc(scn.titreCourt || scn.titre)}</div>`;
+  }
+  function conseil() {
+    if (tuto) { direEtape(); return; }
+    const o = objectifs().find(x => x.cur);
+    dire(o?.hint || 'Tu as tout ce qu\'il faut : conclus quand tu es prêt.', { refs: o?.ref });
+  }
+
+  // ------------------------------------------------------------ tutoriel
+  function condOk(c) {
+    if (!c) return false;
+    const tous = (ids, f) => ids.every(f);
+    switch (c.type) {
+      case 'securite': return E.securite.faite;
+      case 'zone': return E.zonesVisitees.includes(c.id);
+      case 'photoZone': return E.photoZone.has(c.id);
+      case 'decouvert': return tous(c.ids, id => E.decouverts.has(id));
+      case 'photo': return tous(c.ids, id => E.photoObs.has(id));
+      case 'analyse': return tous(c.ids, id => E.analyses.has(id));
+      case 'fouille': return E.fouille.retirees >= (c.n || 1);
+      case 'temoin': return (E.temoins.get(c.id)?.size || 0) >= (c.n || 1);
+      case 'hypotheses': return [...E.hyp.origines.values(), ...E.hyp.causes.values()].every(x => x.teste);
+      case 'carnet': return ui.vu.has(c.page);
+      case 'rapport': return !!E.rapport;
     }
+    return false;
+  }
+  function direEtape() {
+    const st = tuto?.[ui.tutoIdx];
+    if (!st) return;
+    dire(st.mentor, { refs: st.ref });
+  }
+  function verifierTuto() {
+    if (!tuto) return;
+    let avance = false;
+    while (ui.tutoIdx < tuto.length && condOk(tuto[ui.tutoIdx].cond)) { ui.tutoIdx++; avance = true; }
+    if (avance) { son('objectif'); pop('✔ Objectif atteint', 'ok'); setTimeout(direEtape, 350); }
+  }
+  function surligner() {
+    $$('.pulse', root).forEach(x => x.classList.remove('pulse'));
+    const st = tuto?.[ui.tutoIdx];
+    if (st?.cible) $$(st.cible, root).forEach(x => x.classList.add('pulse'));
   }
 
-  function renderLeft() {
-    const p = E.progression();
-    const el = $('.enq-left', root);
-    el.innerHTML = `
-      <div>
-        <div class="sec-t">Mission <button class="btn btn-sm btn-ghost" data-a="brief">Briefing</button></div>
-        <div style="font-weight:700">${esc(scn.titre)}</div>
-        <div class="muted small">${esc(scn.mission.adresse)}</div>
-      </div>
-      <div>
-        <div class="sec-t">Méthode scientifique ${ref('4.3')}</div>
-        <ul class="methode">${METHODE_SCIENTIFIQUE.map(m => `<li class="${p[m.id] >= 1 ? 'done' : ''}" title="${esc(m.texte)}"><span class="dot"><i style="--p:${Math.round((p[m.id] || 0) * 100)}%"></i></span><span>${esc(m.titre)}</span><span class="kbd">${m.ref.split(' ')[0]}</span></li>`).join('')}</ul>
-      </div>
-      <div>
-        <div class="sec-t">Sécurité ${ref('12')}</div>
-        <button class="btn btn-sm ${E.securite.faite ? '' : 'btn-fire'}" data-a="secu" style="width:100%">${E.securite.faite ? '✔ Évaluation réalisée' : '⚠ Évaluer la sécurité de la scène'}</button>
-      </div>
-      <div>
-        <div class="sec-t">Zones <span class="muted" style="text-transform:none;letter-spacing:0">dégâts</span></div>
-        <div class="zones">${scn.zones.map(z => `<button class="zone-b ${E.zoneActive === z.id ? 'on' : ''}" data-z="${z.id}">
-          <span>${z.exterieur ? '🌳' : '🚪'}</span><span>${esc(z.nom)}</span>
-          ${E.zonesVisitees.includes(z.id) ? '<span class="vu">✔</span>' : ''}
-          <span class="rg">${[1, 2, 3, 4].map(i => `<i class="${(z.rang || 0) >= i ? 'f' : ''}"></i>`).join('')}</span></button>`).join('')}</div>
-        <p class="muted small" style="margin-top:6px">Les barres indiquent l'intensité apparente des dégâts : elles ne désignent pas l'origine.</p>
-      </div>
-      <div>
-        <div class="sec-t">Crédits</div>
-        <div><b style="color:var(--accent2)">${ctx.app.c.credits.toLocaleString('fr-FR')}</b> cr <span class="muted small">· dépensés : ${E.depenses}</span></div>
-      </div>
-      <button class="btn btn-ghost btn-sm" data-a="quitter">⟵ Abandonner et revenir au QG</button>`;
-    $$('[data-z]', el).forEach(b => b.onclick = () => allerZone(b.dataset.z));
-    $('[data-a=brief]', el).onclick = briefing;
-    $('[data-a=secu]', el).onclick = securite;
-    $('[data-a=quitter]', el).onclick = async () => { if (await confirmer('Abandonner l\'enquête ?', 'La progression de cette enquête sera perdue (les crédits dépensés en analyses ne sont pas remboursés).', 'Abandonner')) ctx.allerQG(); };
+  // ------------------------------------------------------------ HUD
+  function renderCompteurs() {
+    const dec = [...E.decouverts.keys()].filter(id => !E.obs(id)?.cachee).length;
+    $('.compteurs', root).innerHTML = `
+      <div class="cpt"><b>${dec}/${nObs()}</b><span>indices</span></div>
+      <div class="cpt"><b>${E.photos.length}</b><span>photos</span></div>
+      <div class="cpt"><b>${E.scelles.length}</b><span>scellés</span></div>
+      <div class="cpt"><b style="color:#ffd23f">${ctx.app.c.credits.toLocaleString('fr-FR')}</b><span>crédits</span></div>
+      <div class="vue-btns" style="flex-direction:row">
+        <button class="ic-btn" data-v="rotg" title="Pivoter (Q)">⟲</button><button class="ic-btn" data-v="rotd" title="Pivoter (E)">⟳</button>
+        <button class="ic-btn" data-v="vue" title="Vue générale">🏠</button>
+        <button class="ic-btn" data-v="son" title="Sons">${estMuet() ? '🔇' : '🔊'}</button>
+        <button class="ic-btn" data-v="quit" title="Quitter l'enquête">✕</button>
+      </div>`;
+    $$('[data-v]', root).forEach(b => b.onclick = () => vue(b.dataset.v));
+  }
+  function vue(v) {
+    if (v === 'rotg') S.rotateView(-45);
+    if (v === 'rotd') S.rotateView(45);
+    if (v === 'vue') { E.zoneActive = null; S.setFocus(null, null); S.setNiveauVisible(null); S.setToiture('visible'); fermerFiche(); renderAll(); }
+    if (v === 'son') { basculerSon(); renderCompteurs(); }
+    if (v === 'quit') confirmer('Quitter l\'enquête ?', 'La progression de cette enquête sera perdue.', 'Quitter').then(ok => ok && ctx.allerQG());
   }
 
-  function renderZoneOv() {
-    const z = E.zone(E.zoneActive);
-    const el = $('.ov-zone', root);
-    if (!z) { el.innerHTML = `<h3>Vue générale</h3><div class="muted small">Choisissez une zone à examiner dans la colonne de gauche.</div>`; return; }
-    const nObs = scn.observations.filter(o => o.zone === z.id && E.decouverts.has(o.id)).length;
-    el.innerHTML = `<h3>${esc(z.nom)}</h3><div class="muted small">${esc(z.desc || '')} ${E.photoZone.has(z.id) ? '· 📷 vue d\'ensemble faite' : '· <span style="color:var(--warn)">pas encore de vue d\'ensemble</span>'} · ${nObs} constat(s)</div>`;
+  function iconeZone(z) {
+    if (z.exterieur) return /fa[çc]ade/i.test(z.nom) ? '🧱' : '🌳';
+    return ICONES.find(([re]) => re.test(z.nom))?.[1] || '🚪';
+  }
+  function renderParcours() {
+    $('.parcours', root).innerHTML = zonesOrd.map((z, i) => `${i ? '<span class="lien"></span>' : ''}<button class="etape ${E.zonesVisitees.includes(z.id) ? 'vu' : ''} ${E.zoneActive === z.id ? 'on' : ''}" data-z="${z.id}" title="${esc(z.nom)}">
+      <span class="rond">${iconeZone(z)}</span><small>${esc(z.nom)}</small><span class="dg">${[1, 2, 3, 4].map(k => `<i class="${(z.rang || 0) >= k ? 'f' : ''}"></i>`).join('')}</span></button>`).join('');
+    $$('[data-z]', root).forEach(b => b.onclick = () => allerZone(b.dataset.z));
   }
 
-  function renderToolbar() {
-    const el = $('.toolbar', root);
-    el.innerHTML = BARRE.map((id, i) => {
-      const o = OUTILS.find(x => x.id === id);
-      const owned = E.possede(id);
-      return `<button class="tbtn ${ui.outil === id ? 'on' : ''} ${owned ? '' : 'lock'}" data-t="${id}" title="${esc(o.nom)} — ${esc(o.desc)}${owned ? '' : ' (non acquis)'}"><span class="i">${o.icone}</span><span>${esc(o.court || o.nom)}</span><span class="kbd">${i + 1}</span></button>`;
-    }).join('');
-    $$('[data-t]', el).forEach(b => b.onclick = () => choisirOutil(b.dataset.t));
+  function renderCeinture() {
+    const t = [];
+    if (!E.securite.faite) t.push(['secu', '⚠️', 'Sécurité']);
+    t.push(['observer', '🔦', 'Examiner'], ['photoZone', '📷', 'Vue d\'ensemble']);
+    if (E.possede('pid')) t.push(['pid', '📟', 'PID']);
+    if (E.possede('calc')) t.push(['calc', '🧮', 'Calculs']);
+    if (E.possede('drone')) t.push(['drone', '🚁', 'Drone']);
+    $('.ceinture', root).innerHTML = t.map(([id, ic, l]) => `<button class="outil ${ui.outil === id ? 'on' : ''}" data-t="${id}" ${id === 'secu' ? 'data-a="secu"' : ''}><span class="i">${ic}</span>${l}</button>`).join('') +
+      `<button class="outil carnet-b" data-t="carnet"><span class="i">📒</span>Carnet</button>
+       <button class="outil cle" data-t="conclure" ${E.decouverts.size < 3 ? 'disabled title="Relève au moins 3 indices"' : ''}><span class="i">⚖️</span>Conclure</button>`;
+    $$('[data-t]', root).forEach(b => b.onclick = () => outil(b.dataset.t));
+  }
+  function outil(id) {
+    if (id === 'secu') return securite();
+    if (id === 'photoZone') return photoZone();
+    if (id === 'calc') return calculateur(scn.dynamique);
+    if (id === 'drone') { ui.dessus = !ui.dessus; S.vueDessus(ui.dessus); return; }
+    if (id === 'carnet') { ui.carnet = !ui.carnet; root.classList.toggle('carnet-ferme', !ui.carnet); son('page'); return; }
+    if (id === 'conclure') return conclure();
+    ui.outil = id; renderCeinture();
+    if (id === 'pid') pop('📟 Clique au sol pour mesurer', '');
   }
 
-  function choisirOutil(id) {
-    if (!E.possede(id)) { toast(`🔒 ${OUTILS.find(o => o.id === id).nom} : équipement non acquis (QG → Équipement).`, 'warn'); return; }
-    if (id === 'calc') { calculateur(scn.dynamique); return; }
-    ui.outil = id;
-    S.curseur = { observer: 'crosshair', photo: 'copy', fouille: 'cell', prelever: 'grab' }[id] || 'crosshair';
-    renderToolbar();
+  // ------------------------------------------------------------ fouille
+  function zoneInteretDefinie() {
+    const f = scn.fouille;
+    const cand = scn.observations.filter(o => o.zone === f.zone && !o.couche && o.analyse).length;
+    return [...E.analyses.keys()].filter(id => E.obs(id)?.zone === f.zone && !(E.obs(id).couche)).length >= Math.min(tuto ? 1 : 3, cand);
   }
-
   function renderFouille() {
-    const f = scn.fouille, el = $('.ov-fouille', root);
+    const f = scn.fouille, el = $('.fouille-p', root);
     if (!f || E.zoneActive !== f.zone) { el.hidden = true; S.montrerRubanFouille(false); return; }
     const pret = zoneInteretDefinie();
     S.montrerRubanFouille(pret);
     el.hidden = false;
-    const n = E.fouille.retirees;
-    el.innerHTML = `<div class="sec-t" style="margin:0">Fouille par couches ${ref(f.ref)}</div>
-      ${pret ? `<div class="layers">${[...f.couches].sort((a, b) => b.n - a.n).map(c => `<div class="layer ${c.n <= n ? 'gone' : ''} ${c.n === n + 1 ? 'cur' : ''}"><span>${c.n}</span><span title="${esc(c.description)}">${esc(c.nom)}</span><span>${E.photoCouche.has(c.n) ? '📷' : ''}</span></div>`).join('')}</div>
-      ${n < f.couches.length ? `<div class="small muted" style="margin-bottom:6px">${esc(f.couches.find(c => c.n === n + 1).description)}</div>
-      <div class="acts" style="display:flex;gap:6px"><button class="btn btn-sm" data-f="photo">📷 Photographier</button><button class="btn btn-sm btn-primary" data-f="retirer">⛏️ Retirer la couche ${n + 1}</button></div>` : '<div class="small" style="color:var(--ok)">Niveau du sol atteint. Examinez les éléments mis au jour.</div>'}`
-      : `<p class="small muted" style="margin:6px 0 0">Analysez d'abord les tracés du séjour (au moins 3 constats analysés) pour délimiter une zone d'intérêt à fouiller. ${ref('17.3.1.8')}</p>`}`;
-    $('[data-f=photo]', el)?.addEventListener('click', () => photoZone());
-    $('[data-f=retirer]', el)?.addEventListener('click', () => retirerCouche());
+    const n = E.fouille.retirees, cur = f.couches.find(c => c.n === n + 1);
+    el.innerHTML = `<div style="font-weight:800;margin-bottom:4px">⛏️ Fouille par couches ${ref(f.ref || '17.3.2')}</div>
+      ${!pret ? `<div class="small" style="color:#cfd3d8">Lis d'abord les tracés de cette pièce : ils te diront où creuser.</div>` : `
+      <div class="layers">${[...f.couches].sort((a, b) => b.n - a.n).map(c => `<div class="layer ${c.n <= n ? 'gone' : ''} ${c.n === n + 1 ? 'cur' : ''}"><span>${c.n}</span><span>${esc(c.nom)}</span><span>${E.photoCouche.has(c.n) ? '📷' : ''}</span></div>`).join('')}</div>
+      ${cur ? `<div class="small" style="color:#cfd3d8;margin-bottom:8px">${esc(cur.description || '')}</div>
+      <div style="display:flex;gap:6px">${E.photoCouche.has(cur.n) ? '' : '<button class="btn-j" data-f="photo">📷 Photo</button>'}<button class="btn-j go" data-f="retirer">Retirer la couche ${cur.n}</button></div>` : '<div class="small" style="color:#7ee0a6">Niveau du sol atteint : examine ce qui est apparu.</div>'}`}`;
+    $('[data-f=photo]', el)?.addEventListener('click', photoZone);
+    $('[data-f=retirer]', el)?.addEventListener('click', retirerCouche);
   }
-
-  function zoneInteretDefinie() {
-    const f = scn.fouille;
-    const cand = scn.observations.filter(o => o.zone === f.zone && !o.couche && o.analyse).length;
-    return [...E.analyses.keys()].filter(id => E.obs(id)?.zone === f.zone && !(E.obs(id).couche)).length >= Math.min(3, cand);
-  }
-
-  // ------------------------------------------------------------ panneau droit
-  const ONGLETS = [
-    ['dossier', '📁 Dossier'], ['carnet', '📓 Carnet'], ['photos', '📷 Photos'], ['scelles', '🧪 Scellés'],
-    ['temoins', '🗣️ Témoins'], ['osint', '🛰️ OSINT'], ['hyp', '🧠 Hypothèses'], ['rapport', '📄 Rapport'],
-  ];
-  function renderRight() {
-    const nav = $('.rtabs', root);
-    const cnt = { carnet: E.faits.size, photos: E.photos.length, scelles: E.scelles.length, hyp: E.hyp.origines.size + E.hyp.causes.size };
-    nav.innerHTML = ONGLETS.map(([id, l]) => `<button class="rtab ${ui.onglet === id ? 'on' : ''}" data-o="${id}">${l}${cnt[id] ? `<span class="n">${cnt[id]}</span>` : ''}</button>`).join('');
-    $$('[data-o]', nav).forEach(b => b.onclick = () => { ui.onglet = b.dataset.o; renderRight(); });
-    const body = $('.rbody', root);
-    body.innerHTML = '';
-    ({ dossier, carnet, photos, scelles, temoins, osint, hyp, rapport })[ui.onglet](body);
-  }
-
-  function dossier(b) {
-    b.innerHTML = `
-      <div class="sec-t">Ordre de mission</div>
-      <p class="small"><b>Mandant :</b> ${esc(scn.mission.mandant)}<br><b>Réf. :</b> ${esc(scn.mission.reference)}<br><b>Sinistre :</b> ${esc(scn.mission.dateSinistre)} · alerte ${esc(scn.mission.heureAlerte)}</p>
-      <p class="small">${esc(scn.mission.ordre)}</p>
-      <p class="small muted">${esc(scn.mission.preservation)}</p>
-      <div class="sec-t">Compte rendu d'intervention SDIS</div>
-      <ul class="small" style="padding-left:16px;margin-top:0">${scn.rapportSdis.map(l => `<li>${esc(l)}</li>`).join('')}</ul>
-      <div class="sec-t">Météo déclarée</div><p class="small">${esc(scn.meteo)}</p>
-      ${immediat ? `<div class="sec-t">Écarts de méthode relevés (${E.violations.length})</div>
-      ${E.violations.length ? E.violations.map(v => `<div class="fait contamine"><div class="hd"><span class="chip ko">écart</span>${ref(v.ref)}</div>${esc(v.texte)}</div>`).join('') : '<p class="small muted">Aucun pour l\'instant.</p>'}` : '<p class="small muted">Mode expertise : les écarts de méthode seront révélés au débriefing.</p>'}
-      <div class="sec-t">Journal</div>
-      <div class="small muted">${E.journal.slice(-12).reverse().map(j => `<div>${j.t} — ${esc(j.texte)}</div>`).join('') || '—'}</div>`;
-  }
-
-  function faitHtml(f) {
-    const o = f.obs ? E.obs(f.obs) : null;
-    const a = o ? E.analyses.get(o.id) : null;
-    const num = o ? E.decouverts.get(o.id)?.num : null;
-    const typeChip = { constat: '<span class="chip">constat</span>', temoin: '<span class="chip">témoin</span>', osint: '<span class="chip">OSINT</span>', labo: '<span class="chip">labo</span>' }[f.type];
-    return `<div class="fait ${f.contamine ? 'contamine' : ''}" data-f="${f.id}">
-      <div class="hd">${num ? `<span class="cav">${num}</span>` : ''}<span class="id">${f.id}</span>${typeChip}${f.contamine ? '<span class="chip ko">contaminé</span>' : ''}${f.speculatif && immediat ? '<span class="chip warn">non probant</span>' : ''}${f.partiel ? '<span class="chip warn">partiel</span>' : ''}${o && E.photoObs.has(o.id) ? '<span class="chip">📷</span>' : ''}${f.ref ? ref(f.ref) : ''}</div>
-      <div>${esc(f.court || f.texte)}</div>
-      ${o && !o.analyse ? '' : o ? (a ? `<div class="interp ${immediat && !a.ok ? 'ko' : ''}">Analyse : ${esc(o.analyse.options[a.idx].t)}</div>` : `<div style="margin-top:5px"><button class="btn btn-sm btn-primary" data-an="${o.id}">Analyser</button> <button class="btn btn-sm" data-voir="${o.id}">Voir</button></div>`) : ''}
-      ${f.fiabilite ? `<div class="muted small">Fiabilité : ${esc(f.fiabilite)}</div>` : ''}
-    </div>`;
-  }
-  function carnet(b) {
-    const faits = [...E.faits.values()];
-    if (!faits.length) { b.innerHTML = '<p class="muted">Aucune donnée collectée. Examinez la scène (outil 🔦), entendez les témoins, consultez les sources ouvertes.</p>'; return; }
-    const nonAna = faits.filter(f => f.obs && !E.analyses.has(f.obs)).length;
-    b.innerHTML = `<p class="small muted">« Cataloguer n'est pas analyser » ${ref('4.3.4')} — ${nonAna} constat(s) en attente d'analyse.</p>` +
-      ['constat', 'temoin', 'osint', 'labo'].map(t => {
-        const l = faits.filter(f => f.type === t);
-        return l.length ? `<div class="sec-t">${{ constat: 'Constatations', temoin: 'Déclarations', osint: 'Sources ouvertes', labo: 'Résultats de laboratoire' }[t]}</div>${l.map(faitHtml).join('')}` : '';
-      }).join('');
-    $$('[data-an]', b).forEach(x => x.onclick = () => analyser(x.dataset.an));
-    $$('[data-voir]', b).forEach(x => x.onclick = () => montrerCarte(E.obs(x.dataset.voir)));
-  }
-
-  function photos(b) {
-    b.innerHTML = E.photos.length ? `<p class="small muted">Planche photographique (numérotée) ${ref('15.2')}</p><div class="photos">${E.photos.map(p => `<div class="photo"><img src="${p.img}" alt=""><div><b>${p.n}</b> · ${esc(p.legende)}</div></div>`).join('')}</div>` : '<p class="muted">Aucune photo. Outil 📷 : cliquez dans la scène pour une vue d\'ensemble de la zone, ou sur un cavalier pour un plan rapproché.</p>';
-  }
-
-  function scelles(b) {
-    if (!E.scelles.length) { b.innerHTML = `<p class="muted">Aucun scellé. Outil 🧤 « Prélever » sur un constat relevé.</p><p class="small muted">Contenants disponibles : ${E.contenantsDisponibles().map(c => esc(c.nom)).join(', ')}.</p>`; return; }
-    b.innerHTML = `<p class="small muted">Analyses ${E.possede('labo') ? 'au laboratoire interne (−50 %)' : 'par laboratoire extérieur'} · crédits : <b style="color:var(--accent2)">${ctx.app.c.credits}</b></p>` + E.scelles.map(s => {
-      const p = scn.prelevements.find(x => x.id === s.prelevement);
-      const cont = CONTENANTS.find(c => c.id === s.contenant);
-      return `<div class="fait"><div class="hd"><span class="cav">${s.id}</span><b>${esc(s.nom)}</b></div>
-        <div class="small muted">Contenant : ${esc(cont?.nom)}${s.temoin ? ' · avec échantillon de comparaison' : ''}${s.photoAvant ? ' · photo avant prélèvement' : ''}</div>
-        ${p.analyses.map(a => s.resultats[a.id] ? `<div class="fb ${s.resultats[a.id].fait && !s.resultats[a.id].partiel ? 'ok' : 'ko'}"><b>${esc(a.nom)}</b><br>${esc(s.resultats[a.id].texte)}</div>` : `<div style="margin-top:6px"><button class="btn btn-sm btn-primary" data-s="${s.id}" data-a="${a.id}">Envoyer : ${esc(a.nom)} — ${E.coutAnalyse(a)} cr</button></div>`).join('')}
-      </div>`;
-    }).join('');
-    $$('[data-s]', b).forEach(x => x.onclick = async () => {
-      const r = E.analyserScelle(x.dataset.s, x.dataset.a);
-      if (r.erreur) { toast(r.erreur, 'ko'); return; }
-      ctx.save();
-      toast(`🔬 Résultat reçu (−${r.cout} cr).`, 'ok');
-      renderAll();
-    });
-  }
-
-  function temoins(b) {
-    b.innerHTML = `<p class="small muted">Préparez vos entretiens, privilégiez les questions ouvertes, documentez ${ref('13.4')}</p>` + scn.temoins.map(t => {
-      const n = E.temoins.get(t.id)?.size || 0;
-      return `<div class="temoin" data-t="${t.id}"><span class="av">${t.avatar || '👤'}</span><div><b>${esc(t.nom)}</b><div class="small muted">${esc(t.role)}</div></div><span class="chip" style="margin-left:auto">${n}/${t.questions.length}</span></div>`;
-    }).join('');
-    $$('[data-t]', b).forEach(x => x.onclick = () => entretien(x.dataset.t));
-  }
-
-  function entretien(tid) {
-    const t = scn.temoins.find(x => x.id === tid);
-    const corps = document.createElement('div');
-    const draw = () => {
-      const posees = E.temoins.get(tid) || new Set();
-      corps.innerHTML = `<p class="muted small">${esc(t.role)}</p>
-        ${t.questions.filter(q => posees.has(q.id)).map(q => `<div class="qa"><div class="q">« ${esc(q.q)} »</div><div class="r">${esc(q.r)}</div>${q.info ? `<div class="small" style="color:var(--blue);margin-top:4px">💡 ${esc(q.info)}</div>` : ''}${immediat && q.piege ? `<div class="fb ko small">${esc(q.piege)}</div>` : ''}</div>`).join('')}
-        <div class="sec-t" style="margin-top:12px">Questions possibles</div>
-        ${t.questions.filter(q => !posees.has(q.id)).map(q => `<button class="btn qbtn" data-q="${q.id}"><span class="typ">${{ ouverte: 'ouverte', fermee: 'fermée', orientee: 'directe' }[q.type]}</span>${esc(q.q)}</button>`).join('') || '<p class="muted small">Toutes les questions ont été posées.</p>'}`;
-      $$('[data-q]', corps).forEach(x => x.onclick = () => {
-        const r = E.poserQuestion(tid, x.dataset.q);
-        if (immediat) r.msgs.forEach(v => toast(`⚠ ${esc(v.texte)} ${ref(v.ref)}`, 'warn', 5000));
-        draw(); renderRight(); renderLeft();
-      });
-    };
-    draw();
-    modal({ titre: `${t.avatar || '👤'} Entretien — ${esc(t.nom)}`, corps, large: true, actions: [{ label: 'Terminer l\'entretien' }] });
-  }
-
-  function osint(b) {
-    b.innerHTML = `<p class="small muted">Recherche en sources ouvertes ${ref('13.5 / 13.6')} — cherchez des noms, lieux, marques ou dates relevés pendant l'enquête. Évaluez la fiabilité de chaque source.</p>
-      <div class="osint-bar"><select class="inp" id="osS">${SOURCES_OSINT.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select></div>
-      <div class="osint-bar"><input id="osQ" placeholder="ex. : nom, adresse, marque, « météo »…" autocomplete="off"><button class="btn btn-primary" id="osGo">Rechercher</button></div>
-      <div id="osR"></div>
-      ${E.osint.recherches.length ? `<div class="sec-t" style="margin-top:12px">Historique</div><div class="small muted">${E.osint.recherches.slice(-8).reverse().map(r => esc(r.requete)).join(' · ')}</div>` : ''}`;
-    const go = () => {
-      const q = $('#osQ', b).value.trim(); if (!q) return;
-      ui.osintRes = E.rechercher(q, $('#osS', b).value);
-      drawRes();
-    };
-    const drawRes = () => {
-      const r = $('#osR', b);
-      r.innerHTML = ui.osintRes.length ? ui.osintRes.map(o => {
-        const lock = o.pro && !E.possede('osintpro');
-        return `<div class="res"><h4>${esc(o.titre)}</h4>${lock ? '<p class="small muted">🔒 Source réservée aux abonnements OSINT pro.</p>' : `<div class="small">${esc(o.extrait)}</div><div class="fia">Fiabilité : ${esc(o.fiabilite)}</div>
-          <div style="margin-top:6px">${E.osint.ajoutes.has(o.id) ? '<span class="chip ok">versé au dossier</span>' : `<button class="btn btn-sm" data-add="${o.id}">Verser au dossier</button>`}</div>`}</div>`;
-      }).join('') : '<p class="muted small">Aucun résultat pertinent.</p>';
-      $$('[data-add]', r).forEach(x => x.onclick = () => { E.ajouterOsint(x.dataset.add); toast('Source versée au dossier.', 'ok'); drawRes(); renderLeft(); });
-    };
-    $('#osGo', b).onclick = go;
-    $('#osQ', b).addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
-    if (ui.osintRes.length) drawRes();
-  }
-
-  // ------------------------------------------------------------ hypothèses
-  function hyp(b) {
-    const block = (kind, titre, rf) => {
-      const defs = scn.hypotheses[kind];
-      const m = E.hyp[kind];
-      const dispo = defs.filter(d => !m.has(d.id));
-      return `<div class="sec-t">${titre} ${ref(rf)}</div>
-        ${[...m].map(([id, hh]) => { const d = defs.find(x => x.id === id); return `<div class="hyp"><div style="display:flex;gap:6px;align-items:center"><span class="st st-${hh.statut}">${{ ouverte: 'à tester', retenue: 'retenue', refutee: 'réfutée' }[hh.statut]}</span><span class="id muted small" style="margin-left:auto">${hh.soutien.length}↑ ${hh.refute.length}↓</span></div>
-          <div>${esc(d.nom)}</div><div style="margin-top:6px;display:flex;gap:6px"><button class="btn btn-sm btn-primary" data-test="${kind}|${id}">Tester</button>${kind === 'causes' ? `<button class="btn btn-sm" data-comp="${id}">Compétence ${E.competence.has(id) ? '✔' : ''}</button>` : ''}</div></div>`; }).join('') || '<p class="small muted">Aucune hypothèse.</p>'}
-        ${dispo.length ? `<div style="display:flex;gap:6px;margin:6px 0 14px"><select class="inp" data-sel="${kind}" style="flex:1;min-width:0">${dispo.map(d => `<option value="${d.id}">${esc(d.nom)}</option>`).join('')}</select><button class="btn btn-sm" data-add="${kind}">+ Ajouter</button></div>` : ''}`;
-    };
-    const nAna = E.analyses.size;
-    b.innerHTML = `<p class="small muted">Induction : formulez des hypothèses à partir des données. Déduction : testez chacune contre <b>toutes</b> les données, en cherchant à la réfuter ${ref('4.3.5 / 4.3.6')}.</p>
-      ${nAna < 4 ? `<div class="fb ko small">Seulement ${nAna} donnée(s) analysée(s). Éviter la présomption : collectez et analysez avant de conclure ${ref('4.3.7')}.</div>` : ''}
-      ${block('origines', 'Hypothèses d\'origine', '17.5')}${block('causes', 'Hypothèses de cause', '18.5')}`;
-    $$('[data-add]', b).forEach(x => x.onclick = () => { const k = x.dataset.add; E.ajouterHypothese(k, $(`[data-sel=${k}]`, b).value); renderAll(); });
-    $$('[data-test]', b).forEach(x => x.onclick = () => { const [k, id] = x.dataset.test.split('|'); testerHyp(k, id); });
-    $$('[data-comp]', b).forEach(x => x.onclick = () => {
-      const d = scn.hypotheses.causes.find(c => c.id === x.dataset.comp);
-      testCompetence(d, v => { E.competence.add(d.id); E.log(`Test de compétence (${d.id}) : ${v}.`); toast('Test de compétence enregistré.', 'ok'); renderAll(); });
-    });
-  }
-
-  function testerHyp(kind, id) {
-    const d = scn.hypotheses[kind].find(x => x.id === id);
-    const cur = E.hyp[kind].get(id);
-    const val = new Map();
-    cur.soutien.forEach(f => val.set(f, 's')); cur.refute.forEach(f => val.set(f, 'r'));
-    const faits = [...E.faits.values()];
-    const corps = document.createElement('div');
-    corps.innerHTML = `<p><b>${esc(d.nom)}</b></p>
-      ${d.premierCombustible ? `<p class="small muted">Premier combustible : ${esc(d.premierCombustible)} · Source : ${esc(d.source)}</p>` : ''}
-      <p class="small muted">Pour chaque donnée : la soutient-elle, la réfute-t-elle, ou est-elle neutre ? Une réfutation doit s'appuyer sur au moins un fait ; une hypothèse retenue doit être soutenue par des faits ${ref('4.3.6 / 18.6.5')}.</p>
-      <div>${faits.map(f => { const o = f.obs ? E.obs(f.obs) : null; const a = o ? E.analyses.get(o.id) : null; return `<div class="ftest"><div><span class="id muted small">${f.id}</span> ${esc(f.court || f.texte)}${o && !a ? ' <span class="chip warn">non analysé</span>' : ''}${f.contamine ? ' <span class="chip ko">contaminé</span>' : ''}</div>
-        <div class="tri" data-f="${f.id}"><button data-v="s">Soutient</button><button data-v="n">Neutre</button><button data-v="r">Réfute</button></div></div>`; }).join('') || '<p class="muted">Aucune donnée.</p>'}</div>
-      <div class="form-row" style="margin-top:12px"><label>Statut de l'hypothèse</label><select class="inp" id="hSt">
-        <option value="ouverte">À tester / en suspens</option><option value="refutee">Réfutée par les données</option><option value="retenue">Retenue (hypothèse finale)</option></select></div>`;
-    const sync = () => $$('.tri', corps).forEach(t => { const v = val.get(t.dataset.f) || 'n'; $$('button', t).forEach(bb => bb.classList.toggle('on', bb.dataset.v === v)); });
-    $$('.tri button', corps).forEach(bb => bb.onclick = () => { val.set(bb.parentElement.dataset.f, bb.dataset.v); sync(); });
-    $('#hSt', corps).value = cur.statut;
-    sync();
-    modal({ titre: `🧠 Tester l'hypothèse ${kind === 'origines' ? 'd\'origine' : 'de cause'}`, corps, large: true, actions: [
-      { label: 'Annuler', classe: 'btn-ghost' },
-      { label: 'Enregistrer le test', classe: 'btn-primary', onClick: () => {
-        const st = $('#hSt', corps).value;
-        const s = [...val].filter(([, v]) => v === 's').map(([k]) => k), r = [...val].filter(([, v]) => v === 'r').map(([k]) => k);
-        if (st === 'refutee' && !r.length) { toast('Une réfutation doit s\'appuyer sur au moins une donnée qui contredit l\'hypothèse.', 'ko', 4500); return false; }
-        if (st === 'retenue' && !s.length) { toast('Negative corpus : une hypothèse ne peut être retenue sans donnée qui la soutienne (18.6.5).', 'ko', 5000); return false; }
-        if (st === 'retenue') for (const [oid, hh] of E.hyp[kind]) if (oid !== id && hh.statut === 'retenue') hh.statut = 'ouverte';
-        E.testerHypothese(kind, id, s, r, st);
-        renderAll();
-      } },
-    ] });
-  }
-
-  // ------------------------------------------------------------ rapport
-  function rapport(b) {
-    const ret = k => [...E.hyp[k]].find(([, x]) => x.statut === 'retenue')?.[0];
-    b.innerHTML = `<p class="small muted">Rapport d'enquête : constatations, prélèvements, déclarations, corrélation, conclusion ${ref('4.7 / 15.5')}.</p>
-      <div class="panel small">
-        <div>Hypothèse d'origine retenue : <b>${ret('origines') ? esc(scn.hypotheses.origines.find(x => x.id === ret('origines')).nom) : '—'}</b></div>
-        <div>Hypothèse de cause retenue : <b>${ret('causes') ? esc(scn.hypotheses.causes.find(x => x.id === ret('causes')).nom) : '—'}</b></div>
-        <div>Constats : ${E.decouverts.size} · analysés : ${E.analyses.size} · photos : ${E.photos.length} · scellés : ${E.scelles.length}</div>
-      </div>
-      <button class="btn btn-primary" id="rRed" style="width:100%">✍️ Rédiger et déposer le rapport</button>`;
-    $('#rRed', b).onclick = rediger;
-  }
-
-  function rediger() {
-    const ret = k => [...E.hyp[k]].find(([, x]) => x.statut === 'retenue')?.[0] || '';
-    const faits = [...E.faits.values()];
-    const cRet = ret('causes');
-    const preAppui = new Set(cRet ? E.hyp.causes.get(cRet).soutien : []);
-    const corps = document.createElement('div');
-    corps.innerHTML = `
-      <div class="form-row"><label>Zone d'origine</label><select class="inp" id="rO"><option value="">— non déterminée —</option>${scn.hypotheses.origines.map(o => `<option value="${o.id}" ${o.id === ret('origines') ? 'selected' : ''}>${esc(o.nom)}</option>`).join('')}</select></div>
-      <div class="form-row"><label>Cause</label><select class="inp" id="rC"><option value="">— indéterminée —</option>${scn.hypotheses.causes.map(o => `<option value="${o.id}" ${o.id === cRet ? 'selected' : ''}>${esc(o.nom)}</option>`).join('')}</select></div>
-      <div class="form-row"><label>Niveau de certitude ${ref('4.5')}</label><select class="inp" id="rCe">${CERTITUDES.map(c => `<option value="${c.id}">${esc(c.nom)}</option>`).join('')}</select></div>
-      <div class="form-row"><label>Classification ${ref('19.2.1')}</label><select class="inp" id="rCl">${CLASSIFICATIONS.map(c => `<option value="${c.id}">${esc(c.nom)}</option>`).join('')}</select></div>
-      <div class="form-row"><label>Faits à l'appui de la cause</label><div style="max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:6px;padding:6px">${faits.map(f => `<label style="display:block;font-size:12.5px;padding:2px 0"><input type="checkbox" class="rF" value="${f.id}" ${preAppui.has(f.id) ? 'checked' : ''}> <span class="muted">${f.id}</span> ${esc(f.court || f.texte)}</label>`).join('')}</div></div>
-      <div class="form-row"><label>Conclusion rédigée</label><textarea class="inp" id="rT" rows="5" placeholder="Synthèse argumentée : origine, premier combustible, source d'ignition, séquence, hypothèses écartées et pourquoi."></textarea></div>`;
-    const collect = () => ({
-      origine: $('#rO', corps).value, cause: $('#rC', corps).value, certitude: $('#rCe', corps).value, classification: $('#rCl', corps).value,
-      faitsAppui: $$('.rF', corps).filter(x => x.checked).map(x => x.value), texte: $('#rT', corps).value,
-    });
-    modal({ titre: '📄 Rapport d\'enquête', corps, large: true, actions: [
-      { label: 'Aperçu imprimable', onClick: () => { apercuRapport(E, collect(), ctx.app.c); return false; } },
-      { label: 'Déposer le rapport', classe: 'btn-fire', onClick: () => {
-        const R = collect();
-        confirmer('Déposer le rapport ?', 'Le rapport sera évalué (méthode, analyse, conclusion). L\'enquête sera clôturée.', 'Déposer').then(ok => {
-          if (!ok) return;
-          E.rapport = R;
-          ctx.onLeave?.(); ctx.onLeave = null;
-          ouvrirDebrief(E, ctx);
-        });
-      } },
-    ] });
-  }
-
-  // ------------------------------------------------------------ actions scène
-  function allerZone(id) {
-    const msgs = E.entrerZone(id);
-    const z = E.zone(id);
-    S.setFocus(z, z.piece || null);
-    S.setNiveauVisible(z.piece ? S._nivDePiece(z.piece) : null);
-    if (immediat) msgs.forEach(v => toast(`⚠ ${esc(v.texte)} ${ref(v.ref)}`, 'warn', 5500));
-    fermerCarte();
-    renderAll();
-  }
-
-  function photoZone() {
-    if (!E.zoneActive) { toast('Choisissez d\'abord une zone.', 'warn'); return; }
-    fermerCarte();
-    setTimeout(() => {
-      const n = E.photoDeZone(S.capture());
-      toast(`📷 Photo n°${n} : vue d'ensemble.`, 'ok');
-      renderAll();
-    }, 30);
-  }
-
   function retirerCouche() {
-    const p = E.peutRetirerCouche();
-    if (!p.ok) { toast(p.msg || 'Impossible.', 'warn'); return; }
-    if (!zoneInteretDefinie()) { toast('Zone d\'intérêt non délimitée : analysez d\'abord les tracés du séjour.', 'warn'); return; }
     const r = E.retirerCouche();
     S.setFouille(E.fouille.retirees);
-    if (immediat) r.msgs.forEach(v => toast(`⚠ ${esc(v.texte)} ${ref(v.ref)}`, 'warn', 5500));
-    toast(`⛏️ Couche ${r.couche.n} retirée : ${esc(r.couche.nom)}.${r.reveles.length ? ` ${r.reveles.length} élément(s) à examiner.` : ''}`, 'info', 4500);
+    signaler(r.msgs);
+    son('trouve');
+    pop(`⛏️ ${esc(r.couche.nom)} retirée${r.reveles.length ? ` · ${r.reveles.length} élément(s) à examiner` : ''}`, 'gold');
     renderAll();
   }
 
-  function onPick(hit) {
-    if (hit.photo) { voirPhoto(hit.photo); return; }
-    if (!E.zoneActive && ui.outil !== 'photo') { toast('Choisissez une zone à examiner (colonne de gauche).', 'warn'); return; }
-    // un clic sur un cavalier déjà relevé ouvre sa fiche, quel que soit l'outil (sauf photo/prélèvement)
-    if (hit.hotspot && E.decouverts.has(hit.hotspot) && !['photo', 'prelever', 'jauge', 'arc'].includes(ui.outil)) { montrerCarte(E.obs(hit.hotspot)); return; }
-    const r = E.pick(ui.outil, hit);
-    switch (r.type) {
-      case 'rien': if (r.msg) toast(r.msg, 'info', 2600); break;
-      case 'indice': montrerIndice(r); break;
-      case 'obs': if (r.neuf) toast(`🟨 Cavalier ${E.decouverts.get(r.obs.id).num} posé : ${esc(r.obs.titre)}`, 'ok'); montrerCarte(r.obs); break;
-      case 'photoZone': photoZone(); return;
-      case 'photoObs': photoObs(r.obs); return;
-      case 'pid': toast(`📟 PID : <b>${esc(r.valeur)}</b>${r.obs ? ' — lecture consignée au carnet.' : ''}`, r.obs ? 'warn' : 'info', 4200); if (r.obs) montrerCarte(r.obs); break;
-      case 'prelever': prelever(r.obs); break;
-      case 'fouille': retirerCouche(); return;
+  // ------------------------------------------------------------ carnet
+  function renderCarnet() {
+    const cnt = { constats: [...E.decouverts.keys()].filter(id => E.obs(id)?.analyse && !E.analyses.has(id)).length, hyp: [...E.hyp.origines.values(), ...E.hyp.causes.values()].filter(x => !x.teste).length };
+    $('.carnet .onglets', root).innerHTML = PAGES.map(([id, ic, l, c]) => `<button class="onglet ${ui.page === id ? 'on' : ''}" data-p="${id}" title="${l}" style="background:${c}">${ic}${cnt[id] ? `<span class="n">${cnt[id]}</span>` : ''}</button>`).join('');
+    $$('.onglet', root).forEach(b => b.onclick = () => { ui.page = b.dataset.p; ui.vu.add(ui.page); if (!ui.carnet) { ui.carnet = true; root.classList.remove('carnet-ferme'); } son('page'); renderCarnet(); verifierTuto(); renderObjectifs(); surligner(); });
+    const page = $('.carnet .page', root);
+    const [, ic, titre] = PAGES.find(p => p[0] === ui.page);
+    page.innerHTML = `<div class="page-h"><h2>${ic} ${titre}</h2><small>${esc(scn.titreCourt || scn.titre)}</small></div><div class="page-b"></div>`;
+    ({ mission: pMission, constats: pConstats, temoins: pTemoins, labo: pLabo, hyp: pHyp, notes: pNotes })[ui.page]($('.page-b', page));
+  }
+
+  function pMission(b) {
+    b.innerHTML = `<div class="fax"><b>ORDRE DE MISSION</b> — ${esc(scn.mission.reference || '')}<br>${esc(scn.mission.mandant || '')}<br><br>${esc(scn.mission.ordre || '')}<br><br>Sinistre : ${esc(scn.mission.dateSinistre || '')} · alerte ${esc(scn.mission.heureAlerte || '')}<br>${esc(scn.mission.adresse || '')}</div>
+      ${scn.rapportSdis.length ? `<div class="sous">Compte rendu des secours</div><div class="fax">${scn.rapportSdis.map(esc).join('<br>')}</div>` : ''}
+      ${scn.meteo ? `<div class="sous">Météo</div><div class="mot">${esc(scn.meteo)}</div>` : ''}
+      ${immediat && E.violations.length ? `<div class="sous">Remarques du tuteur</div>${E.violations.map(v => `<div class="ecart">✗ ${esc(v.texte)}</div>`).join('')}` : ''}`;
+  }
+
+  function pConstats(b) {
+    const parZone = zonesOrd.map(z => ({ z, l: [...E.decouverts].filter(([id]) => E.obs(id).zone === z.id).map(([id, d]) => ({ o: E.obs(id), num: d.num })) })).filter(x => x.l.length);
+    if (!parZone.length) { b.innerHTML = '<div class="mot">Rien encore… Examine la scène : chaque indice trouvé s\'écrira ici.</div>'; return; }
+    b.innerHTML = parZone.map(({ z, l }) => `<div class="sous">${iconeZone(z)} ${esc(z.nom)}</div>${l.sort((a, b2) => a.num - b2.num).map(({ o, num }) => {
+      const a = E.analyses.get(o.id); const ph = E.photos.find(p => p.obs === o.id);
+      return `<div class="entree" data-o="${o.id}"><div class="hd"><span class="cv">${num}</span><span class="ti">${esc(o.titre)}</span>${ph ? `<img class="ph" src="${ph.img}" alt="">` : ''}</div>
+        ${a ? `<div class="an ${immediat ? (a.ok ? 'ok' : 'ko') : ''}">→ ${esc(o.analyse.options[a.idx].t)}</div>` : o.analyse ? `<div class="todo">${E.photoObs.has(o.id) ? '✎ à interpréter' : '📷 à photographier puis interpréter'}</div>` : ''}</div>`;
+    }).join('')}`).join('') +
+      (E.photos.filter(p => !p.obs).length ? `<div class="sous">Vues d'ensemble</div><div class="polas">${E.photos.filter(p => !p.obs).map(p => `<div class="pola"><img src="${p.img}" alt=""><span>n°${p.n}</span></div>`).join('')}</div>` : '');
+    $$('[data-o]', b).forEach(x => x.onclick = () => { const o = E.obs(x.dataset.o); cadrer(o); ouvrirFiche(o); });
+  }
+
+  function pTemoins(b) {
+    const decl = [...E.faits.values()].filter(f => f.type === 'temoin');
+    const os = [...E.faits.values()].filter(f => f.type === 'osint');
+    b.innerHTML = (scn.temoins.length ? scn.temoins.map(t => `<div class="perso" data-t="${t.id}"><span class="av">${t.avatar || '👤'}</span><div><b>${esc(t.nom)}</b><small>${esc(t.role)}</small></div><span class="bdg">${E.temoins.get(t.id)?.size || 0}/${t.questions.length}</span></div>`).join('') : '<div class="mot">Aucun témoin à entendre.</div>') +
+      (decl.length ? `<div class="sous">Ce qu'on m'a dit</div>${decl.map(f => `<div class="mot">« ${esc(f.court)} »${f.contamine ? ' <span style="color:#c0392b">(sur ma suggestion…)</span>' : ''}</div>`).join('')}` : '') +
+      ((scn.osint || []).length ? `<div class="sous">Recherches</div><button class="btn-j go gros" data-tel>📱 Ouvrir le téléphone (sources ouvertes)</button>${os.map(f => `<div class="coupure"><b>${esc(f.source)}</b>${esc(f.court)}${f.fiabilite ? `<div style="color:#888;font-size:12px">${esc(f.fiabilite)}</div>` : ''}</div>`).join('')}` : '');
+    $$('[data-t]', b).forEach(x => x.onclick = () => entretien(x.dataset.t));
+    $('[data-tel]', b)?.addEventListener('click', telephone);
+  }
+
+  function pLabo(b) {
+    if (!E.scelles.length) { b.innerHTML = `<div class="mot">Aucun scellé. Prélève depuis la fiche d'un indice (🧤).</div><div class="mot" style="color:#8a8374">Contenants dans ma mallette : ${E.contenantsDisponibles().map(c => esc(c.nom.split(' (')[0])).join(', ')}.</div>`; return; }
+    b.innerHTML = E.scelles.map(s => {
+      const p = scn.prelevements.find(x => x.id === s.prelevement);
+      return `<div class="enveloppe"><span class="scel">${s.id}</span><b>${esc(s.nom)}</b><div style="font-size:12.5px">${esc(CONTENANTS.find(c => c.id === s.contenant)?.nom)}${s.temoin ? ' · + comparaison' : ''}</div>
+        ${p.analyses.map(a => s.resultats[a.id] ? `<div class="resultat"><span class="tampon ${s.resultats[a.id].fait && !s.resultats[a.id].partiel ? 'ok' : 'ko'}">${s.resultats[a.id].fait && !s.resultats[a.id].partiel ? 'RÉSULTAT' : 'INEXPLOITABLE'}</span><br><b>${esc(a.nom)}</b><br>${esc(s.resultats[a.id].texte)}</div>`
+          : `<button class="btn-j go" style="margin-top:8px" data-s="${s.id}" data-a="${a.id}">📮 Envoyer : ${esc(a.nom)} — ${E.coutAnalyse(a)} cr</button>`).join('')}</div>`;
+    }).join('');
+    $$('[data-s]', b).forEach(x => x.onclick = () => {
+      const r = E.analyserScelle(x.dataset.s, x.dataset.a);
+      if (r.erreur) { toast(r.erreur, 'ko'); return; }
+      ctx.save(); son('ok'); pop(`🔬 Résultats du labo reçus (−${r.cout} cr)`, 'gold'); renderAll();
+    });
+  }
+
+  function pHyp(b) {
+    const bloc = (kind, titre) => {
+      const defs = scn.hypotheses[kind], m = E.hyp[kind];
+      const dispo = defs.filter(d => !m.has(d.id));
+      const tamp = { ouverte: ['wait', 'À TESTER'], retenue: ['ok', 'RETENUE'], refutee: ['ko', 'ÉCARTÉE'] };
+      return `<div class="sous">${titre}</div>${[...m].map(([id, hh]) => { const d = defs.find(x => x.id === id); const [c, l] = tamp[hh.statut]; return `<div class="hcarte"><span class="tampon ${c}">${l}</span><p>${esc(d.nom)}</p>
+        <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn-j go" data-test="${kind}|${id}">🧷 Confronter aux faits</button>${kind === 'causes' ? `<button class="btn-j" data-comp="${id}">🔥 Compétence ${E.competence.has(id) ? '✓' : ''}</button>` : ''}</div></div>`; }).join('')}
+        ${dispo.length && !tuto ? `<div style="display:flex;gap:6px;margin:6px 0 10px"><select class="inp" data-sel="${kind}" style="flex:1;min-width:0;background:#fff;color:#222;border-color:#ddd5c2">${dispo.map(d => `<option value="${d.id}">${esc(d.nom)}</option>`).join('')}</select><button class="btn-j" data-add="${kind}">＋</button></div>` : ''}`;
+    };
+    b.innerHTML = `<div class="mot">Je pars des faits, j'imagine plusieurs explications, puis j'essaie de les <b>démolir</b> une à une.</div>${bloc('origines', 'Où le feu a-t-il pris ?')}${bloc('causes', 'Comment a-t-il pris ?')}`;
+    $$('[data-add]', b).forEach(x => x.onclick = () => { const k = x.dataset.add; E.ajouterHypothese(k, $(`[data-sel=${k}]`, b).value); son('page'); renderAll(); });
+    $$('[data-test]', b).forEach(x => x.onclick = () => { const [k, id] = x.dataset.test.split('|'); confronter(k, id); });
+    $$('[data-comp]', b).forEach(x => x.onclick = () => { const d = scn.hypotheses.causes.find(c => c.id === x.dataset.comp); testCompetence(d, v => { E.competence.add(d.id); pop('🔥 Test de compétence noté', 'ok'); renderAll(); }); });
+  }
+
+  function pNotes(b) {
+    b.innerHTML = `<textarea class="notes-zone" placeholder="Mes notes de terrain… (heures, doutes, pistes à vérifier)">${esc(E.notes)}</textarea>`;
+    $('textarea', b).oninput = e => { E.notes = e.target.value; };
+  }
+
+  // ------------------------------------------------------------ fiche d'indice
+  function cadrer(o) {
+    const z = E.zone(o.zone);
+    if (z && E.zoneActive !== z.id) allerZone(z.id, true);
+  }
+  function fermerFiche() { ui.carte = null; $('.fiche', root).hidden = true; }
+
+  function ouvrirFiche(o) {
+    const el = $('.fiche', root);
+    ui.carte = o.id; el.hidden = false;
+    const d = E.decouverts.get(o.id), a = E.analyses.get(o.id), ph = E.photoObs.has(o.id);
+    const scelle = o.prelevement && E.scelles.find(s => s.prelevement === o.prelevement);
+    const mesPhotos = E.photos.filter(p => p.obs === o.id);
+    const vraies = (scn.photos || []).filter(p => p.constat === o.id && scn.medias?.[p.media]);
+    const etapes = [['Repéré', true], ['Photo', ph], ...(o.analyse ? [['Lecture', !!a]] : []), ...(o.prelevement ? [['Scellé', !!scelle]] : [])];
+    const cur = etapes.findIndex(x => !x[1]);
+    el.innerHTML = `<span class="num">${d?.num ?? '?'}</span><h3>${esc(o.titre)}</h3>
+      <div class="lieu">${esc(E.zone(o.zone)?.nom || '')}${o.outil ? ` · relevé : ${esc(E.outilNom(o.outil))}` : ''}</div>
+      <div class="etapes">${etapes.map(([l, ok], i) => `<span class="etp ${ok ? 'ok' : i === cur ? 'cur' : ''}">${ok ? '✓ ' : ''}${l}</span>`).join('')}</div>
+      ${mesPhotos.length || vraies.length ? `<div class="polas">${mesPhotos.map(p => `<div class="pola"><img src="${p.img}" alt=""><span>n°${p.n}</span></div>`).join('')}${vraies.map(p => `<div class="pola" data-ph="${p.id}"><img src="${scn.medias[p.media]}" alt=""><span>photo réelle</span></div>`).join('')}</div>` : ''}
+      <div class="desc">${esc(o.description)}</div>
+      <div class="suite"></div>`;
+    const s = $('.suite', el);
+    if (!ph) {
+      s.innerHTML = `<button class="btn-j go gros" style="margin-top:12px" data-x="photo">📷 Photographier l'indice</button><div class="small" style="color:#8a8374;margin-top:6px;text-align:center">On photographie toujours avant de toucher ou d'interpréter ${ref('15.2')}</div>`;
+      $('[data-x=photo]', s).onclick = () => photoObs(o);
+    } else if (o.analyse && !a) {
+      s.innerHTML = `<div class="question">${esc(o.analyse.question)}</div>${o.analyse.options.map((op, i) => `<button class="choix" data-i="${i}">${esc(op.t)}</button>`).join('')}`;
+      $$('[data-i]', s).forEach(btn => btn.onclick = () => {
+        const r = E.analyser(o.id, +btn.dataset.i);
+        if (immediat) { son(r.ok ? 'ok' : 'ko'); pop(r.ok ? '✔ Bonne lecture !' : '✗ Lecture discutable', r.ok ? 'ok' : 'ko'); }
+        else { son('page'); pop('✍ Lecture notée au carnet'); }
+        renderAll(); ouvrirFiche(o);
+      });
+    } else {
+      s.innerHTML = a ? (immediat ? `<div class="verdict ${a.ok ? 'ok' : 'ko'}"><b>${a.ok ? 'Bien vu !' : 'Pas tout à fait…'}</b>${esc(o.analyse.options[a.idx].t)}<div style="margin-top:6px;font-size:13px">${esc(o.analyse.options[a.idx].fb || '')}${!a.ok ? `<br><b style="font:700 14px var(--sans);display:inline">Lecture attendue :</b> ${esc(o.analyse.options.find(x => x.ok)?.t || '')}` : ''}</div><div style="margin-top:4px">${ref(o.analyse.ref)}</div></div>` : `<div class="verdict" style="background:#f1ead6">✍ ${esc(o.analyse.options[a.idx].t)}</div>`) : '';
     }
-    renderAll();
+    if (ph && o.prelevement && !scelle && (!o.analyse || a)) {
+      const p = scn.prelevements.find(x => x.id === o.prelevement);
+      const conts = E.contenantsDisponibles();
+      s.insertAdjacentHTML('beforeend', `<div class="question">🧤 Prélever : ${esc(p.nom)}</div><div class="mini-form">${conts.map((c, i) => `<label><input type="radio" name="ct" value="${c.id}" ${i === 0 ? 'checked' : ''}> ${esc(c.nom)}</label>`).join('')}
+        ${p.type === 'liquide' ? `<label><input type="checkbox" class="cmp"> + échantillon de comparaison (${esc(p.temoin || 'même matériau, hors zone')})</label>` : ''}</div>
+        ${E.possede('pots') ? '' : '<div class="small" style="color:#8a8374">🔒 Pots métalliques et sachets spéciaux : équipement « Contenants » au QG.</div>'}
+        <button class="btn-j fire gros" style="margin-top:6px" data-x="scelle">Mettre sous scellé</button>`);
+      $('[data-x=scelle]', s).onclick = () => {
+        const r = E.prelever(o.id, $('input[name=ct]:checked', s).value, $('.cmp', s)?.checked);
+        if (r.erreur) { toast(r.erreur, 'ko'); return; }
+        signaler(r.msgs); son('ok'); pop(`🧪 Scellé ${r.scelle.id} constitué`, 'gold'); renderAll(); ouvrirFiche(o);
+      };
+    } else if (scelle) s.insertAdjacentHTML('beforeend', `<div class="small" style="margin-top:8px">🧪 Sous scellé <b>${scelle.id}</b> — résultats dans le carnet (onglet 🧪).</div>`);
+    s.insertAdjacentHTML('beforeend', `<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn-j ghost" data-x="close">Fermer ✕</button></div>`);
+    $('[data-x=close]', s).onclick = fermerFiche;
+    $$('[data-ph]', el).forEach(x => x.onclick = () => voirPhoto(x.dataset.ph));
+  }
+
+  function ficheIndice(o) {
+    const el = $('.fiche', root);
+    ui.carte = null; el.hidden = false;
+    const poss = E.possede(o.outil), out = OUTILS.find(x => x.id === o.outil);
+    el.innerHTML = `<span class="num">?</span><h3>Quelque chose à mesurer…</h3><div class="desc">${esc(o.indice || 'Un relevé instrumental serait utile ici.')}</div>
+      ${poss ? `<button class="btn-j go gros" style="margin-top:12px" data-x="use">${out.icone} Utiliser : ${esc(out.nom)}</button>` : `<div class="verdict ko"><b>Il me manque l'outil</b>${out.icone} ${esc(out.nom)} — disponible à l'équipement du QG (${out.prix} cr).</div>`}
+      <div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn-j ghost" data-x="close">Fermer ✕</button></div>`;
+    $('[data-x=close]', el).onclick = fermerFiche;
+    $('[data-x=use]', el)?.addEventListener('click', () => { const r = E.pick(o.outil, { hotspot: o.id }); if (r.obs) { son('trouve'); pop(`${out.icone} Relevé effectué`, 'gold'); renderAll(); ouvrirFiche(o); } });
   }
 
   function voirPhoto(id) {
     const p = scn.photos.find(x => x.id === id);
-    const src = scn.medias?.[p.media];
-    E.log(`Photo d'intervention consultée : ${p.titre || id}.`);
-    modal({ titre: `📷 ${esc(p.titre || 'Photo')}`, large: true, corps: `${src ? `<img src="${src}" alt="" style="width:100%;border-radius:8px;display:block">` : '<p class="muted">Image absente.</p>'}
-      <p style="margin-top:10px">${esc(p.legende || '')}</p><p class="small muted">${esc([p.date, p.auteur].filter(Boolean).join(' · '))}</p>`, actions: [{ label: 'Fermer' }] });
+    modal({ titre: `📷 ${esc(p.titre || 'Photo')}`, classe: 'jeu-m', large: true, corps: `${scn.medias?.[p.media] ? `<img src="${scn.medias[p.media]}" alt="" style="width:100%;border-radius:8px">` : ''}<p style="margin-top:10px">${esc(p.legende || '')}</p><p class="small muted">${esc([p.date, p.auteur].filter(Boolean).join(' · '))}</p>`, actions: [{ label: 'Fermer' }] });
   }
 
+  // ------------------------------------------------------------ actions
+  function allerZone(id, silencieux) {
+    const msgs = E.entrerZone(id);
+    const z = E.zone(id);
+    S.setFocus({ ...z, azimut: z.azimut ?? (z.exterieur ? undefined : 42) }, z.piece || null);
+    S.setNiveauVisible(z.piece ? S._nivDePiece(z.piece) : null);
+    S.setToiture(z.toiture || (z.exterieur ? 'visible' : 'cache'));
+    if (!silencieux) fermerFiche();
+    signaler(msgs);
+    if (!msgs.length && !silencieux) son('page');
+    renderAll();
+  }
+
+  function capture(cb, cible) {
+    const fl = h('<div style="position:absolute;inset:0;background:#fff;z-index:40;opacity:.85;transition:opacity .35s;pointer-events:none"></div>');
+    if (cible) { S.setFocus({ cible, zoom: Math.max(S.camera.zoom, 2.2) }, S.focus?.piece || null); }
+    setTimeout(() => { const img = S.capture(); root.appendChild(fl); son('photo'); requestAnimationFrame(() => { fl.style.opacity = 0; }); setTimeout(() => fl.remove(), 400); cb(img); }, cible ? 720 : 30);
+  }
+  function photoZone() {
+    if (!E.zoneActive) { dire('Choisis d\'abord une zone dans le parcours, en bas de l\'écran.'); return; }
+    const vis = !$('.fiche', root).hidden; $('.fiche', root).hidden = true;
+    capture(img => { const n = E.photoDeZone(img); pop(`📷 Photo n°${n} : vue d'ensemble`); if (vis && ui.carte) ouvrirFiche(E.obs(ui.carte)); renderAll(); });
+  }
   function photoObs(o) {
-    fermerCarte();
-    setTimeout(() => { const n = E.photoDObs(o, S.capture()); toast(`📷 Photo n°${n} : ${esc(o.titre)}.`, 'ok'); renderAll(); if (ui.carte === o.id) montrerCarte(o); }, 30);
+    $('.fiche', root).hidden = true;
+    capture(img => { E.photoDObs(o, img); pop('📷 Indice photographié'); renderAll(); ouvrirFiche(o); }, [o.pos[0], altitudeDe(bat, o.niveau) + o.pos[1], o.pos[2]]);
   }
 
-  function montrerIndice(r) {
-    const el = $('.ov-card', root);
-    el.hidden = false; ui.carte = null;
-    el.innerHTML = `<h3>🔎 Indice</h3><div class="desc">${esc(r.msg)}</div>
-      <p class="small">Outil requis : <b>${esc(E.outilNom(r.outilRequis))}</b> ${r.possede ? '<span class="chip ok">disponible</span>' : '<span class="chip ko">non acquis</span>'}</p>
-      <div class="acts">${r.possede ? `<button class="btn btn-sm btn-primary" data-x="use">Prendre l'outil</button>` : ''}<button class="btn btn-sm" data-x="close">Fermer</button></div>`;
-    $('[data-x=close]', el).onclick = fermerCarte;
-    $('[data-x=use]', el)?.addEventListener('click', () => { choisirOutil(r.outilRequis); fermerCarte(); toast('Cliquez à nouveau sur la zone avec l\'outil.', 'info'); });
+  function onPick(hit) {
+    if (hit.photo) { voirPhoto(hit.photo); return; }
+    if (hit.hotspot) {
+      const o = E.obs(hit.hotspot);
+      if (E.decouverts.has(o.id)) { ouvrirFiche(o); return; }
+      if (!E.zoneActive) { dire('Choisis d\'abord la zone à examiner dans le parcours.'); return; }
+      if (o.outil) { ficheIndice(o); return; }
+      const r = E.pick('observer', hit);
+      if (r.obs) { son('trouve'); pop(`🔎 Nouvel indice : ${esc(o.titre)}`, 'gold'); renderAll(); ouvrirFiche(o); }
+      return;
+    }
+    if (ui.outil === 'pid' && E.zoneActive) {
+      const r = E.pick('pid', hit);
+      if (r.type === 'pid') { son(r.obs ? 'trouve' : 'page'); pop(`📟 PID : ${esc(r.valeur)}`, r.obs ? 'gold' : ''); if (r.obs) { renderAll(); ouvrirFiche(r.obs); } }
+    }
   }
 
-  function montrerCarte(o) {
-    if (!o) return;
-    const el = $('.ov-card', root);
-    ui.carte = o.id; el.hidden = false;
-    const d = E.decouverts.get(o.id), a = E.analyses.get(o.id);
-    const scelle = o.prelevement && E.scelles.find(s => s.prelevement === o.prelevement);
-    el.innerHTML = `<h3><span class="cav">${d?.num ?? '?'}</span>${esc(o.titre)}</h3>
-      <div class="small muted">${esc(E.zone(o.zone)?.nom)}${o.outil ? ` · relevé : ${esc(E.outilNom(o.outil))}` : ''}${o.couche ? ` · fouille, couche ${o.couche}` : ''}</div>
-      <div class="desc">${esc(o.description)}</div>
-      ${(scn.photos || []).filter(p => p.constat === o.id && scn.medias?.[p.media]).map(p => `<img src="${scn.medias[p.media]}" alt="" data-ph="${p.id}" style="width:31%;margin:0 1% 6px 0;border-radius:4px;cursor:zoom-in">`).join('')}
-      ${a ? `<div class="fb ${immediat ? (a.ok ? 'ok' : 'ko') : ''} small"><b>Votre analyse :</b> ${esc(o.analyse.options[a.idx].t)}${immediat ? `<br><span class="muted">${esc(o.analyse.options[a.idx].fb || '')}</span>` : ''}</div>` : ''}
-      <div class="acts" style="margin-top:10px">
-        ${E.photoObs.has(o.id) ? '<span class="chip ok">📷 photographié</span>' : '<button class="btn btn-sm" data-x="photo">📷 Photographier</button>'}
-        ${a || !o.analyse ? '' : '<button class="btn btn-sm btn-primary" data-x="ana">Analyser</button>'}
-        ${o.prelevement ? (scelle ? `<span class="chip ok">scellé ${scelle.id}</span>` : '<button class="btn btn-sm" data-x="prel">🧤 Prélever</button>') : ''}
-        <button class="btn btn-sm btn-ghost" data-x="close">Fermer</button>
-      </div>`;
-    $('[data-x=close]', el).onclick = fermerCarte;
-    $$('[data-ph]', el).forEach(i => i.onclick = () => voirPhoto(i.dataset.ph));
-    $('[data-x=photo]', el)?.addEventListener('click', () => photoObs(o));
-    $('[data-x=ana]', el)?.addEventListener('click', () => analyser(o.id));
-    $('[data-x=prel]', el)?.addEventListener('click', () => prelever(o));
-  }
-  function fermerCarte() { ui.carte = null; $('.ov-card', root).hidden = true; }
-
-  function analyser(id) {
-    const o = E.obs(id);
-    const corps = document.createElement('div');
-    corps.innerHTML = `<div class="desc" style="background:#15181c;border-left:3px solid var(--accent);padding:8px 10px;border-radius:0 6px 6px 0;margin-bottom:10px">${esc(o.description)}</div>
-      <p><b>${esc(o.analyse.question)}</b></p>
-      ${o.analyse.options.map((op, i) => `<label class="opt"><input type="radio" name="an" value="${i}"><span>${esc(op.t)}</span></label>`).join('')}
-      <div id="anFb"></div>`;
-    let fait = false;
-    const m = modal({ titre: `Analyse — ${esc(o.titre)}`, corps, large: true, actions: [
-      { label: 'Annuler', classe: 'btn-ghost' },
-      { label: 'Valider l\'analyse', classe: 'btn-primary', onClick: () => {
-        if (fait) return true;
-        const sel = corps.querySelector('input[name=an]:checked');
-        if (!sel) { toast('Choisissez une interprétation.', 'warn'); return false; }
-        const r = E.analyser(id, +sel.value);
-        fait = true;
-        if (immediat) {
-          $$('.opt', corps).forEach((l, i) => { if (i === +sel.value) l.classList.add(r.ok ? 'ok' : 'ko'); });
-          $('#anFb', corps).innerHTML = `<div class="fb ${r.ok ? 'ok' : 'ko'}"><b>${r.ok ? 'Analyse correcte.' : 'Analyse discutable.'}</b> ${esc(r.fb || '')} ${ref(r.ref)}</div>`;
-          m.el.querySelector('.modal-f .btn-primary').textContent = 'Continuer';
-          renderAll(); if (ui.carte === id) montrerCarte(o);
-          return false;
-        }
-        toast('Analyse consignée au carnet.', 'ok');
-        renderAll(); if (ui.carte === id) montrerCarte(o);
-      } },
-    ] });
-  }
-
-  function prelever(o) {
-    const p = scn.prelevements.find(x => x.id === o.prelevement);
-    if (E.scelles.some(s => s.prelevement === p.id)) { toast('Déjà placé sous scellé.', 'info'); return; }
-    const conts = E.contenantsDisponibles();
-    const corps = document.createElement('div');
-    corps.innerHTML = `<p><b>${esc(p.nom)}</b></p>
-      ${E.photoObs.has(o.id) ? '' : `<div class="fb ko small">Ce constat n'a pas été photographié en place ${ref('16.5.2')}.</div>`}
-      <div class="sec-t" style="margin-top:10px">Contenant ${ref('16.6')}</div>
-      ${conts.map((c, i) => `<label class="opt"><input type="radio" name="ct" value="${c.id}" ${i === 0 ? 'checked' : ''}><span>${esc(c.nom)}</span></label>`).join('')}
-      ${E.possede('pots') ? '' : '<p class="small muted">🔒 Pots métalliques, bocaux et sachets nylon : équipement « Contenants pour liquides inflammables ».</p>'}
-      ${p.type === 'liquide' ? `<label class="opt"><input type="checkbox" id="ctT"><span>Prélever aussi un <b>échantillon de comparaison</b> : ${esc(p.temoin || 'même matériau hors zone')} ${ref('16.5.4')}</span></label>` : ''}
-      <p class="small muted">Étiquetage, scellé et chaîne de traçabilité ${ref('16.7 / 16.9')}.</p>`;
-    modal({ titre: '🧤 Prélèvement et mise sous scellé', corps, large: false, actions: [
-      { label: 'Annuler', classe: 'btn-ghost' },
-      { label: 'Placer sous scellé', classe: 'btn-primary', onClick: () => {
-        const c = corps.querySelector('input[name=ct]:checked')?.value;
-        const r = E.prelever(o.id, c, $('#ctT', corps)?.checked);
-        if (r.erreur) { toast(r.erreur, 'ko'); return; }
-        if (immediat) r.msgs.forEach(v => toast(`⚠ ${esc(v.texte)} ${ref(v.ref)}`, 'warn', 5500));
-        toast(`🧪 Scellé ${r.scelle.id} constitué.`, 'ok');
-        renderAll(); montrerCarte(o);
-      } },
-    ] });
-  }
-
+  // ------------------------------------------------------------ sécurité
   function securite() {
     const opts = scn.securite.options;
-    const corps = document.createElement('div');
-    corps.innerHTML = `<p class="small muted">Avant d'entrer : évaluation des risques de la scène et mesures de protection ${ref(scn.securite.ref)}. Cochez les mesures que vous mettez en œuvre.</p>
-      ${opts.map(o => `<label class="opt"><input type="checkbox" value="${o.id}" ${E.securite.choix.includes(o.id) ? 'checked' : ''}><span>${esc(o.t)}</span></label>`).join('')}<div id="sFb"></div>`;
+    const corps = h(`<div><p>Avant d'entrer, coche les mesures que tu prends ${ref(scn.securite.ref)}.</p>${opts.map(o => `<label class="opt" style="background:#fff;border-color:#e2dccb;color:#222"><input type="checkbox" value="${o.id}"><span>${esc(o.t)}</span></label>`).join('')}<div class="sFb"></div></div>`);
     let fait = false;
-    const m = modal({ titre: '⚠ Évaluation de sécurité', corps, actions: [
-      { label: 'Valider', classe: 'btn-primary', onClick: () => {
-        if (fait) return true;
-        const choix = $$('input:checked', corps).map(x => x.value);
-        const r = E.validerSecurite(choix);
-        fait = true;
-        if (immediat) {
-          $('#sFb', corps).innerHTML = (r.fautes.length || r.oublis.length) ? `<div class="fb ko small">${r.fautes.map(f => `✗ ${esc(f.fb)}`).join('<br>')}${r.oublis.length ? `<br>Oubli(s) : ${r.oublis.map(o => esc(o.t)).join(' ; ')}` : ''}</div>` : '<div class="fb ok small">Évaluation complète et adaptée.</div>';
-          m.el.querySelector('.modal-f .btn-primary').textContent = 'Continuer';
-          renderLeft();
-          return false;
-        }
-        renderLeft();
-      } },
-    ] });
+    const m = modal({ titre: '⚠️ Sécurité de la scène', classe: 'jeu-m', corps, actions: [{ label: 'Valider', classe: 'btn-primary', onClick: () => {
+      if (fait) return true;
+      const r = E.validerSecurite($$('input:checked', corps).map(x => x.value));
+      fait = true;
+      const bon = !r.fautes.length && !r.oublis.length;
+      son(bon ? 'ok' : 'ko');
+      if (immediat) {
+        $('.sFb', corps).innerHTML = bon ? '<div class="verdict ok"><b>Parfait.</b>Scène sécurisée, on peut travailler.</div>' : `<div class="verdict ko"><b>À revoir</b>${r.fautes.map(f => `✗ ${esc(f.fb)}`).join('<br>')}${r.oublis.length ? `<br>Oublié : ${r.oublis.map(o => esc(o.t)).join(' ; ')}` : ''}</div>`;
+        m.el.querySelector('.modal-f .btn-primary').textContent = 'Continuer';
+        renderAll(); return false;
+      }
+      renderAll();
+    } }] });
   }
 
-  function briefing() {
-    modal({ titre: `📋 Briefing — ${esc(scn.titre)}`, large: true, corps: `
-      <p><b>${esc(scn.mission.mandant)}</b> · réf. ${esc(scn.mission.reference)}</p>
-      <p>${esc(scn.mission.ordre)}</p>
-      <div class="panel small"><b>Sinistre :</b> ${esc(scn.mission.dateSinistre)}, alerte ${esc(scn.mission.heureAlerte)}<br><b>Adresse :</b> ${esc(scn.mission.adresse)}<br><b>Préservation :</b> ${esc(scn.mission.preservation)}</div>
-      <div class="sec-t">Compte rendu SDIS</div><ul class="small" style="padding-left:16px">${scn.rapportSdis.map(l => `<li>${esc(l)}</li>`).join('')}</ul>
-      <div class="sec-t">Rappels de méthode</div>
-      <ol class="small" style="padding-left:18px">
-        <li>Sécurité de la scène avant d'entrer ${ref('12')}.</li>
-        <li>Abords et extérieur, puis intérieur, des zones les moins vers les plus endommagées ${ref('17.3.1.3')}.</li>
-        <li>Photographier avant de toucher, fouiller par couches ${ref('15.2 / 17.3.2')}.</li>
-        <li>Analyser chaque donnée, formuler et TESTER plusieurs hypothèses ${ref('4.3')}.</li>
-        <li>Pas de conclusion sans donnée qui la démontre ${ref('18.6.5')}.</li>
-      </ol>
-      <p class="small muted">Commandes : clic gauche = outil actif · glisser = pivoter · clic droit glissé = déplacer · molette = zoom · touches 1–8 = outils · Q/E = pivoter.</p>`,
-      actions: [{ label: 'Commencer l\'enquête', classe: 'btn-primary' }] });
+  // ------------------------------------------------------------ témoins (dialogue)
+  function entretien(tid) {
+    const t = scn.temoins.find(x => x.id === tid);
+    const corps = h(`<div class="dialogue"><div class="qui"><div class="av">${t.avatar || '👤'}</div><b>${esc(t.nom)}</b><div class="small muted">${esc(t.role)}</div></div><div><div class="fil"></div><div class="repliques"></div></div></div>`);
+    const draw = () => {
+      const posees = E.temoins.get(tid) || new Set();
+      $('.fil', corps).innerHTML = t.questions.filter(q => posees.has(q.id)).map(q => `<div class="b-q">${esc(q.q)}</div><div class="b-r">${esc(q.r)}</div>${q.info ? `<div class="b-t">💡 ${esc(q.info)}</div>` : ''}${immediat && q.piege ? `<div class="b-t">👨‍🚒 ${esc(q.piege)}</div>` : ''}`).join('') || '<div class="b-t">Prends le temps de te présenter, puis laisse parler la personne.</div>';
+      $('.repliques', corps).innerHTML = t.questions.filter(q => !posees.has(q.id)).map(q => `<button class="replique" data-q="${q.id}">💬 ${esc(q.q)}</button>`).join('') || '<div class="small muted">Tu as fait le tour.</div>';
+      $('.fil', corps).scrollTop = 1e6;
+      $$('[data-q]', corps).forEach(x => x.onclick = () => { const r = E.poserQuestion(tid, x.dataset.q); signaler(r.msgs); if (r.q.fait) pop('✍ Noté au carnet'); son('page'); draw(); renderAll(); });
+    };
+    draw();
+    modal({ titre: `Entretien`, classe: 'jeu-m', corps, large: true, actions: [{ label: 'Terminer l\'entretien' }] });
   }
 
-  // vue
-  const ovv = $('.ov-view', root);
-  const modesMurs = ['auto', 'bas', 'pleins'];
-  let iMur = 0;
-  ovv.addEventListener('click', e => {
-    const v = e.target.closest('[data-v]')?.dataset.v; if (!v) return;
-    if (v === 'rotg') S.rotateView(-45);
-    if (v === 'rotd') S.rotateView(45);
-    if (v === 'murs') { iMur = (iMur + 1) % 3; S.setModeMurs(modesMurs[iMur]); e.target.textContent = `🧱 Murs : ${modesMurs[iMur]}`; }
-    if (v === 'vue') { E.zoneActive = null; S.setFocus(null, null); S.setNiveauVisible(null); fermerCarte(); renderAll(); }
-    if (v === 'dessus') { if (!E.possede('drone')) { toast('🔒 Vue aérienne : équipement « Drone » requis.', 'warn'); return; } ui.dessus = !ui.dessus; S.vueDessus(ui.dessus); }
-  });
+  // ------------------------------------------------------------ téléphone (OSINT)
+  function telephone() {
+    const corps = h(`<div class="tel"><div class="ecran"><div class="barre"><span>${new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span><span>📶 🔋</span></div>
+      <div class="apps"></div><div class="rech"><input placeholder="Nom, lieu, marque, « météo »…"><button>OK</button></div><div class="res"></div></div></div>`);
+    const draw = () => {
+      $('.apps', corps).innerHTML = APPS.map(([k, l]) => `<button class="app ${ui.app === k ? 'on' : ''}" data-a="${k}">${l}</button>`).join('');
+      $$('[data-a]', corps).forEach(b => b.onclick = () => { ui.app = b.dataset.a; draw(); });
+      $('.res', corps).innerHTML = ui.res.length ? ui.res.map(o => { const lock = o.pro && !E.possede('osintpro'); return `<div class="post"><b>${esc(o.titre)}</b>${lock ? '🔒 Réservé à l\'abonnement OSINT pro.' : `${esc(o.extrait)}<small>Fiabilité : ${esc(o.fiabilite || '—')}</small>
+        <div style="margin-top:6px">${E.osint.ajoutes.has(o.id) ? '<span class="tampon ok">ÉPINGLÉ</span>' : `<button class="btn-j go" data-add="${o.id}">📌 Épingler au carnet</button>`}</div>`}</div>`; }).join('') : '<div class="post">Cherche des noms, des lieux, des marques relevées sur la scène…</div>';
+      $$('[data-add]', corps).forEach(b => b.onclick = () => { E.ajouterOsint(b.dataset.add); son('ok'); pop('📌 Source épinglée'); draw(); renderAll(); });
+    };
+    const go = () => { const q = $('input', corps).value.trim(); if (!q) return; ui.res = E.rechercher(q, ui.app); son('page'); draw(); };
+    $('.rech button', corps).onclick = go;
+    $('input', corps).addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+    draw();
+    modal({ titre: '📱 Recherches', classe: 'jeu-m', corps, actions: [{ label: 'Ranger le téléphone' }] });
+  }
 
+  // ------------------------------------------------------------ hypothèses (tableau en liège)
+  function confronter(kind, id) {
+    const d = scn.hypotheses[kind].find(x => x.id === id);
+    const cur = E.hyp[kind].get(id);
+    const val = new Map(); cur.soutien.forEach(f => val.set(f, 's')); cur.refute.forEach(f => val.set(f, 'r'));
+    const faits = [...E.faits.values()];
+    const src = { constat: '🔎 indice', temoin: '🗣️ témoin', osint: '📱 source', labo: '🧪 labo' };
+    const corps = h(`<div class="liege"><div class="hyp-t">${esc(d.nom)}</div>
+      <div style="color:#fff;font-weight:700;margin-bottom:8px;text-shadow:0 1px 2px rgba(0,0,0,.6)">Pour chaque fait : est-ce qu'il <span style="color:#a6f0c6">appuie</span> ou <span style="color:#ffb3ab">contredit</span> cette hypothèse ? ${ref('4.3.6')}</div>
+      <div class="postits">${faits.map(f => `<div class="postit" data-f="${f.id}"><span class="src">${src[f.type]}${f.contamine ? ' · contaminé' : ''}</span>${esc(f.court || f.texte)}<div class="vote"><button data-v="s">👍 appuie</button><button data-v="r">👎 contredit</button></div></div>`).join('') || '<div class="postit">Aucun fait au carnet pour l\'instant.</div>'}</div>
+      <div class="verdicts"><button data-st="retenue" style="background:#2fa36b;color:#fff">✔ Je la retiens</button><button data-st="refutee" style="background:#d8463b;color:#fff">✖ Je l'écarte</button><button data-st="ouverte" style="background:#fff">… Plus tard</button></div></div>`);
+    const sync = () => $$('.postit[data-f]', corps).forEach(p => { const v = val.get(p.dataset.f); p.className = `postit ${v || ''}`; $$('.vote button', p).forEach(b => b.classList.toggle('on', b.dataset.v === v)); });
+    $$('.vote button', corps).forEach(b => b.onclick = () => { const f = b.closest('.postit').dataset.f; val.set(f, val.get(f) === b.dataset.v ? null : b.dataset.v); son('page'); sync(); });
+    sync();
+    const m = modal({ titre: '🧷 Tableau d\'enquête', classe: 'jeu-m', large: true, corps, actions: [] });
+    $$('[data-st]', corps).forEach(b => b.onclick = () => {
+      const st = b.dataset.st;
+      const s = [...val].filter(([, v]) => v === 's').map(([k]) => k), r = [...val].filter(([, v]) => v === 'r').map(([k]) => k);
+      if (st === 'refutee' && !r.length) { son('ko'); toast('Pour écarter une hypothèse, désigne au moins un fait qui la contredit.', 'ko', 4500); return; }
+      if (st === 'retenue' && !s.length) { son('ko'); toast('On ne retient jamais une hypothèse sans fait qui la démontre (negative corpus, 18.6.5).', 'ko', 5000); return; }
+      if (st === 'retenue') for (const [oid, hh] of E.hyp[kind]) if (oid !== id && hh.statut === 'retenue') hh.statut = 'ouverte';
+      E.testerHypothese(kind, id, s, r, st);
+      son(st === 'ouverte' ? 'page' : 'ok'); pop(st === 'retenue' ? '✔ Hypothèse retenue' : st === 'refutee' ? '✖ Hypothèse écartée' : '… En suspens', st === 'refutee' ? 'ko' : 'ok');
+      m.close(); renderAll();
+    });
+  }
+
+  // ------------------------------------------------------------ conclusion (assistant)
+  function conclure() {
+    const ret = k => [...E.hyp[k]].find(([, x]) => x.statut === 'retenue')?.[0] || '';
+    const R = { origine: ret('origines'), cause: ret('causes'), certitude: '', classification: '', faitsAppui: ret('causes') ? [...E.hyp.causes.get(ret('causes')).soutien] : [], texte: '' };
+    let etape = 0;
+    const corps = h('<div></div>');
+    const nb = 5;
+    const draw = () => {
+      const cartes = (items, cle) => `<div class="cartes" data-cle="${cle}">${items.map(it => `<button class="carte-c ${R[cle] === it.id ? 'on' : ''}" data-v="${it.id}">${it.tag ? `<span class="tag">${it.tag}</span>` : ''}${esc(it.nom)}${it.sub ? `<small>${esc(it.sub)}</small>` : ''}</button>`).join('')}</div>`;
+      let html = `<div class="wiz-steps">${Array.from({ length: nb }, (_, i) => `<span class="${i <= etape ? 'on' : ''}"></span>`).join('')}</div>`;
+      if (etape === 0) html += `<div class="wiz-q">Où le feu a-t-il pris ?</div>` + cartes([...scn.hypotheses.origines.map(o => ({ id: o.id, nom: o.nom, tag: E.hyp.origines.get(o.id)?.statut === 'retenue' ? 'ta piste' : '' })), { id: '', nom: 'Je ne peux pas la déterminer', sub: 'Origine indéterminée' }], 'origine');
+      if (etape === 1) html += `<div class="wiz-q">Comment a-t-il pris ?</div>` + cartes([...scn.hypotheses.causes.map(o => ({ id: o.id, nom: o.nom, sub: o.premierCombustible ? `1er combustible : ${o.premierCombustible}` : '', tag: E.hyp.causes.get(o.id)?.statut === 'retenue' ? 'ta piste' : '' })), { id: '', nom: 'Je ne peux pas la déterminer', sub: 'Cause indéterminée' }], 'cause');
+      if (etape === 2) html += `<div class="wiz-q">Quels faits le démontrent ?</div><div class="small muted" style="margin-bottom:8px">Choisis les faits solides. Une rumeur ou une suggestion n'est pas une preuve ${ref('18.6.5')}</div><div class="postits">${[...E.faits.values()].map(f => `<div class="postit ${R.faitsAppui.includes(f.id) ? 's' : ''}" data-f="${f.id}" style="cursor:pointer">${esc(f.court || f.texte)}</div>`).join('')}</div>`;
+      if (etape === 3) html += `<div class="wiz-q">Avec quelle certitude ?</div>` + cartes(CERTITUDES.map(c => ({ id: c.id, nom: c.nom, sub: { probable: 'Plus probable que toute autre explication', possible: 'Faisable mais non démontré', suspecte: 'Une impression…' }[c.id] })), 'certitude') +
+        `<div class="wiz-q" style="margin-top:16px">Et la classification ?</div>` + cartes(CLASSIFICATIONS.map(c => ({ id: c.id, nom: c.nom })), 'classification');
+      if (etape === 4) html += `<div class="wiz-q">Ta conclusion, en quelques mots</div><textarea class="inp" rows="5" style="width:100%;background:#fff;color:#222;border-color:#ddd5c2;font:600 20px var(--hand)" placeholder="Le feu a pris… parce que…">${esc(R.texte)}</textarea>
+        <p class="small muted">Tes notes de terrain seront jointes au rapport.</p><button class="btn-j" data-apercu>🖨️ Aperçu du rapport</button>`;
+      html += `<div style="display:flex;justify-content:space-between;margin-top:16px"><button class="btn-j ghost" data-nav="-1" ${etape ? '' : 'disabled'}>← Retour</button>${etape < nb - 1 ? '<button class="btn-j go" data-nav="1">Suivant →</button>' : '<button class="btn-j fire" data-fin>⚖️ Déposer mon rapport</button>'}</div>`;
+      corps.innerHTML = html;
+      $$('.carte-c', corps).forEach(b => b.onclick = () => { const cle = b.closest('.cartes').dataset.cle; R[cle] = b.dataset.v; if (cle === 'cause' && R.cause && !R.faitsAppui.length) R.faitsAppui = [...(E.hyp.causes.get(R.cause)?.soutien || [])]; son('page'); draw(); });
+      $$('.postit[data-f]', corps).forEach(p => p.onclick = () => { const f = p.dataset.f; R.faitsAppui = R.faitsAppui.includes(f) ? R.faitsAppui.filter(x => x !== f) : [...R.faitsAppui, f]; draw(); });
+      $('textarea', corps)?.addEventListener('input', e => { R.texte = e.target.value; });
+      $$('[data-nav]', corps).forEach(b => b.onclick = () => {
+        if (+b.dataset.nav > 0 && etape === 3 && (!R.certitude || !R.classification)) { toast('Choisis une certitude et une classification.', 'warn'); return; }
+        etape += +b.dataset.nav; draw();
+      });
+      $('[data-apercu]', corps)?.addEventListener('click', () => apercuRapport(E, { ...R, texte: R.texte + (E.notes ? `\n\nNotes de terrain :\n${E.notes}` : '') }, ctx.app.c));
+      $('[data-fin]', corps)?.addEventListener('click', () => {
+        E.rapport = { ...R, texte: R.texte + (E.notes ? `\n\nNotes de terrain :\n${E.notes}` : '') };
+        m.close(); son('victoire');
+        ctx.onLeave?.(); ctx.onLeave = null;
+        ouvrirDebrief(E, ctx);
+      });
+    };
+    const m = modal({ titre: '⚖️ Conclure l\'enquête', classe: 'jeu-m', large: true, corps, actions: [] });
+    draw();
+  }
+
+  // ------------------------------------------------------------ clavier & rendu
   function onKey(e) {
     if (e.target.closest('input,textarea,select') || $('.modal-bg')) return;
     const k = e.key.toLowerCase();
-    if (k >= '1' && k <= '8') choisirOutil(BARRE[+k - 1]);
     if (k === 'q') S.rotateView(-45);
     if (k === 'e') S.rotateView(45);
-    if (k === 'escape') fermerCarte();
+    if (k === 'c') outil('carnet');
+    if (k === 'escape') fermerFiche();
   }
   document.addEventListener('keydown', onKey);
 
-  window.__rcci = { E, S, pick: h2 => onPick(h2), zone: id => allerZone(id), outil: id => choisirOutil(id) };
-  function renderAll() {
-    refreshHotspots(); renderLeft(); renderZoneOv(); renderToolbar(); renderFouille(); renderRight();
+  function refreshHotspots() {
+    const st = tuto?.[ui.tutoIdx];
+    const focus = new Set(st?.obs || []);
+    for (const p of scn.photos || []) S.setPhotoVisible(p.id, p.constat ? E.decouverts.has(p.constat) : E.zonesVisitees.includes(zonePhoto(p)));
+    for (const o of scn.observations) {
+      const d = E.decouverts.get(o.id);
+      const lueur = tuto ? focus.has(o.id) : (reg.lueurs && !o.outil);
+      S.updateHotspot(o.id, { actif: E.estActif(o), decouvert: !!d, num: d?.num, photo: E.photoObs.has(o.id), analyse: E.analyses.has(o.id), lueur, toujours: !!d });
+    }
   }
+
+  function renderAll() {
+    verifierTuto();
+    refreshHotspots(); renderObjectifs(); renderCompteurs(); renderParcours(); renderCeinture(); renderFouille(); renderCarnet();
+    surligner();
+  }
+  window.__rcci = { E, S, ui, pick: x => onPick(x), zone: id => allerZone(id), outil, fiche: id => ouvrirFiche(E.obs(id)), conclure, render: renderAll };
+
   S.setFocus(null, null, false);
   renderAll();
-  briefing();
+  // accueil
+  if (tuto) direEtape();
+  else dire(scn.intro || 'Cette fois, c\'est toi qui mènes l\'enquête. Suis ta méthode : sécurité, extérieur, puis des zones les moins touchées vers les plus touchées. Clique sur moi si tu as besoin d\'un conseil.', { refs: '4.3' });
 }
