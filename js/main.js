@@ -42,13 +42,14 @@ function allerQG(onglet) {
         <div class="xpbar"><i style="width:${pct}%"></i></div>
         <div class="small" style="display:flex;justify-content:space-between;margin-top:4px;color:#d7c6a8"><span>${g.suivant ? `prochain : ${esc(g.suivant.nom)}` : 'grade maximal'}</span><span style="color:#ffd23f;font-weight:800">${app.c.credits.toLocaleString('fr-FR')} cr</span></div></div>
     </div>
-    <nav class="qtabs">${[['missions', '🗂️ Enquêtes'], ['entrainement', '🎯 Entraînement'], ['competences', '🎓 Compétences'], ['equipement', '🧰 Équipement'], ['codex', '📚 Référentiel'], ['carriere', '🏅 Carrière']].map(([id, l]) => `<button class="qtab ${app.onglet === id ? 'on' : ''}" data-o="${id}">${l}</button>`).join('')}
+    <nav class="qtabs">${[['missions', '🗂️ Enquêtes'], ['entrainement', '🔬 Laboratoire'], ['competences', '🎓 Compétences'], ['equipement', '🧰 Équipement'], ['codex', '📚 Référentiel'], ['carriere', '🏅 Carrière']].map(([id, l]) => `<button class="qtab ${app.onglet === id ? 'on' : ''}" data-o="${id}">${l}</button>`).join('')}
       <a class="qtab" href="editor.html" style="text-decoration:none;margin-left:auto">🛠️ Atelier de scènes</a></nav>
     <div class="tableau" id="qgBody"></div>
   </div></div>`);
   screen.appendChild(el);
   $$('[data-o]', el).forEach(b => b.onclick = () => { son('page'); allerQG(b.dataset.o); });
   const body = $('#qgBody', el);
+  body.classList.toggle('labo-salle', app.onglet === 'entrainement');
   ({ missions, entrainement: b2 => salleEntrainement(b2, ctx), competences, equipement, codex, carriere })[app.onglet](body);
 }
 
@@ -105,7 +106,7 @@ function lancer(scn) {
 // ------------------------------------------------------------ Compétences
 function competences(b) {
   const bonus = Math.round(bonusHonoraires(app.c) * 100);
-  b.innerHTML = `<div class="hcarte" style="margin-bottom:16px;display:flex;gap:12px;align-items:center"><span style="font-size:36px">🎓</span><div>Tes compétences progressent à chaque analyse juste, en enquête comme à l'entraînement. Chaque niveau gagné augmente tes honoraires de 1 % (bonus actuel : <b>+${bonus} %</b>). Au <b>niveau 3</b>, chaque compétence débloque un avantage sur le terrain.</div></div>
+  b.innerHTML = `<div class="hcarte" style="margin-bottom:16px;display:flex;gap:12px;align-items:center"><span style="font-size:36px">🎓</span><div>Tes compétences progressent à chaque analyse juste, en enquête comme au laboratoire. Chaque niveau gagné augmente tes honoraires de 1 % (bonus actuel : <b>+${bonus} %</b>). Au <b>niveau 3</b>, chaque compétence débloque un avantage sur le terrain.</div></div>
     <div class="comp-grille">${DOMAINES.map(d => {
       const xp = xpDe(app.c, d.id), p = progression(xp);
       return `<div class="comp-carte ${p.n >= 3 ? 'av' : ''}"><div class="hd"><span class="ic">${d.ic}</span><div><b>${esc(d.nom)}</b><small>${esc(d.desc)}</small></div><span class="niv">Niv. ${p.n}</span></div>

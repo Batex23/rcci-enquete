@@ -1,4 +1,4 @@
-// Compétences de l'enquêteur : de l'expérience par domaine, gagnée en analysant (enquêtes et entraînements).
+// Compétences de l'enquêteur : de l'expérience par domaine, gagnée en analysant (enquêtes et laboratoire).
 // Chaque niveau augmente les honoraires ; le niveau 3 débloque un avantage concret en enquête.
 
 export const DOMAINES = [

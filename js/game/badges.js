@@ -12,7 +12,7 @@ export const BADGES = [
   { id: 'tous', ic: '🏆', nom: 'Carrière lancée', desc: 'Réussir les trois premières enquêtes' },
   { id: 'thermo', ic: '🌡️', nom: 'Thermomètre', desc: 'Estimer juste toutes les températures d\'une scène (au moins 2)' },
   { id: 'specialiste', ic: '🎓', nom: 'Spécialiste', desc: 'Atteindre le niveau 3 dans une compétence' },
-  { id: 'assidu', ic: '🎯', nom: 'Assidu', desc: 'Réussir un entraînement sans faute' },
+  { id: 'assidu', ic: '🥼', nom: 'Blouse blanche', desc: 'Réussir une expérience du laboratoire sans faute' },
   { id: 'polyvalent', ic: '🧭', nom: 'Polyvalent', desc: 'Atteindre le niveau 2 dans toutes les compétences' },
 ];
 

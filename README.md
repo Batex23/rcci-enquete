@@ -20,10 +20,10 @@ Le joueur mène des enquêtes sur des scènes d'incendie en **3D low-poly (vue i
 - **Témoins de température** : certains indices sont des objets fondus ou restés intacts (aluminium, verre, zamac, PVC, cuivre…). Avec ses repères de fusion (NFPA 921, tableau 6.2.8.2), le joueur en déduit la fourchette de température atteinte : un objet fondu donne un minimum, un objet intact un maximum. Pièges : l'alliage (cuivre « fondu » au contact de zinc ou d'aluminium) et le mythe « température élevée = accélérant ». La page 🌡️ du carnet trace la carte des températures.
 - **Débriefing** : étoiles, badges (Méthodique, Œil de lynx, Lucide, Impartial, Thermomètre…), compétences gagnées, pièges évités ou non, reconstitution 3D.
 
-### Progresser : compétences et entraînement
+### Progresser : compétences et laboratoire
 
 - **Compétences** (onglet 🎓) : Méthode, Lecture des tracés, Températures, Électricité, Entretiens & sources, Raisonnement, Prélèvements & labo. Chaque analyse juste rapporte des points dans le domaine concerné (5 niveaux, de Novice à Maître). Chaque niveau gagné augmente les honoraires de 1 % ; au **niveau 3**, un avantage se débloque sur le terrain : photo automatique avant fouille, une lecture erronée barrée, témoins de température mis en évidence, analyses de labo moins chères, questions orientées signalées, aide à la certitude.
-- **Salle d'entraînement** (onglet 🎯) : séries courtes et renouvelées — *Le thermomètre* (fourchettes de température générées au hasard), *Mythe ou réalité ?* (les idées reçues passées au crible de la NFPA 921), *Lecture des tracés*, *Arc, feu ou alliage ?*. Elles font progresser les compétences ; la première série du jour de chaque exercice rapporte des crédits.
+- **Le laboratoire** (onglet 🔬) : une zone d'expérimentation pour comprendre les phénomènes, hors enquête. Quatre postes : *Four de fusion* (fondu ou intact ? fourchettes de température tirées au hasard), *Banc d'essai* (mythe ou réalité ?), *Cellule d'essai au feu* (lecture des tracés), *Microscope* (arc, feu ou alliage ?). Les expériences font progresser les compétences ; la première série du jour de chaque poste est rémunérée. D'autres postes (calorimètre, chromatographe, grande cellule) accueilleront plus tard des études plus poussées.
 
 ### Les enquêtes
 
@@ -112,7 +112,7 @@ js/data/nfpa.js         Référentiel NFPA 921 (2011), reformulé en français
 js/data/sources.js      Bibliographie et correspondances NFPA 921 → autres sources
 js/data/thermique.js    Témoins de température (fusion, ramollissement, alliages)
 js/game/competences.js  Compétences, niveaux et avantages
-js/screens/entrainement.js  Salle d'entraînement
+js/screens/entrainement.js  Le laboratoire (postes d'expérimentation)
 js/data/materiaux.js    Températures, puissances, fusion (tableau mnémotechnique de l'auteur)
 js/data/scenarios/      Scénarios d'enquête (JSON)
 ```
@@ -122,7 +122,7 @@ js/data/scenarios/      Scénarios d'enquête (JSON)
 - Variantes du pavillon : autre heure, autre puissance, autre origine (feu de cuisine).
 - Scène avec **victime** (chap. 23) et lecture des **traces d'actions de lance** des sapeurs-pompiers (6.3.2.5).
 - Enquête complexe en entrepôt (chap. 20 et 27), modélisation.
-- Nouveaux exercices d'entraînement (ordre des étapes, niveaux de certitude) et défis chronométrés.
+- Laboratoire : études plus poussées (calorimètre, chromatogrammes, essais en grande cellule), en lien avec le laboratoire interne.
 
 ## Sources
 

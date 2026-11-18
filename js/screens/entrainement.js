@@ -1,4 +1,4 @@
-// Salle d'entraînement : exercices courts qui font progresser les compétences
+// Le laboratoire : postes d'expérimentation courts pour comprendre les phénomènes (et faire progresser les compétences)
 import { FUSIONS, fusion, optionsThermo, etatAtteint, etatNon } from '../data/thermique.js';
 import { TRACES } from '../data/nfpa.js';
 import { voirAussiHtml } from '../data/sources.js';
@@ -82,21 +82,32 @@ function genArc(i) {
 }
 
 export const EXERCICES = [
-  { id: 'thermo', ic: '🌡️', nom: 'Le thermomètre', dom: 'thermo', n: 5, desc: 'Des objets fondus ou intacts : à toi de dire quelle température a régné.', gen: () => Array.from({ length: 5 }, genThermo) },
-  { id: 'mythes', ic: '🧩', nom: 'Mythe ou réalité ?', dom: 'raisonnement', n: 6, desc: 'Les idées reçues de l\'enquête incendie, passées au crible de la NFPA 921.', gen: () => melange(MYTHES.map((_, i) => i)).slice(0, 6).map(genMythe) },
-  { id: 'traces', ic: '🔥', nom: 'Lecture des tracés', dom: 'traces', n: 6, desc: 'Une description, un nom de tracé : saurais-tu les associer ?', gen: () => { const pool = TRACES.filter(t => t.def && !/^(Accidentelle|Naturelle|Volontaire|Indéterminée|Suspecte|Probable|Possible|Suspectée)/.test(t.nom)); return melange(pool.map((_, i) => i)).slice(0, 6).map(i => genTrace(i, pool)); } },
-  { id: 'arcs', ic: '⚡', nom: 'Arc, feu ou alliage ?', dom: 'elec', n: 5, desc: 'Lire la fusion d\'un conducteur électrique.', gen: () => melange(ARCS.map((_, i) => i)).slice(0, 5).map(genArc) },
+  { id: 'thermo', ic: '🔥', poste: 'Four de fusion', nom: 'Fondu ou intact ?', dom: 'thermo', n: 5, desc: 'On chauffe des objets du quotidien : certains fondent, d\'autres tiennent. Quelle température a régné ?', gen: () => Array.from({ length: 5 }, genThermo) },
+  { id: 'mythes', ic: '⚗️', poste: 'Banc d\'essai', nom: 'Mythe ou réalité ?', dom: 'raisonnement', n: 6, desc: 'Les idées reçues de l\'enquête incendie, confrontées aux essais et à la NFPA 921.', gen: () => melange(MYTHES.map((_, i) => i)).slice(0, 6).map(genMythe) },
+  { id: 'traces', ic: '🧱', poste: 'Cellule d\'essai au feu', nom: 'Lecture des tracés', dom: 'traces', n: 6, desc: 'Après un essai en cellule, les murs parlent : associe chaque marque au bon tracé.', gen: () => { const pool = TRACES.filter(t => t.def && !/^(Accidentelle|Naturelle|Volontaire|Indéterminée|Suspecte|Probable|Possible|Suspectée)/.test(t.nom)); return melange(pool.map((_, i) => i)).slice(0, 6).map(i => genTrace(i, pool)); } },
+  { id: 'arcs', ic: '🔬', poste: 'Microscope', nom: 'Arc, feu ou alliage ?', dom: 'elec', n: 5, desc: 'Sous l\'objectif, des conducteurs fondus : lequel a vu un arc, le feu, ou un alliage ?', gen: () => melange(ARCS.map((_, i) => i)).slice(0, 5).map(genArc) },
 ];
 
 // ---------------------------------------------------------------- écran
+const FUTURS = [
+  { ic: '🧫', poste: 'Calorimètre', nom: 'Puissance des objets', desc: 'Mesurer ce que dégage un canapé, une poubelle, un matelas…' },
+  { ic: '📈', poste: 'Chromatographe', nom: 'Analyse de débris', desc: 'Lire un chromatogramme : essence, pyrolyse ou électrolyte ?' },
+  { ic: '🏗️', poste: 'Grande cellule', nom: 'Embrasement généralisé', desc: 'Reproduire un feu de pièce et observer la couche chaude descendre.' },
+];
+export const LABO = { nom: 'Dr Lina Morel', role: 'ingénieure du laboratoire', avatar: '👩‍🔬' };
+
 export function entrainement(b, ctx) {
   const c = ctx.app.c;
   c.entrainement ||= {};
   const jour = new Date().toISOString().slice(0, 10);
-  b.innerHTML = `<div class="hcarte" style="margin-bottom:16px;display:flex;gap:12px;align-items:center"><span style="font-size:36px">👨‍🚒</span><div><b>Salle d'entraînement.</b> Des séries courtes pour aiguiser l'œil entre deux enquêtes. Chaque bonne réponse fait progresser la compétence correspondante ; la première série du jour de chaque exercice rapporte aussi des crédits.</div></div>
-    <div class="boutique">${EXERCICES.map(x => { const st = c.entrainement[x.id] || {}; const d = DOMAINES.find(y => y.id === x.dom); return `<div class="objet-b"><span class="ic">${x.ic}</span><h4>${esc(x.nom)}</h4><p>${esc(x.desc)}</p>
-      <div class="small">${d.ic} ${esc(d.nom)} · niveau ${niveauDe(c, d.id)} · meilleur : ${st.meilleur ?? '—'} / ${x.n}</div>
-      <div style="margin-top:8px"><button class="btn-j go" data-ex="${x.id}">▶ S'entraîner</button>${st.jour === jour ? ' <span class="small muted">crédits du jour déjà gagnés</span>' : ` <span class="small" style="color:#9a7a20">+${x.n * 15} cr possibles</span>`}</div></div>`; }).join('')}</div>`;
+  b.innerHTML = `<div class="labo-entete"><span class="av">${LABO.avatar}</span><div><b>Bienvenue au laboratoire.</b> Ici, pas d'enquête : on <b>expérimente</b> pour comprendre les phénomènes. Chaque poste lance une courte série d'expériences ; chaque bonne observation fait progresser la compétence correspondante, et la première série du jour de chaque poste est rémunérée.<small>— ${esc(LABO.nom)}, ${esc(LABO.role)}</small></div></div>
+    <div class="labo-etagere" aria-hidden="true"><span>⚗️</span><span>🧪</span><span>🧫</span><span>🌡️</span><span>🧯</span><span>🔬</span><span>🧪</span><span>⚖️</span><span>🥽</span></div>
+    <div class="paillasse">${EXERCICES.map((x, i) => { const st = c.entrainement[x.id] || {}; const d = DOMAINES.find(y => y.id === x.dom); return `<div class="poste">
+      <div class="app-labo"><span>${x.ic}</span><i>Poste ${i + 1} · ${esc(x.poste)}</i></div>
+      <h4>${esc(x.nom)}</h4><p>${esc(x.desc)}</p>
+      <div class="small">${d.ic} ${esc(d.nom)} · niv. ${niveauDe(c, d.id)} · record : ${st.meilleur ?? '—'} / ${x.n}</div>
+      <div class="go-l"><button class="btn-j go" data-ex="${x.id}">▶ Lancer l'expérience</button>${st.jour === jour ? '<span class="small muted">rémunération du jour perçue</span>' : `<span class="small" style="color:#9a7a20">jusqu'à +${x.n * 15} cr</span>`}</div></div>`; }).join('')}</div>
+    <div class="paillasse futur">${FUTURS.map(x => `<div class="poste verrou"><div class="app-labo"><span>${x.ic}</span><i>${esc(x.poste)}</i></div><h4>${esc(x.nom)}</h4><p>${esc(x.desc)}</p><div class="small">🔒 Études plus poussées : bientôt</div></div>`).join('')}</div>`;
   $$('[data-ex]', b).forEach(x => x.onclick = () => lancer(EXERCICES.find(e => e.id === x.dataset.ex), ctx, () => (ctx.allerQG ? ctx.allerQG('entrainement') : entrainement(b, ctx))));
 }
 
@@ -105,7 +116,7 @@ function lancer(ex, ctx, fin) {
   const qs = ex.gen();
   let i = 0, bons = 0, rep = null;
   const corps = h('<div class="entrainement"></div>');
-  const m = modal({ titre: `${ex.ic} ${esc(ex.nom)}`, classe: 'jeu-m', large: true, corps, actions: [], onClose: () => fin() });
+  const m = modal({ titre: `${ex.ic} ${esc(ex.poste)} — ${esc(ex.nom)}`, classe: 'jeu-m labo-m', large: true, corps, actions: [], onClose: () => fin() });
   const draw = () => {
     if (i >= qs.length) return bilan();
     const q = qs[i];
@@ -129,12 +140,13 @@ function lancer(ex, ctx, fin) {
     const d = DOMAINES.find(x => x.id === ex.dom);
     son(bons >= qs.length * 0.8 ? 'victoire' : 'page');
     corps.innerHTML = `<div style="text-align:center;padding:10px">
-      <div style="font:700 38px/1 var(--hand)">${bons === qs.length ? 'Sans faute !' : bons >= qs.length * 0.6 ? 'Bien joué' : 'On continue'}</div>
+      <div class="small" style="text-transform:uppercase;letter-spacing:.12em;color:#5b7385;font-weight:800">Compte rendu d'expérience</div>
+      <div style="font:700 38px/1 var(--hand);margin-top:4px">${bons === qs.length ? 'Résultats impeccables !' : bons >= qs.length * 0.6 ? 'Bonnes observations' : 'On refait l\'expérience ?'}</div>
       <div style="font-size:44px;font-weight:900;margin:8px 0">${bons} / ${qs.length}</div>
       <div><span class="chip">${d.ic} ${esc(d.nom)} <b>+${bons * 10}</b></span> ${cr ? `<span class="chip ok">+${cr} cr</span>` : '<span class="chip">crédits du jour déjà gagnés</span>'}</div>
       ${montees.map(mm => `<div class="chip ok" style="margin-top:8px">${mm.dom.ic} Niveau ${mm.n} (${NOMS_NIVEAU[mm.n - 1]})${mm.n === 3 ? ` — avantage : ${esc(mm.dom.avantage.nom)}` : ''}</div>`).join('')}
       ${nouveauBadge ? `<div style="margin-top:8px"><span class="badge-gagne">${BADGES.find(x => x.id === 'assidu').ic} ${esc(BADGES.find(x => x.id === 'assidu').nom)}</span></div>` : ''}
-      <div style="display:flex;gap:8px;justify-content:center;margin-top:16px"><button class="btn-j go" data-again>↻ Une autre série</button><button class="btn-j ghost" data-close>Fermer</button></div></div>`;
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:16px"><button class="btn-j go" data-again>↻ Relancer l'expérience</button><button class="btn-j ghost" data-close>Fermer</button></div></div>`;
     $('[data-again]', corps).onclick = () => { m.close(); lancer(ex, ctx, fin); };
     $('[data-close]', corps).onclick = () => m.close();
     if (montees.length) toast(`${montees[0].dom.ic} ${montees[0].dom.nom} : niveau ${montees[0].n} !`, 'ok');
