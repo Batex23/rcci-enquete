@@ -132,7 +132,7 @@ export class Scene3D {
       this._g = g; this._niv = i; this._nivData = niv; this._alt = niv.altitude || 0;
       const Hn = niv.hauteur || this.H;
       for (const p of niv.pieces) this._buildFloor(p, niv.traces || [], niv.tremies || [], i > 0);
-      this._buildWalls({ ...bat, pieces: niv.pieces, ouvertures: niv.ouvertures || [], traces: niv.traces || [], hauteur: Hn });
+      this._buildWalls({ ...bat, pieces: niv.pieces, parois: niv.parois || [], ouvertures: niv.ouvertures || [], traces: niv.traces || [], hauteur: Hn });
       for (const o of niv.objets || []) { const og = this._buildObjet(o); if (og) { og.userData.niveau = i; g.add(og); } }
       if (i === fIdx) this._buildFouille(scn.fouille);
       this._buildFireRig(niv, Hn);
@@ -254,7 +254,8 @@ export class Scene3D {
 
   roomAt(x, z, niv) {
     const pieces = niv == null ? (this._nivData?.pieces && this._g !== this.root ? this._nivData.pieces : this.niveaux[0].pieces) : this.niveaux[niv].pieces;
-    return pieces.find(p => x > p.x + 1e-3 && x < p.x + p.w - 1e-3 && z > p.z + 1e-3 && z < p.z + p.d - 1e-3) || null;
+    const dans = p => x > p.x + 1e-3 && x < p.x + p.w - 1e-3 && z > p.z + 1e-3 && z < p.z + p.d - 1e-3;
+    return pieces.find(p => !p.ouverte && dans(p)) || pieces.find(dans) || null;
   }
 
   _buildGround(bat) {
@@ -333,9 +334,16 @@ export class Scene3D {
     const H = bat.hauteur || this.H, T = bat.epaisseur || 0.16;
     const lines = { h: new Map(), v: new Map() };
     const add = (axe, key, a, b) => { const k = Math.round(key * 100) / 100; if (!lines[axe].has(k)) lines[axe].set(k, []); lines[axe].get(k).push([a, b]); };
-    for (const p of bat.pieces.filter(p => !p.ouverte)) {
+    for (const p of bat.pieces.filter(p => !p.ouverte && !p.sansMurs)) {
       add('h', p.z, p.x, p.x + p.w); add('h', p.z + p.d, p.x, p.x + p.w);
       add('v', p.x, p.z, p.z + p.d); add('v', p.x + p.w, p.z, p.z + p.d);
+    }
+    // parois libres (outil « Paroi ») : droites → même chaîne que les murs de pièces ; obliques → boîtes simples
+    for (const w of bat.parois || []) {
+      const L = Math.hypot(w.x1 - w.x0, w.z1 - w.z0); if (L < 0.05) continue;
+      if (Math.abs(w.z1 - w.z0) < 1e-3) { add('h', w.z0, Math.min(w.x0, w.x1), Math.max(w.x0, w.x1)); }
+      else if (Math.abs(w.x1 - w.x0) < 1e-3) { add('v', w.x0, Math.min(w.z0, w.z1), Math.max(w.z0, w.z1)); }
+      else this._buildParoiOblique(w, H, T);
     }
     const traces = bat.traces || [];
     for (const axe of ['h', 'v']) {
@@ -353,6 +361,7 @@ export class Scene3D {
             const vals = axe === 'h' ? [p.x, p.x + p.w] : [p.z, p.z + p.d];
             for (const v of vals) if (v > a + 1e-3 && v < b - 1e-3) bp.add(v);
           }
+          for (const w of bat.parois || []) { const v = axe === 'h' ? (Math.abs(w.x1 - w.x0) < 1e-3 ? w.x0 : null) : (Math.abs(w.z1 - w.z0) < 1e-3 ? w.z0 : null); if (v != null && v > a + 1e-3 && v < b - 1e-3) bp.add(v); }
           const pts = [...bp].sort((x, y) => x - y);
           for (let i = 0; i < pts.length - 1; i++) {
             this._buildWallPiece(axe, ligne, pts[i], pts[i + 1], i === 0, i === pts.length - 2, bat, traces, H, T);
@@ -362,9 +371,21 @@ export class Scene3D {
     }
   }
 
+  _buildParoiOblique(w, H, T) {
+    const plane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 99);
+    this.walls.push({ axe: 'o', ligne: 0, a: 0, b: 0, plane, rooms: {}, niv: this._niv, alt: this._alt, exterieur: true });
+    const L = Math.hypot(w.x1 - w.x0, w.z1 - w.z0);
+    const m = new THREE.Mesh(new THREE.BoxGeometry(L + T, H, T), mat(w.couleur || '#d9d2c4', { clippingPlanes: [plane], side: THREE.DoubleSide }));
+    m.position.set((w.x0 + w.x1) / 2, H / 2, (w.z0 + w.z1) / 2);
+    m.rotation.y = -Math.atan2(w.z1 - w.z0, w.x1 - w.x0);
+    m.castShadow = true; m.receiveShadow = true;
+    m.userData = { mur: true, oblique: true, niveau: this._niv };
+    this._g.add(m);
+  }
+
   _buildWallPiece(axe, ligne, a, b, isStart, isEnd, bat, traces, H, T) {
     const mid = (a + b) / 2;
-    const at = (off) => axe === 'h' ? this.roomAt(mid, ligne + off) : this.roomAt(ligne + off, mid);
+    const at = (off) => { const r = axe === 'h' ? this.roomAt(mid, ligne + off) : this.roomAt(ligne + off, mid); return r?.ouverte ? null : r; };
     const roomPos = at(0.3), roomNeg = at(-0.3); // côté +z/+x et côté -z/-x
     const plane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 99);
     const wall = { axe, ligne, a, b, plane, rooms: {}, niv: this._niv, alt: this._alt };

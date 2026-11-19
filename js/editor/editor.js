@@ -153,12 +153,13 @@ function majSelection() {
   }
   if (s.t === 'ouverture') { const o = nivCur().ouvertures[s.idx]; if (o) { const hw = o.w / 2; if (o.axe === 'h') boite(helpers.sel, o.x - hw, o.x + hw, A + (o.allege || 0), A + (o.allege || 0) + o.h, o.z - 0.12, o.z + 0.12); else boite(helpers.sel, o.x - 0.12, o.x + 0.12, A + (o.allege || 0), A + (o.allege || 0) + o.h, o.z - hw, o.z + hw); } }
   if (s.t === 'obs' || s.t === 'photo') { const o = (s.t === 'obs' ? ED.scn.observations : ED.scn.photos).find(x => x.id === s.id); if (o) { const a = altitudeDe(bat(), o.niveau); boite(helpers.sel, o.pos[0] - 0.25, o.pos[0] + 0.25, a + o.pos[1] - 0.25, a + o.pos[1] + 0.25, o.pos[2] - 0.25, o.pos[2] + 0.25); } }
+  if (s.t === 'paroi') { const w = nivCur().parois?.[s.idx]; if (w) boite(helpers.sel, Math.min(w.x0, w.x1) - 0.1, Math.max(w.x0, w.x1) + 0.1, A, A + (nivCur().hauteur || 2.5), Math.min(w.z0, w.z1) - 0.1, Math.max(w.z0, w.z1) + 0.1); }
   if (s.t === 'tremie') { const t = nivCur().tremies[s.idx]; if (t) boite(helpers.sel, t.x, t.x + t.w, A, A + 0.05, t.z, t.z + t.d); }
 }
 
 // ------------------------------------------------------------------ outils par mode
 function outilsDuMode() {
-  if (ED.mode === 'construire') return [['select', '🖱️', 'Sélectionner (V)'], ['piece', '⬛', 'Pièce (P)'], ['sol', '🟫', 'Sols & terrain (T)'], ['porte', '🚪', 'Porte (O)'], ['fenetre', '🪟', 'Fenêtre (F)'], ['baie', '🖼️', 'Baie vitrée'], ['garage', '🏠', 'Porte de garage'], ['tremie', '⬜', 'Trémie'], ['meubles', '🛋️', 'Objets (catalogue)'], ['gomme', '🧽', 'Supprimer (X)']];
+  if (ED.mode === 'construire') return [['select', '🖱️', 'Sélectionner (V)'], ['paroi', '🧱', 'Paroi (M)'], ['remplir', '🪣', 'Sol de pièce (B)'], ['piece', '⬛', 'Pièce carrée (P)'], ['sol', '🟫', 'Sols & terrain (T)'], ['porte', '🚪', 'Porte (O)'], ['fenetre', '🪟', 'Fenêtre (F)'], ['baie', '🖼️', 'Baie vitrée'], ['garage', '🏠', 'Porte de garage'], ['tremie', '⬜', 'Trémie'], ['meubles', '🛋️', 'Objets (catalogue)'], ['gomme', '🧽', 'Supprimer (X)']];
   if (ED.mode === 'effets') return [['piecefx', '🏠', 'Suie & couche chaude'], ...PINCEAUX_MUR.map(([k, ic, l]) => [`mur:${k}`, ic, l]), ...PINCEAUX_SOL.map(([k, ic, l]) => [`sol:${k}`, ic, l]), ['bruler', '🔥', 'Brûler un objet']];
   if (ED.mode === 'indices') return [['select', '🖱️', 'Sélectionner (V)'], ['constat', '🟨', 'Poser un constat'], ['photo', '📷', 'Épingler une photo'], ['fouille', '⛏️', 'Zone de fouille'], ['gomme', '🧽', 'Supprimer (X)']];
   return [];
@@ -206,6 +207,8 @@ function rendreBarre() {
 function aide() {
   const o = ED.outil;
   if (o === 'piece' || o === 'tremie' || o === 'fouille') return 'Cliquez-glissez sur la grille pour dessiner le rectangle (pas de 25 cm). Échap : annuler l\'outil.';
+  if (o === 'paroi') return 'Cliquez-glissez pour tracer une paroi (droite ou à 45°), d\'un point à l\'autre de la grille. Enchaînez les parois, puis 🪣 pour créer le sol de chaque pièce fermée.';
+  if (o === 'remplir') return 'Cliquez à l\'intérieur d\'un espace fermé par des parois : le sol de la pièce est créé (nom, revêtement, zone d\'enquête).';
   if (o === 'sol') return `Cliquez-glissez pour poser un sol « ${nomSol(ED.solMat)} » (allée, terrasse, parking…). Le terrain se règle juste en dessous.`;
   if (['porte', 'fenetre', 'baie', 'garage'].includes(o)) return 'Survolez un mur : l\'ouverture s\'y accroche. Cliquez pour la poser.';
   if (o === 'meubles') return 'Choisissez un objet dans le catalogue, puis cliquez au sol pour le poser.';
@@ -228,7 +231,8 @@ function rendreListes() {
   const n = nivCur();
   let html = '';
   if (ED.mode === 'construire') {
-    html = `<div class="sec-t">Pièces et sols (${n.pieces.length})</div>${n.pieces.map(p => `<button class="li-b ${ED.sel?.t === 'piece' && ED.sel.id === p.id ? 'on' : ''}" data-pc="${esc(p.id)}">${p.ouverte ? '🟫' : '⬛'} ${esc(p.nom)}${aFiche(p) ? '<span class="bim" title="Fiche technique renseignée">📋</span>' : ''}</button>`).join('') || '<p class="small muted">Outil ⬛ : dessinez une pièce.</p>'}
+    html = `<div class="sec-t">Pièces et sols (${n.pieces.length})</div>${n.pieces.map(p => `<button class="li-b ${ED.sel?.t === 'piece' && ED.sel.id === p.id ? 'on' : ''}" data-pc="${esc(p.id)}">${p.ouverte ? '🟫' : p.sansMurs ? '🪣' : '⬛'} ${esc(p.nom)}${aFiche(p) ? '<span class="bim" title="Fiche technique renseignée">📋</span>' : ''}</button>`).join('') || '<p class="small muted">Outil ⬛ : dessinez une pièce.</p>'}
+      ${(n.parois || []).length ? `<div class="sec-t" style="margin-top:10px">Parois (${n.parois.length})</div>${n.parois.map((w, i) => `<button class="li-b ${ED.sel?.t === 'paroi' && ED.sel.idx === i ? 'on' : ''}" data-pa="${i}">🧱 ${esc(w.nom || `Paroi ${i + 1}`)} · ${Math.hypot(w.x1 - w.x0, w.z1 - w.z0).toFixed(2)} m${aFiche(w) ? '<span class="bim">📋</span>' : ''}</button>`).join('')}` : ''}
       <div class="sec-t" style="margin-top:10px">Objets (${n.objets.length})</div>${n.objets.map(o => `<button class="li-b ${ED.sel?.t === 'objet' && ED.sel.id === o.id ? 'on' : ''}" data-oj="${esc(o.id)}">${icone(o)} ${esc(o.nom || o.id)}${aFiche(o) ? '<span class="bim" title="Fiche technique renseignée">📋</span>' : ''}</button>`).join('') || '<p class="small muted">Outil 🛋️ : choisissez dans le catalogue.</p>'}`;
   }
   if (ED.mode === 'effets') html = `<div class="sec-t">Tracés du niveau (${n.traces.length})</div>${n.traces.map((t, i) => `<button class="li-b ${ED.sel?.t === 'trace' && ED.sel.idx === i ? 'on' : ''}" data-tr="${i}">${esc(t.type)} · ${esc(t.piece)} · ${esc(t.cote)}</button>`).join('') || '<p class="small muted">Choisissez un pinceau puis cliquez sur un mur ou un sol.</p>'}`;
@@ -238,6 +242,7 @@ function rendreListes() {
   $$('[data-pc]', el).forEach(b => b.onclick = () => { selectionner({ t: 'piece', id: b.dataset.pc }); const p = n.pieces.find(x => x.id === b.dataset.pc); cadrerSur({ pos: [p.x + p.w / 2, 0, p.z + p.d / 2], niveau: n.id }); });
   $$('[data-oj]', el).forEach(b => b.onclick = () => { selectionner({ t: 'objet', id: b.dataset.oj }); const o = n.objets.find(x => x.id === b.dataset.oj); cadrerSur({ pos: [o.x, 0, o.z], niveau: n.id }); });
   $$('[data-tr]', el).forEach(b => b.onclick = () => selectionner({ t: 'trace', idx: +b.dataset.tr }));
+  $$('[data-pa]', el).forEach(b => b.onclick = () => selectionner({ t: 'paroi', idx: +b.dataset.pa }));
   $$('[data-ob]', el).forEach(b => b.onclick = () => { selectionner({ t: 'obs', id: b.dataset.ob }); cadrerSur(ED.scn.observations.find(o => o.id === b.dataset.ob)); });
   $$('[data-ph]', el).forEach(b => b.onclick = () => { selectionner({ t: 'photo', id: b.dataset.ph }); cadrerSur(ED.scn.photos.find(o => o.id === b.dataset.ph)); });
 }
@@ -285,10 +290,19 @@ function ajouterNiveau() {
 }
 
 // ------------------------------------------------------------------ pointeur
+function segmentsMurs(niv = nivCur()) {
+  const out = [];
+  for (const r of niv.pieces.filter(x => !x.ouverte && !x.sansMurs)) out.push(['h', r.z, r.x, r.x + r.w], ['h', r.z + r.d, r.x, r.x + r.w], ['v', r.x, r.z, r.z + r.d], ['v', r.x + r.w, r.z, r.z + r.d]);
+  for (const w of niv.parois || []) {
+    if (Math.abs(w.z1 - w.z0) < 1e-3) out.push(['h', w.z0, Math.min(w.x0, w.x1), Math.max(w.x0, w.x1)]);
+    else if (Math.abs(w.x1 - w.x0) < 1e-3) out.push(['v', w.x0, Math.min(w.z0, w.z1), Math.max(w.z0, w.z1)]);
+  }
+  return out;
+}
 function murProche(p) {
   let best = null;
-  for (const r of nivCur().pieces.filter(x => !x.ouverte)) {
-    for (const [axe, ligne, a, b] of [['h', r.z, r.x, r.x + r.w], ['h', r.z + r.d, r.x, r.x + r.w], ['v', r.x, r.z, r.z + r.d], ['v', r.x + r.w, r.z, r.z + r.d]]) {
+  {
+    for (const [axe, ligne, a, b] of segmentsMurs()) {
       const u = axe === 'h' ? p.x : p.z, n = axe === 'h' ? p.z : p.x;
       const uu = Math.max(a, Math.min(b, u)); const dist = Math.hypot(uu - u, n - ligne);
       if (!best || dist < best.dist) best = { axe, ligne, a, b, u: uu, dist };
@@ -308,6 +322,28 @@ function onPointer(type, info) {
     ctxF._attente({ x: p.x, y: p.y - alt(), z: p.z }); ctxF._attente = null; $('#pickHint').hidden = true; return;
   }
   const o = ED.outil, P = info.plan;
+  // -- parois libres
+  if (o === 'paroi') {
+    if (!P) return;
+    const sp = { x: snap(P.x), z: snap(P.z) };
+    if (type === 'down') ED.drag = { kind: 'paroi', a: sp };
+    if (ED.drag?.kind === 'paroi') {
+      const b = finParoi(ED.drag.a, sp);
+      apercuParoi(ED.drag.a, b);
+      const L = Math.hypot(b.x - ED.drag.a.x, b.z - ED.drag.a.z);
+      etiquette(`${L.toFixed(2)} m`, [(ED.drag.a.x + b.x) / 2, alt() + 0.6, (ED.drag.a.z + b.z) / 2]);
+      if (type === 'up') {
+        const a = ED.drag.a; helpers.prev.visible = false; helpers.prev.rotation.y = 0; etiquette(null); ED.drag = null;
+        if (L < 0.25) return;
+        nivCur().parois ||= [];
+        nivCur().parois.push({ x0: r2(a.x), z0: r2(a.z), x1: r2(b.x), z1: r2(b.z) });
+        ED.sel = null; // on reste dans le geste de dessin : pas de panneau qui masque la scène
+        changed(); rendreInspecteur(); rendreListes();
+      }
+    } else { helpers.prev.rotation.y = 0; boite(helpers.prev, sp.x - 0.06, sp.x + 0.06, alt(), alt() + 0.6, sp.z - 0.06, sp.z + 0.06); }
+    return;
+  }
+  if (o === 'remplir') { if (type === 'down' && P) remplirPiece(P); return; }
   // -- rectangles (pièce, sol, trémie, fouille)
   if (['piece', 'sol', 'tremie', 'fouille'].includes(o)) {
     if (!P) return;
@@ -394,6 +430,8 @@ function cibleSous(info) {
     if (idx >= 0) return { t: 'ouverture', idx };
   }
   if (info.plan && ED.mode === 'construire') {
+    const pi = paroiProche(info.plan);
+    if (pi) return { t: 'paroi', idx: pi.idx };
     const tr = nivCur().tremies.findIndex(t => info.plan.x >= t.x && info.plan.x <= t.x + t.w && info.plan.z >= t.z && info.plan.z <= t.z + t.d);
     if (tr >= 0) return { t: 'tremie', idx: tr };
     const p = pieceA(info.plan.x, info.plan.z);
@@ -417,6 +455,10 @@ function pointeurSelection(type, info) {
     } else if (c.t === 'objet') {
       const o = nivCur().objets.find(x => x.id === c.id);
       ED.drag = { kind: 'objet', o, dx: o.x - P.x, dz: o.z - P.z, moved: false };
+    } else if (c.t === 'paroi') {
+      const w = nivCur().parois[c.idx];
+      const bout = Math.hypot(P.x - w.x0, P.z - w.z0) < 0.3 ? 0 : Math.hypot(P.x - w.x1, P.z - w.z1) < 0.3 ? 1 : null;
+      ED.drag = { kind: 'paroi-sel', w, bout, start: { x: P.x, z: P.z }, orig: { ...w }, moved: false };
     } else if (c.t === 'ouverture') {
       ED.drag = { kind: 'ouverture', o: nivCur().ouvertures[c.idx], moved: false };
     } else if (c.t === 'obs' || c.t === 'photo') {
@@ -441,13 +483,20 @@ function pointeurSelection(type, info) {
       if (D.bord === 'z1') p.d = Math.max(0.5, sz - o.z);
       boite(helpers.sel, p.x, p.x + p.w, alt(), alt() + 0.05, p.z, p.z + p.d);
       etiquette(`${p.w.toFixed(2)} × ${p.d.toFixed(2)} m`, [p.x + p.w / 2, alt() + 0.3, p.z + p.d / 2]);
+    } else if (D.kind === 'paroi-sel') {
+      const w = D.w, o = D.orig;
+      if (D.bout === 0) { const b = finParoi({ x: o.x1, z: o.z1 }, { x: snap(P.x), z: snap(P.z) }); w.x0 = r2(b.x); w.z0 = r2(b.z); }
+      else if (D.bout === 1) { const b = finParoi({ x: o.x0, z: o.z0 }, { x: snap(P.x), z: snap(P.z) }); w.x1 = r2(b.x); w.z1 = r2(b.z); }
+      else { const dx = snap(P.x - D.start.x), dz = snap(P.z - D.start.z); w.x0 = r2(o.x0 + dx); w.x1 = r2(o.x1 + dx); w.z0 = r2(o.z0 + dz); w.z1 = r2(o.z1 + dz); }
+      apercuParoi({ x: w.x0, z: w.z0 }, { x: w.x1, z: w.z1 }); helpers.sel.visible = false;
+      etiquette(`${Math.hypot(w.x1 - w.x0, w.z1 - w.z0).toFixed(2)} m`, [(w.x0 + w.x1) / 2, alt() + 0.6, (w.z0 + w.z1) / 2]);
     } else if (D.kind === 'objet') {
       D.o.x = snap(P.x + D.dx, 0.05); D.o.z = snap(P.z + D.dz, 0.05);
       S.root.traverse(n => { if (n.userData.objet === D.o.id && n.userData.def) n.position.set(D.o.x, n.position.y, D.o.z); });
       majSelection();
     } else if (D.kind === 'ouverture') {
       const o = D.o, hw = o.w / 2;
-      const seg = nivCur().pieces.filter(r => !r.ouverte).flatMap(r => o.axe === 'h' ? [[r.z, r.x, r.x + r.w], [r.z + r.d, r.x, r.x + r.w]] : [[r.x, r.z, r.z + r.d], [r.x + r.w, r.z, r.z + r.d]]).filter(([l]) => Math.abs(l - (o.axe === 'h' ? o.z : o.x)) < 0.02);
+      const seg = segmentsMurs().filter(([ax, l]) => ax === o.axe && Math.abs(l - (o.axe === 'h' ? o.z : o.x)) < 0.02).map(([, l, a, b]) => [l, a, b]);
       const a = Math.min(...seg.map(s => s[1])), b = Math.max(...seg.map(s => s[2]));
       const u = Math.max(a + hw, Math.min(b - hw, snap(o.axe === 'h' ? P.x : P.z, 0.05)));
       if (o.axe === 'h') o.x = r2(u); else o.z = r2(u);
@@ -459,6 +508,7 @@ function pointeurSelection(type, info) {
   }
   if (type === 'up') {
     etiquette(null);
+    if (D.kind === 'paroi-sel') { helpers.prev.visible = false; helpers.prev.rotation.y = 0; }
     if (D.moved) { if (D.kind === 'indice' && D.o.zone !== undefined) D.o.zone = zonePour(D.o.pos[0], D.o.pos[2]); changed(); rendreInspecteur(); }
     ED.drag = null;
   }
@@ -470,6 +520,7 @@ function supprimer(sel) {
   if (sel.t === 'piece') { n.pieces = n.pieces.filter(p => p.id !== sel.id); ED.scn.zones = ED.scn.zones.filter(z => z.piece !== sel.id); }
   if (sel.t === 'objet') n.objets = n.objets.filter(o => o.id !== sel.id);
   if (sel.t === 'ouverture') n.ouvertures.splice(sel.idx, 1);
+  if (sel.t === 'paroi') n.parois.splice(sel.idx, 1);
   if (sel.t === 'tremie') n.tremies.splice(sel.idx, 1);
   if (sel.t === 'trace') n.traces.splice(sel.idx, 1);
   if (sel.t === 'obs') ED.scn.observations = ED.scn.observations.filter(o => o.id !== sel.id);
@@ -480,6 +531,78 @@ function supprimer(sel) {
 }
 function gommer(info) { const c = cibleSous(info); if (c) supprimer(c); }
 
+// Parois : direction droite ou à 45°, aperçu, sélection
+function finParoi(a, b) {
+  const dx = b.x - a.x, dz = b.z - a.z;
+  if (Math.abs(dx) >= 2 * Math.abs(dz)) return { x: b.x, z: a.z };
+  if (Math.abs(dz) >= 2 * Math.abs(dx)) return { x: a.x, z: b.z };
+  const d = snap(Math.max(Math.abs(dx), Math.abs(dz)));
+  return { x: a.x + Math.sign(dx) * d, z: a.z + Math.sign(dz) * d };
+}
+function apercuParoi(a, b) {
+  const L = Math.hypot(b.x - a.x, b.z - a.z), H = nivCur().hauteur || 2.5, T = bat().epaisseur || 0.16;
+  const m = helpers.prev;
+  m.position.set((a.x + b.x) / 2, alt() + H / 2, (a.z + b.z) / 2);
+  m.scale.set(Math.max(0.05, L + T), H, T + 0.02);
+  m.rotation.y = -Math.atan2(b.z - a.z, b.x - a.x);
+  m.visible = true;
+}
+function paroiProche(P, tol = 0.2) {
+  let best = null;
+  (nivCur().parois || []).forEach((w, idx) => {
+    const vx = w.x1 - w.x0, vz = w.z1 - w.z0, L2 = vx * vx + vz * vz || 1;
+    const t = Math.max(0, Math.min(1, ((P.x - w.x0) * vx + (P.z - w.z0) * vz) / L2));
+    const d = Math.hypot(P.x - (w.x0 + t * vx), P.z - (w.z0 + t * vz));
+    if (d < tol && (!best || d < best.d)) best = { idx, d };
+  });
+  return best;
+}
+
+// Sol de pièce : remplissage d'un espace fermé par des murs (parois droites et pièces)
+function remplirPiece(P) {
+  const n = nivCur();
+  const deja = n.pieces.find(p => !p.ouverte && P.x > p.x && P.x < p.x + p.w && P.z > p.z && P.z < p.z + p.d);
+  if (deja) { selectionner({ t: 'piece', id: deja.id }); return toast(`Ce sol existe déjà : « ${esc(deja.nom)} ».`, 'info', 2000); }
+  const segs = segmentsMurs(n);
+  if (!segs.length) return toast('Tracez d\'abord des parois (outil 🧱).', 'warn');
+  const C = 0.25;
+  const xs = segs.flatMap(s => s[0] === 'h' ? [s[2], s[3]] : [s[1]]), zs = segs.flatMap(s => s[0] === 'h' ? [s[1]] : [s[2], s[3]]);
+  const X0 = Math.floor(Math.min(...xs)) - 1, Z0 = Math.floor(Math.min(...zs)) - 1;
+  const NX = Math.ceil((Math.max(...xs) + 1 - X0) / C), NZ = Math.ceil((Math.max(...zs) + 1 - Z0) / C);
+  const bloque = (axe, ligne, u) => segs.some(([a, l, s0, s1]) => a === axe && Math.abs(l - ligne) < 0.01 && u > s0 && u < s1);
+  const i0 = Math.floor((P.x - X0) / C), j0 = Math.floor((P.z - Z0) / C);
+  if (i0 <= 0 || j0 <= 0 || i0 >= NX - 1 || j0 >= NZ - 1) return toast('Cliquez à l\'intérieur d\'un espace fermé par des murs.', 'warn');
+  const vu = new Uint8Array(NX * NZ), pile = [[i0, j0]]; vu[j0 * NX + i0] = 1;
+  let fuite = false, nb = 0;
+  while (pile.length) {
+    const [i, j] = pile.pop(); nb++;
+    if (i <= 0 || j <= 0 || i >= NX - 1 || j >= NZ - 1) { fuite = true; break; }
+    const x = X0 + i * C, z = Z0 + j * C;
+    const voisins = [[i + 1, j, !bloque('v', x + C, z + C / 2)], [i - 1, j, !bloque('v', x, z + C / 2)], [i, j + 1, !bloque('h', z + C, x + C / 2)], [i, j - 1, !bloque('h', z, x + C / 2)]];
+    for (const [a, b, ok] of voisins) if (ok && !vu[b * NX + a]) { vu[b * NX + a] = 1; pile.push([a, b]); }
+  }
+  if (fuite) return toast('Cet espace n\'est pas fermé : complétez les parois (les portes se posent ensuite sur les murs).', 'warn', 4500);
+  // découpage en rectangles
+  const pris = new Uint8Array(NX * NZ), rects = [];
+  for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) {
+    if (!vu[j * NX + i] || pris[j * NX + i]) continue;
+    let w = 0; while (i + w < NX && vu[j * NX + i + w] && !pris[j * NX + i + w]) w++;
+    let d = 1; while (j + d < NZ && Array.from({ length: w }, (_, k) => vu[(j + d) * NX + i + k] && !pris[(j + d) * NX + i + k]).every(Boolean)) d++;
+    for (let jj = j; jj < j + d; jj++) for (let ii = i; ii < i + w; ii++) pris[jj * NX + ii] = 1;
+    rects.push({ x: r2(X0 + i * C), z: r2(Z0 + j * C), w: r2(w * C), d: r2(d * C) });
+  }
+  const base = `Pièce ${n.pieces.filter(p => !p.ouverte).length + 1}`;
+  let premier = null;
+  rects.forEach((r, k) => {
+    const id = uid('p', toutesPieces().map(p => p.id));
+    n.pieces.push({ id, nom: rects.length > 1 ? `${base} (${k + 1}/${rects.length})` : base, ...r, sol: 'parquet', peinture: '#ddd6c6', couche: n.hauteur || 2.5, suie: 0, sansMurs: true });
+    premier ||= id;
+  });
+  ED.sel = { t: 'piece', id: premier };
+  changed(); rendreInspecteur(); rendreListes();
+  toast(rects.length > 1 ? `Sol créé en ${rects.length} parties (pièce non rectangulaire). Renommez-les dans le panneau de droite.` : `Sol de pièce créé (${(nb * C * C).toFixed(1)} m²). Donnez-lui un nom à droite.`, 'ok', 3500);
+}
+
 // Copier / coller / dupliquer / déplacer au clavier
 function copier() {
   const s = ED.sel; if (!s) return false;
@@ -487,6 +610,7 @@ function copier() {
   if (s.t === 'objet') ED.presse = { t: 'objet', d: structuredClone(n.objets.find(o => o.id === s.id)) };
   else if (s.t === 'piece') { const p = n.pieces.find(x => x.id === s.id); ED.presse = { t: 'piece', d: structuredClone(p), contenus: p.ouverte ? [] : structuredClone(n.objets.filter(o => o.x >= p.x && o.x <= p.x + p.w && o.z >= p.z && o.z <= p.z + p.d)) }; }
   else if (s.t === 'obs') ED.presse = { t: 'obs', d: structuredClone(ED.scn.observations.find(o => o.id === s.id)) };
+  else if (s.t === 'paroi') ED.presse = { t: 'paroi', d: structuredClone(n.parois[s.idx]) };
   else return false;
   return true;
 }
@@ -502,6 +626,11 @@ function coller() {
     n.pieces.push(p);
     for (const c of P.contenus || []) n.objets.push({ ...structuredClone(c), id: uid(c.type, tousObjets().map(x => x.id)), x: r2(c.x + dx) });
     ED.sel = { t: 'piece', id: p.id }; P.d = structuredClone(p); P.contenus = (P.contenus || []).map(c => ({ ...c, x: r2(c.x + dx) }));
+  } else if (P.t === 'paroi') {
+    const horiz = Math.abs(P.d.z1 - P.d.z0) < 1e-3;
+    const dx = horiz ? 0 : 1, dz = horiz ? 1 : 0;
+    const w = { ...structuredClone(P.d), x0: r2(P.d.x0 + dx), x1: r2(P.d.x1 + dx), z0: r2(P.d.z0 + dz), z1: r2(P.d.z1 + dz) };
+    (n.parois ||= []).push(w); ED.sel = { t: 'paroi', idx: n.parois.length - 1 }; P.d = structuredClone(w);
   } else if (P.t === 'obs') {
     const o = { ...structuredClone(P.d), id: uid('F', ED.scn.observations.map(x => x.id)), pos: [r2(P.d.pos[0] + 0.4), P.d.pos[1], r2(P.d.pos[2] + 0.4)], titre: `${P.d.titre} (copie)` };
     ED.scn.observations.push(o); ED.sel = { t: 'obs', id: o.id }; P.d = structuredClone(o);
@@ -513,6 +642,7 @@ function deplacer(dx, dz) {
   const n = nivCur();
   if (s.t === 'objet') { const o = n.objets.find(x => x.id === s.id); o.x = r2(o.x + dx); o.z = r2(o.z + dz); }
   else if (s.t === 'piece') { const p = n.pieces.find(x => x.id === s.id); const cont = p.ouverte ? [] : n.objets.filter(o => o.x >= p.x && o.x <= p.x + p.w && o.z >= p.z && o.z <= p.z + p.d); p.x = r2(p.x + dx); p.z = r2(p.z + dz); cont.forEach(o => { o.x = r2(o.x + dx); o.z = r2(o.z + dz); }); }
+  else if (s.t === 'paroi') { const w = n.parois[s.idx]; w.x0 = r2(w.x0 + dx); w.x1 = r2(w.x1 + dx); w.z0 = r2(w.z0 + dz); w.z1 = r2(w.z1 + dz); }
   else if (s.t === 'obs' || s.t === 'photo') { const o = (s.t === 'obs' ? ED.scn.observations : ED.scn.photos).find(x => x.id === s.id); o.pos = [r2(o.pos[0] + dx), o.pos[1], r2(o.pos[2] + dz)]; }
   else return;
   changed(); rendreInspecteur();
@@ -696,7 +826,7 @@ function rendreInspecteur() {
   if (ED.mode === 'enquete' || ED.mode === 'retex') { el.innerHTML = ''; return; }
   const s = ED.sel;
   if (!s) { el.innerHTML = ''; return; }
-  const avecFiche = ['piece', 'objet', 'ouverture'].includes(s.t) && ED.mode === 'construire';
+  const avecFiche = ['piece', 'objet', 'ouverture', 'paroi'].includes(s.t) && ED.mode === 'construire';
   const form = (titre, obj, champs, extra = '', apres) => {
     const ongl = avecFiche ? `<div class="onglets-i"><button data-ong="reglages" class="${ED.onglet === 'reglages' ? 'on' : ''}">⚙ Réglages</button><button data-ong="fiche" class="${ED.onglet === 'fiche' ? 'on' : ''}">📋 Fiche technique${aFiche(obj) ? ' ✓' : ''}</button></div>` : '';
     const fiche = avecFiche && ED.onglet === 'fiche';
@@ -736,6 +866,12 @@ function rendreInspecteur() {
   if (s.t === 'ouverture') {
     const o = n.ouvertures[s.idx]; if (!o) return;
     return form('Ouverture', o, [['nom', 'text', '', null, 'Nom'], ['type', 'select', '', ['porte', 'fenetre', 'baie'], 'Type'], ['w', 'number', '', null, 'Largeur'], ['h', 'number', '', null, 'Hauteur'], ['allege', 'number', '', null, 'Allège'], ['fermee', 'bool', 'Porte fermée lors du feu', null, 'Fermée'], ['brise', 'bool', 'Vitrage rompu', null, 'Brisé'], ['garage', 'bool', '', null, 'Porte de garage']]);
+  }
+  if (s.t === 'paroi') {
+    const w = n.parois?.[s.idx]; if (!w) return;
+    const L = Math.hypot(w.x1 - w.x0, w.z1 - w.z0);
+    return form(`🧱 Paroi (${L.toFixed(2)} m)`, w, [['nom', 'text', 'Ex. cloison séjour / cuisine', null, 'Nom'], ['x0', 'number', '', null, 'Début x'], ['z0', 'number', '', null, 'Début z'], ['x1', 'number', '', null, 'Fin x'], ['z1', 'number', '', null, 'Fin z'], ['couleur', 'color', 'Couleur (paroi oblique)', null, 'Couleur']],
+      `<p class="small muted">Glissez une extrémité pour l'allonger, le milieu pour la déplacer. Les portes et fenêtres se posent sur les parois droites. Matériau, résistance au feu, PV : onglet 📋.</p>`);
   }
   if (s.t === 'tremie') { const t = n.tremies[s.idx]; return form('Trémie (escalier)', t, [['x', 'number'], ['z', 'number'], ['w', 'number'], ['d', 'number']], '<p class="small muted">Trou dans le plancher de ce niveau. Posez un escalier au niveau inférieur.</p>'); }
   if (s.t === 'trace') {
@@ -831,7 +967,7 @@ function ouvrirAide() {
   const k = s => s.split('+').map(x => `<kbd>${x}</kbd>`).join('');
   modal({ titre: '❔ Aide de l\'Atelier', large: true, corps: `<div class="aide-g"><div>
     <h3>Créer une scène en 6 étapes</h3><ol class="etapes-a">
-      <li><b>🏗️ Construire</b> : outil ⬛ <i>Pièce</i>, cliquez-glissez sur la grille. Ajoutez portes et fenêtres en survolant un mur.</li>
+      <li><b>🏗️ Construire</b> : tracez les murs avec 🧱 <i>Paroi</i> (cliquez-glissez d'un point à l'autre), puis 🪣 dans chaque espace fermé pour créer la pièce. Ou, plus rapide pour une pièce rectangulaire : ⬛ <i>Pièce carrée</i>. Ajoutez portes et fenêtres en survolant un mur.</li>
       <li><b>🟫 Sols & terrain</b> : allée, terrasse, parking… puis le terrain autour (herbe, sable, enrobé).</li>
       <li><b>🛋️ Objets</b> : choisissez dans le catalogue, cliquez pour poser. Importez vos <b>modèles 3D</b> (Blender .glb, SketchUp .dae/.obj/.stl, .fbx). Onglet <b>📋 Fiche technique</b> : matériau, PV de réaction au feu, photos, documents.</li>
       <li><b>🔥 Effets du feu</b> : couche chaude et suie par pièce, pinceaux sur les murs et les sols, objets brûlés.</li>
@@ -845,7 +981,7 @@ function ouvrirAide() {
       <li>${k('R')} Pivoter l'objet de 90° (${k('Maj+R')} : 15°)</li>
       <li>${k('Q')} / ${k('E')} Pivoter la vue · ${k('G')} Grille</li>
       <li>${k('1')} à ${k('5')} Changer de mode</li>
-      <li>${k('V')} Sélection · ${k('P')} Pièce · ${k('T')} Sols · ${k('O')} Porte · ${k('F')} Fenêtre · ${k('X')} Gomme</li>
+      <li>${k('V')} Sélection · ${k('M')} Paroi · ${k('B')} Sol de pièce · ${k('P')} Pièce carrée · ${k('T')} Sols · ${k('O')} Porte · ${k('F')} Fenêtre · ${k('X')} Gomme</li>
       <li>${k('Ctrl+S')} Enregistrer le brouillon · ${k('H')} ou ${k('?')} Cette aide</li></ul>
       <h3>Souris</h3><p>Clic : sélectionner / poser · glisser : déplacer · bord d'une pièce : redimensionner · molette : zoom · clic droit glissé : déplacer la vue.</p></div></div>`, actions: [{ label: 'C\'est parti !', classe: 'btn-primary' }] });
 }
@@ -863,6 +999,7 @@ function changerMode(m) {
 function charger(scn, msg) {
   ED.scn = migrer(structuredClone(scn));
   ED.scn.modeles ||= {}; ED.scn.medias ||= {};
+  ED.scn.batiment.niveaux.forEach(n => { n.parois ||= []; });
   ED.niv = 0; ED.sel = null; ctxF.ouverts.clear();
   HIST.pile = []; HIST.i = -1; pousserHist();
   rendreNiveaux(); rendreTout();
@@ -902,7 +1039,7 @@ function clavier(e) {
   const pas = e.shiftKey ? 0.25 : 0.05;
   const fl = { arrowleft: [-pas, 0], arrowright: [pas, 0], arrowup: [0, -pas], arrowdown: [0, pas] }[k];
   if (fl && ED.sel) { e.preventDefault(); return deplacer(...fl); }
-  const raccourcis = ED.mode === 'construire' ? { v: 'select', p: 'piece', t: 'sol', o: 'porte', f: 'fenetre', x: 'gomme' } : ED.mode === 'indices' ? { v: 'select', x: 'gomme' } : {};
+  const raccourcis = ED.mode === 'construire' ? { v: 'select', m: 'paroi', b: 'remplir', p: 'piece', t: 'sol', o: 'porte', f: 'fenetre', x: 'gomme' } : ED.mode === 'indices' ? { v: 'select', x: 'gomme' } : {};
   if (raccourcis[k]) choisirOutil(raccourcis[k]);
 }
 

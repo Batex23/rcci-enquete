@@ -75,7 +75,7 @@ Une barre de **boutons ronds en bas de l'écran** : les modes à gauche, les out
 
 | Mode | Ce qu'on y fait |
 |---|---|
-| 🏗️ **Construire** | Dessiner les pièces à la souris sur une grille (pas de 25 cm), les déplacer, les redimensionner par les bords ; poser portes, fenêtres, baies, portes de garage ; **sols extérieurs** (allée, terrasse, parking : gravier, enrobé, dalles, terrasse bois, herbe, terre, sable…) et **terrain** autour du bâtiment ; catalogue d'objets ; **import de modèles 3D** ; **niveaux** (R+1, R+2…), **trémies** et escaliers |
+| 🏗️ **Construire** | Tracer les murs comme dans Les Sims avec l'outil 🧱 **Paroi** (cliquez-glissez, droit ou à 45°, extrémités déplaçables), puis 🪣 **Sol de pièce** : un clic dans un espace fermé crée la pièce (nom, revêtement, zone d'enquête), même en L ; ou ⬛ **Pièce carrée** pour une pièce rectangulaire en un geste ; déplacer, redimensionner par les bords ; poser portes, fenêtres, baies, portes de garage ; **sols extérieurs** (allée, terrasse, parking : gravier, enrobé, dalles, terrasse bois, herbe, terre, sable…) et **terrain** autour du bâtiment ; catalogue d'objets ; **import de modèles 3D** ; **niveaux** (R+1, R+2…), **trémies** et escaliers |
 | 🔥 **Effets du feu** | Par pièce : hauteur de la couche chaude et densité de suie ; pinceaux muraux (tracé en V, clean burn, calcination, zone protégée, démarcation) et au sol (tracés irréguliers, consommation, zone protégée, débris) ; degré de combustion de chaque objet |
 | 📍 **Indices & photos** | Poser les **constats** dans la 3D avec leur **lecture** (interprétation réelle), pièges éventuels, référence NFPA 921 (chapitre / section) et autres sources éventuelles ; **témoins de température** (matériau, fondu ou intact, alliage) ; **épingler de vraies photos** à l'endroit et dans la direction de la prise de vue ; zone de fouille |
 | 🧾 **Enquête** | Mission, compte rendu SDIS, témoins, OSINT, prélèvements et résultats, hypothèses, solution, pièges, chronologie ; génération automatique des zones |
@@ -98,7 +98,7 @@ Catalogue › **📦 Modèles 3D** › *Importer* : **glTF/GLB** (Blender), **DA
 | Suppr · Échap | Supprimer · désélectionner ou quitter l'outil |
 | Flèches (Maj : pas de 25 cm) | Déplacer la sélection de 5 cm |
 | R (Maj+R) · Q / E | Pivoter l'objet de 90° (15°) · pivoter la vue |
-| 1 à 5 · V P T O F X · G | Modes · sélection, pièce, sols, porte, fenêtre, gomme · grille |
+| 1 à 5 · V M B P T O F X · G | Modes · sélection, paroi, sol de pièce, pièce carrée, sols, porte, fenêtre, gomme · grille |
 | Ctrl+S · H ou ? | Enregistrer le brouillon · aide |
 
 ### Un dossier, deux vues
