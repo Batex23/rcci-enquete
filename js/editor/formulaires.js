@@ -15,7 +15,7 @@ export function champHtml(obj, [path, type, aide, opts, label], key) {
     case 'number': inp = `<input class="inp" type="number" step="any" id="${id}" value="${v ?? ''}">`; break;
     case 'range': inp = `<div style="display:flex;gap:8px;align-items:center"><input type="range" id="${id}" min="${opts[0]}" max="${opts[1]}" step="${opts[2]}" value="${v ?? opts[0]}" style="flex:1;accent-color:var(--fire)"><output class="small">${v ?? ''}</output></div>`; break;
     case 'bool': inp = `<label style="padding-top:7px"><input type="checkbox" id="${id}" ${v ? 'checked' : ''}> oui</label>`; break;
-    case 'select': inp = `<select class="inp" id="${id}">${(opts || []).map(o => `<option ${o === (v ?? '') ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`; break;
+    case 'select': inp = `<select class="inp" id="${id}">${(opts || []).map(o => { const [ov, ol] = Array.isArray(o) ? o : [o, o]; return `<option value="${esc(ov)}" ${ov === (v ?? '') ? 'selected' : ''}>${esc(ol)}</option>`; }).join('')}</select>`; break;
     case 'color': inp = `<input type="color" id="${id}" value="${v || '#cccccc'}">`; break;
     case 'json': inp = `<textarea class="inp mono" id="${id}" rows="2">${esc(v === undefined ? '' : JSON.stringify(v))}</textarea>`; break;
     case 'csv': inp = `<input class="inp" id="${id}" value="${esc((v || []).join(', '))}">`; break;

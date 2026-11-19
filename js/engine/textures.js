@@ -144,9 +144,17 @@ const SOLS = {
   parquet:   { base: '#9b7650', joint: 'rgba(50,30,15,0.3)', lame: [0.6, 0.09] },
   carrelage: { base: '#d3cfc6', joint: 'rgba(90,90,90,0.35)', lame: [0.45, 0.45] },
   beton:     { base: '#9d9b95', joint: null },
-  herbe:     { base: '#6f7d4f', joint: null },
-  enrobe: { base: '#4a4a4c' },
+  herbe:     { base: '#6f7d4f', joint: null, grain: ['rgba(40,55,25,0.35)', 'rgba(150,160,90,0.3)'] },
+  enrobe:    { base: '#4a4a4c', grain: ['rgba(20,20,20,0.35)', 'rgba(140,140,140,0.25)'] },
+  gravier:   { base: '#a8a194', grain: ['rgba(70,65,60,0.45)', 'rgba(230,225,215,0.5)'], gros: true },
+  terre:     { base: '#7a5f43', grain: ['rgba(50,35,20,0.35)', 'rgba(160,130,95,0.3)'] },
+  sable:     { base: '#d6c49a', grain: ['rgba(150,125,80,0.3)', 'rgba(250,240,210,0.35)'] },
+  dalle:     { base: '#b9b4aa', joint: 'rgba(80,80,80,0.4)', lame: [0.6, 0.6] },
+  terrasseBois: { base: '#8a6440', joint: 'rgba(40,25,10,0.5)', lame: [2.4, 0.14] },
+  moquette:  { base: '#7d7468', grain: ['rgba(40,35,30,0.2)', 'rgba(200,190,170,0.15)'] },
 };
+export const SOLS_LISTE = [['parquet', 'Parquet'], ['stratifie', 'Stratifié'], ['carrelage', 'Carrelage'], ['moquette', 'Moquette'], ['beton', 'Béton'], ['dalle', 'Dalles'], ['terrasseBois', 'Terrasse bois'], ['enrobe', 'Enrobé'], ['gravier', 'Gravier'], ['herbe', 'Herbe'], ['terre', 'Terre'], ['sable', 'Sable']];
+
 
 export function peindreSol(piece, traces) {
   const W = Math.round(piece.w * PX), Hc = Math.round(piece.d * PX);
@@ -165,6 +173,7 @@ export function peindreSol(piece, traces) {
     }
   }
   for (let i = 0; i < W * Hc / 40; i++) { ctx.fillStyle = `rgba(0,0,0,${r() * 0.05})`; ctx.fillRect(r() * W, r() * Hc, 2, 2); }
+  if (s.grain) for (let i = 0; i < W * Hc / (s.gros ? 9 : 14); i++) { ctx.fillStyle = s.grain[i % 2]; const t = s.gros ? 2 + r() * 3 : 1 + r() * 2; ctx.fillRect(r() * W, r() * Hc, t, t); }
   // assombrissement général par la suie / chaleur
   const suie = piece.suie ?? 0;
   if (suie > 0) { ctx.fillStyle = `rgba(25,18,12,${Math.min(0.78, suie * 0.62)})`; ctx.fillRect(0, 0, W, Hc); }

@@ -1,5 +1,5 @@
 // Écran d'enquête « jeu » : 3D plein écran, carnet de terrain, tuteur, objectifs, fiches d'indices
-import { Scene3D, altitudeDe, niveauIndex, toutesPieces } from '../engine/scene3d.js';
+import { Scene3D, altitudeDe, niveauIndex, toutesPieces, niveauxDe } from '../engine/scene3d.js';
 import { preparerJeu } from '../game/prepa.js';
 import { Enquete } from '../game/enquete.js';
 import { OUTILS, CONTENANTS } from '../data/outils.js';
@@ -8,6 +8,7 @@ import { $, $$, h, esc, toast, modal, confirmer, ref } from '../ui.js';
 import { calculateur, testCompetence } from './outilsAnalyse.js';
 import { voirAussiHtml } from '../data/sources.js';
 import { FUSIONS, fusion, fourchette, etatAtteint, etatNon, fmt } from '../data/thermique.js';
+import { ficheHtml } from '../data/bim.js';
 import { ouvrirDebrief } from './debrief.js';
 import { apercuRapport } from './rapport.js';
 import { son, basculerSon, estMuet } from '../game/sons.js';
@@ -502,6 +503,11 @@ export function ouvrirEnquete(scnSrc, ctx) {
       const r = E.pick('observer', hit);
       if (r.obs) { son('trouve'); pop(`🔎 Nouvel indice : ${esc(o.titre)}`, 'gold'); renderAll(); ouvrirFiche(o); }
       return;
+    }
+    if (hit.objet && ui.outil !== 'pid') {
+      const ob = niveauxDe(scn.batiment).flatMap(n => n.objets || []).find(x => x.id === hit.objet);
+      const f = ob && ficheHtml(ob.fiche, scn.medias || {});
+      if (f) { son('page'); modal({ titre: `📋 Documentation : ${esc(ob.nom || ob.type)}`, classe: 'jeu-m', corps: `<p class="small" style="color:#6b6457">Informations recueillies auprès du propriétaire, du fabricant ou dans les procès-verbaux.</p>${f}`, actions: [{ label: 'Fermer', classe: 'btn-primary' }] }); return; }
     }
     if (ui.outil === 'pid' && E.zoneActive) {
       const r = E.pick('pid', hit);

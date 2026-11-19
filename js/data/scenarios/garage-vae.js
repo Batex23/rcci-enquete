@@ -73,8 +73,8 @@ export default {
         objets: [
           // Garage
           { id: 'etabli', type: 'etabli', x: 2.5, z: 0.35, rot: 0, L: 2.4, brule: 0.9 },
-          { id: 'velo', type: 'velo', x: 1.5, z: 1.0, rot: 0, brule: 0.95, fondu: true },
-          { id: 'chargeur', type: 'chargeur', x: 1.2, y: 0.92, z: 0.3, brule: 1 },
+          { id: 'velo', type: 'velo', nom: 'Vélo à assistance électrique', x: 1.5, z: 1.0, rot: 0, brule: 0.95, fondu: true, fiche: { materiau: 'alu', materiauLibre: 'Cadre en alliage d\'aluminium, batterie sur le tube diagonal', energie: 'batterie lithium-ion', reference: 'Batterie 36 V – 13 Ah', puissance: 250, etat: 'détruit par le feu', notes: 'Vélo acheté d\'occasion (selon le propriétaire). Moteur-roue arrière.' } },
+          { id: 'chargeur', type: 'chargeur', nom: 'Chargeur du vélo', x: 1.2, y: 0.92, z: 0.3, brule: 1, fiche: { materiau: 'abs', energie: 'secteur 230 V', reference: 'Sortie 42 V – 2 A', etat: 'détruit par le feu' } },
           { id: 'prise', type: 'prise', x: 0.9, z: 0.02, y: 0.3, rot: 0 },
           { id: 'cable-ch', type: 'cable', points: [[0.9, 0.3, 0.03], [0.95, 0.03, 0.1], [1.3, 0.03, 0.6], [1.55, 0.35, 0.95]], brule: 1 },
           { id: 'cellules', type: 'cellules', x: 2.2, z: 1.8, r: 2.2, n: 24 },

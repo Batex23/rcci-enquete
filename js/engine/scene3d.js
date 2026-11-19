@@ -1,5 +1,6 @@
 // Moteur 3D « low-poly isométrique » — construit une scène d'incendie depuis un scénario JSON
 import * as THREE from '../../vendor/three.module.min.js';
+import { instanceModele } from './modeles.js';
 import { OrbitControls } from '../../vendor/OrbitControls.js';
 import { peindreMur, peindreSol, canvasCavalier, canvasLueur, canvasFlamme, rng, mix } from './textures.js';
 
@@ -259,9 +260,13 @@ export class Scene3D {
   _buildGround(bat) {
     const cv = document.createElement('canvas'); cv.width = cv.height = 512;
     const c = cv.getContext('2d'); const r = rng(42);
-    c.fillStyle = '#5f6e43'; c.fillRect(0, 0, 512, 512);
-    for (let i = 0; i < 9000; i++) { c.fillStyle = r() < 0.5 ? 'rgba(40,55,25,0.25)' : 'rgba(150,160,90,0.18)'; c.fillRect(r() * 512, r() * 512, 2, 3); }
-    for (let i = 0; i < 40; i++) { c.fillStyle = 'rgba(190,170,120,0.18)'; c.beginPath(); c.arc(r() * 512, r() * 512, 6 + r() * 20, 0, 7); c.fill(); }
+    const T = { herbe: ['#5f6e43', 'rgba(40,55,25,0.25)', 'rgba(150,160,90,0.18)', 'rgba(190,170,120,0.18)'], terre: ['#6e5640', 'rgba(45,32,20,0.3)', 'rgba(150,120,85,0.25)', 'rgba(90,110,60,0.2)'],
+      sable: ['#cdb98f', 'rgba(150,125,80,0.3)', 'rgba(245,235,205,0.3)', 'rgba(120,140,80,0.15)'], gravier: ['#9d968a', 'rgba(70,65,60,0.4)', 'rgba(225,220,210,0.45)', 'rgba(110,105,95,0.2)'],
+      enrobe: ['#4b4b4d', 'rgba(20,20,20,0.35)', 'rgba(140,140,140,0.22)', 'rgba(90,90,90,0.15)'], beton: ['#9d9b95', 'rgba(60,60,60,0.2)', 'rgba(200,200,195,0.2)', 'rgba(120,120,115,0.15)'] }[bat.terrain || 'herbe'] || null;
+    const [b0, g1, g2, t3] = T || ['#5f6e43', 'rgba(40,55,25,0.25)', 'rgba(150,160,90,0.18)', 'rgba(190,170,120,0.18)'];
+    c.fillStyle = b0; c.fillRect(0, 0, 512, 512);
+    for (let i = 0; i < 9000; i++) { c.fillStyle = r() < 0.5 ? g1 : g2; c.fillRect(r() * 512, r() * 512, 2, 3); }
+    for (let i = 0; i < 40; i++) { c.fillStyle = t3; c.beginPath(); c.arc(r() * 512, r() * 512, 6 + r() * 20, 0, 7); c.fill(); }
     const tex = new THREE.CanvasTexture(cv); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(8, 8);
     tex.colorSpace = THREE.SRGBColorSpace;
     const g = new THREE.Mesh(new THREE.PlaneGeometry(70, 70), mat(0xffffff, { map: tex }));
@@ -658,6 +663,12 @@ export class Scene3D {
       case 'poubelle': box(0.6, 1.0, 0.7, col('#3a6b3a', b)); break;
       case 'cartons': { const r = rng(Math.round((o.x + 3) * 19)); for (let i = 0; i < (o.n || 3); i++) box(0.4 + r() * 0.2, 0.3 + r() * 0.2, 0.35, col('#b08a5a', b), (i - (o.n || 3) / 2) * 0.5, 0, r() * 0.1); break; }
       case 'tableauBat': box(0.05, 0.5, 0.35, col('#e8e8e8', b), 0, 1.2, 0); break;
+      case 'modele': {
+        const def = this.scn?.modeles?.[o.modele];
+        const ph = box(0.5, 0.5, 0.5, '#d9a441', 0, 0, 0, { transparent: true, opacity: 0.35 });
+        if (def) instanceModele(o.modele, def, o).then(m => { g.remove(ph); g.add(m); this._cutDirty = true; }).catch(err => { console.warn('Modèle 3D :', err); ph.material.color.set('#c0392b'); });
+        break;
+      }
       default: box(0.4, 0.4, 0.4, '#888');
     }
     g.position.set(o.x || 0, o.y || 0, o.z || 0);
@@ -866,7 +877,9 @@ export class Scene3D {
     if (ph[0] && (!hh[0] || ph[0].distance <= hh[0].distance)) { this.onPick({ photo: ph[0].object.userData.photo }); return; }
     const scene = this.raycaster.intersectObjects(this.root.children, true).filter(i => this._visibleDeep(i.object) && !i.object.userData.hotspot && i.object.type === 'Mesh' && this._visibleClip(i.point, i.object));
     const point = scene[0]?.point || null;
-    this.onPick({ hotspot: hh[0]?.object.userData.hotspot || null, point, sol: scene[0]?.object.userData.sol || null });
+    let n = scene[0]?.object, objet = null;
+    while (n && !objet) { objet = n.userData?.objet || null; n = n.parent; }
+    this.onPick({ hotspot: hh[0]?.object.userData.hotspot || null, point, sol: scene[0]?.object.userData.sol || null, objet });
   }
   _visibleClip(p, obj) {
     const m = Array.isArray(obj.material) ? obj.material[0] : obj.material;

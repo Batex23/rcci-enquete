@@ -58,7 +58,7 @@ export default {
           { type: 'fenetre', x: 5, z: 8, axe: 'h', w: 1.4, h: 1.2, allege: 0.9 },
         ],
         objets: [
-          { id: 'vl', type: 'voiture', x: 12.6, z: 3.6, rot: 0, brule: 0.5, pneusBrules: ['avg', 'ard'], vitresBrisees: true },
+          { id: 'vl', type: 'voiture', nom: 'Citadine « Ondine 1.2 »', fiche: { materiau: 'acier', fabricant: 'Ondine (marque fictive)', reference: '1.2 essence, mise en circulation 2018', energie: 'essence / gazole', etat: 'détruit par le feu', notes: 'Dernière révision trois mois avant le sinistre (facture du garage).' }, x: 12.6, z: 3.6, rot: 0, brule: 0.5, pneusBrules: ['avg', 'ard'], vitresBrisees: true },
           { id: 'bidon', type: 'bidon', x: 16.1, z: 7.6, couche: 1, brule: 0.3 },
           { id: 'poubelle', type: 'poubelle', x: 14.6, z: 0.9, brule: 0 },
         ],

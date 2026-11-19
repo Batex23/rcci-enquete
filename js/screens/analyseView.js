@@ -5,6 +5,7 @@ import { CLASSIFICATIONS, CERTITUDES, NFPA_EDITION } from '../data/nfpa.js';
 import { $, $$, h, esc, modal, refTexte } from '../ui.js';
 import { voirAussi, bibliographie } from '../data/sources.js';
 import { fusion, fourchette, libelle, etatAtteint, etatNon } from '../data/thermique.js';
+import { ficheHtml, inventaire } from '../data/bim.js';
 
 export function catalogueFaits(scn) {
   const m = new Map();
@@ -28,6 +29,7 @@ export function ouvrirAnalyse(src, container, opts = {}) {
   const cls = CLASSIFICATIONS.find(c => c.id === sol.classification)?.nom || sol.classification || '—';
   const cibleDe = o => ({ ref: o.ref || o.analyse?.ref, sources: o.sources, texte: `${o.titre || ''} ${o.description || ''}` });
   const cibles = (scn.observations || []).map(cibleDe);
+  const inv = inventaire(scn);
   const voirLigne = o => { const v = voirAussi(cibleDe(o), 3); return v.length ? `<p class="small ana-voir">📚 Voir aussi : ${v.map(x => x.libre ? esc(x.libre) : `${esc(x.b.court)}${x.b.annee ? ` (${x.b.annee})` : ''}, ${esc(x.loc)}`).join(' ; ')}</p>` : ''; };
   const fl = ids => (ids || []).map(id => faits.get(id)?.court || id).map(t => `<li>${esc(t)}</li>`).join('');
 
@@ -43,7 +45,7 @@ export function ouvrirAnalyse(src, container, opts = {}) {
     </section>
     <section class="ana-doc">
       <div class="ana-bar">${opts.onClose ? '<button class="btn btn-sm" data-close>⟵ Retour</button>' : ''}<span class="chip">${scn.mode === 'retex' ? 'Dossier RETEX' : 'Dossier d\'analyse'}</span><span style="flex:1"></span><button class="btn btn-sm" data-print>🖨️ Imprimer / PDF</button></div>
-      <div class="ana-nav">${['synthese:Synthèse', 'contexte:Contexte', 'chrono:Chronologie', 'constats:Constatations', 'photos:Photos', 'labo:Analyses', 'temoins:Déclarations', 'hyp:Hypothèses', 'retex:Enseignements', 'refs:Références'].map(x => { const [k, l] = x.split(':'); return `<a href="#a-${k}" data-nav="${k}">${l}</a>`; }).join('')}</div>
+      <div class="ana-nav">${['synthese:Synthèse', 'contexte:Contexte', 'chrono:Chronologie', 'constats:Constatations', 'photos:Photos', 'labo:Analyses', 'temoins:Déclarations', 'hyp:Hypothèses', 'retex:Enseignements', ...(inv.length ? ['inventaire:Inventaire technique'] : []), 'refs:Références'].map(x => { const [k, l] = x.split(':'); return `<a href="#a-${k}" data-nav="${k}">${l}</a>`; }).join('')}</div>
       <article class="rapport-doc ana-article">
         <h1>${esc(scn.titre)}</h1>
         <p class="small">${esc([R.auteur && `Rédigé par ${R.auteur}`, R.service, R.date].filter(Boolean).join(' · '))}${R.confidentialite ? `<br><b>${esc(R.confidentialite)}</b>` : ''}</p>
@@ -92,6 +94,8 @@ export function ouvrirAnalyse(src, container, opts = {}) {
 
         <h2 id="a-retex">Enseignements</h2>
         ${[['Enseignements', R.enseignements], ['Points positifs', R.positifs], ['Axes d\'amélioration', R.ameliorations], ['Recommandations (prévention)', R.recommandations]].filter(x => x[1]?.length).map(([t, l]) => `<p><b>${t}</b></p><ul>${l.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`).join('') || '<p>—</p>'}
+        ${inv.length ? `<h2 id="a-inventaire">Inventaire technique</h2><p class="small">Éléments documentés (matériaux, réaction au feu, procès-verbaux, état). Cliquez un objet dans la scène 3D pour afficher sa fiche.</p>
+        <div class="inv-g">${inv.map(x => `<div class="inv-c"><div class="small muted">${esc(x.type)} · ${esc(x.niveau || '')}</div>${ficheHtml(x.fiche, scn.medias || {}, x.nom)}</div>`).join('')}</div>` : ''}
         <h2 id="a-refs">Références</h2>
         <p class="small">Méthode et numérotation : <b>${esc(NFPA_EDITION)}</b> (référence de base). Ouvrages complémentaires cités dans ce dossier :</p>
         <ul class="small">${bibliographie(cibles).map(b => `<li>${esc(b.ref)}</li>`).join('')}</ul>
@@ -118,7 +122,12 @@ export function ouvrirAnalyse(src, container, opts = {}) {
   };
   const doc = $('.ana-doc', el);
   const allerA = id => { const c = $(`#c-${CSS.escape(id)}`, el); if (!c) return; $$('.ana-c.on', el).forEach(x => x.classList.remove('on')); c.classList.add('on'); doc.scrollTo({ top: c.offsetTop - 90, behavior: 'smooth' }); };
-  S.onPick = hit => { if (hit.photo) voirPhoto(hit.photo); else if (hit.hotspot) allerA(hit.hotspot); };
+  const voirFiche = id => {
+    const o = niv.flatMap(n => n.objets || []).find(x => x.id === id);
+    const f = o && ficheHtml(o.fiche, scn.medias || {});
+    if (f) modal({ titre: `📋 ${esc(o.nom || o.type)}`, corps: f, actions: [{ label: 'Fermer' }] });
+  };
+  S.onPick = hit => { if (hit.photo) voirPhoto(hit.photo); else if (hit.hotspot) allerA(hit.hotspot); else if (hit.objet) voirFiche(hit.objet); };
   $$('[data-ph]', el).forEach(i => i.onclick = () => voirPhoto(i.dataset.ph));
   $$('[data-obs]', el).forEach(c => c.querySelector('.ana-ch')?.addEventListener('click', () => {
     const o = scn.observations.find(x => x.id === c.dataset.obs);

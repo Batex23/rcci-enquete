@@ -6,64 +6,16 @@
   <title>RCCI · Atelier de scènes</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛠️</text></svg>">
   <link rel="stylesheet" href="css/style.css">
-  <style>
-    #topbar { gap: 12px; flex-wrap: wrap; }
-    #modes { display: flex; gap: 2px; }
-    #modes .tab { padding: 8px 12px; }
-    .menu { position: relative; } .menu summary { list-style: none; } .menu summary::-webkit-details-marker { display: none; }
-    .menu-c { position: absolute; right: 0; top: 34px; z-index: 30; display: flex; flex-direction: column; gap: 4px; background: var(--bg2); border: 1px solid var(--line); border-radius: 8px; padding: 6px; min-width: 190px; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
-    .menu-c .btn { text-align: left; }
-    .ed2 { flex: 1; display: grid; grid-template-columns: 250px minmax(0, 1fr) 330px; min-height: 0; }
-    .ed2.mode-enquete, .ed2.mode-retex { grid-template-columns: minmax(420px, 560px) minmax(0, 1fr) 0; }
-    .pal, .insp { background: var(--bg2); overflow: auto; padding: 12px; min-height: 0; }
-    .pal { border-right: 1px solid var(--line); }
-    .insp { border-left: 1px solid var(--line); }
-    .mode-enquete .insp, .mode-retex .insp { display: none; }
-    .vp { position: relative; min-height: 0; overflow: hidden; }
-    #edPrev { position: absolute; inset: 0; }
-    #edPrev .scene-canvas { width: 100% !important; height: 100% !important; display: block; }
-    .tools { display: grid; grid-template-columns: 1fr; gap: 3px; }
-    .tool-b { display: flex; gap: 8px; align-items: center; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px; cursor: pointer; font-size: 13px; }
-    .tool-b span { width: 22px; text-align: center; font-size: 16px; }
-    .tool-b.on, .cat-b.on, .li-b.on { border-color: var(--accent); background: #2f2a12; }
-    details { margin-bottom: 4px; } summary { cursor: pointer; font-size: 12.5px; color: var(--txt2); padding: 4px 0; }
-    .cat { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
-    .cat-b { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; background: var(--panel); border: 1px solid var(--line); border-radius: 7px; cursor: pointer; }
-    .cat-b span { font-size: 20px; } .cat-b small { font-size: 10.5px; color: var(--txt2); text-align: center; line-height: 1.15; }
-    .liste { display: flex; flex-direction: column; gap: 3px; max-height: 260px; overflow: auto; }
-    .li-b { display: flex; gap: 6px; align-items: center; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 12.5px; }
-    .li-b img { width: 34px; height: 26px; object-fit: cover; border-radius: 3px; }
-    .insp h3 { font-size: 15px; }
-    .insp .form-row, .pal .form-row { grid-template-columns: 1fr; gap: 4px; margin-bottom: 8px; }
-    .insp .form-row label, .pal .form-row label { padding-top: 0; }
-    .pal .form-row { grid-template-columns: 150px 1fr; }
-    .thumbs { display: flex; gap: 4px; flex-wrap: wrap; } .thumbs img { width: 70px; height: 52px; object-fit: cover; border-radius: 4px; }
-    .vbar { position: absolute; z-index: 5; display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
-    .vbar .btn, .vbar select { background: rgba(15,17,20,.88); color: var(--txt); }
-    .vbar .btn-primary { background: var(--accent); color: #1a1500; }
-    #niveaux { top: 10px; left: 10px; }
-    .vtools { top: 10px; right: 10px; }
-    #dims { position: absolute; z-index: 6; transform: translate(-50%, -120%); background: #111; color: var(--accent2); font: 600 12px var(--mono); padding: 3px 7px; border-radius: 5px; pointer-events: none; border: 1px solid #5a4b12; }
-    #pickHint { position: absolute; bottom: 12px; left: 12px; z-index: 6; }
-    .enq-nav { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 12px; }
-    .enq-nav button { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer; color: var(--txt2); }
-    .enq-nav button.on { border-color: var(--accent); color: var(--txt); }
-    .ed-item { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 6px; background: var(--panel); }
-    .ed-ih { display: flex; align-items: center; gap: 4px; padding: 5px 8px; }
-    .ed-sum { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%; }
-    .ed-ib { padding: 4px 10px 10px; border-top: 1px solid var(--line); }
-    .ed-sub { margin: 10px 0 0 6px; padding-left: 10px; border-left: 2px solid var(--line); }
-    .inp.bad { border-color: var(--ko); }
-    .mono { font-family: var(--mono); font-size: 12px; }
-    .ana-ov { position: fixed; inset: 0; z-index: 40; background: var(--bg); display: flex; flex-direction: column; }
-    @media (max-width: 1100px) { .ed2 { grid-template-columns: 210px 1fr 280px; } }
-  </style>
+  <link rel="stylesheet" href="css/atelier.css">
 </head>
-<body>
+<body class="atelier">
   <div id="app">
     <header id="topbar">
       <a class="logo" href="index.html" style="text-decoration:none;color:inherit"><div class="logo-mark">🛠️</div><div>Atelier de scènes<small id="edTitre"></small></div></a>
-      <nav id="modes"></nav>
+      <div class="hist">
+        <button class="rond-s" id="bUndo" title="Annuler (Ctrl+Z)" disabled>↶</button>
+        <button class="rond-s" id="bRedo" title="Rétablir (Ctrl+Y)" disabled>↷</button>
+      </div>
       <div class="tb-sp"></div>
       <details class="menu"><summary class="btn btn-sm">📁 Fichier ▾</summary><div class="menu-c">
         <button class="btn btn-sm" id="bNouveau">Nouveau dossier</button>
@@ -72,27 +24,35 @@
         <label class="btn btn-sm">Importer JSON<input type="file" id="bImport" accept=".json" hidden></label>
         <button class="btn btn-sm" id="bExport">Exporter JSON</button>
       </div></details>
+      <button class="btn btn-sm" id="bAide" title="Aide et raccourcis (H ou ?)">❔ Aide</button>
       <button class="btn btn-sm" id="bValider">Contrôler</button>
       <button class="btn btn-sm btn-primary" id="bPublier">Publier dans le jeu</button>
       <a class="btn btn-sm btn-ghost" href="index.html" style="text-decoration:none">⟵ Jeu</a>
     </header>
-    <main id="screen" style="flex:1;display:flex;min-height:0">
-      <div class="ed2 mode-construire">
-        <aside class="pal"></aside>
-        <section class="vp">
-          <div id="edPrev"></div>
-          <div class="vbar" id="niveaux"></div>
-          <div class="vbar vtools">
-            <button class="btn btn-sm" data-rot="-45" title="Pivoter (Q)">⟲</button><button class="btn btn-sm" data-rot="45" title="Pivoter (E)">⟳</button>
-            <select class="btn btn-sm" id="murs"><option value="bas">Murs bas</option><option value="auto">Murs auto</option><option value="pleins">Murs pleins</option></select>
-            <label class="btn btn-sm"><input type="checkbox" id="grille" checked> Grille</label>
-            <label class="btn btn-sm">Fouille <input type="range" id="fouilleV" min="0" max="3" value="0" style="width:60px"></label>
-          </div>
-          <div id="dims" hidden></div>
-          <span id="pickHint" class="chip warn" hidden>📍 Cliquez dans la scène pour placer le point</span>
-        </section>
+    <main id="screen" class="ed3 mode-construire">
+      <aside class="formes"></aside>
+      <section class="vp">
+        <div id="edPrev"></div>
+        <div class="vbar" id="niveaux"></div>
+        <div class="vbar vtools">
+          <button class="rond-s" data-rot="-45" title="Pivoter la vue (Q)">⟲</button><button class="rond-s" data-rot="45" title="Pivoter la vue (E)">⟳</button>
+          <select class="sel-s" id="murs" title="Affichage des murs"><option value="bas">Murs bas</option><option value="auto">Murs auto</option><option value="pleins">Murs pleins</option></select>
+          <label class="tog-s" title="Grille (G)"><input type="checkbox" id="grille" checked> Grille</label>
+          <label class="tog-s" title="Couches de fouille retirées">⛏️ <input type="range" id="fouilleV" min="0" max="3" value="0"></label>
+        </div>
+        <aside class="listes"></aside>
         <aside class="insp"></aside>
-      </div>
+        <div id="dims" hidden></div>
+        <span id="pickHint" class="chip warn" hidden>📍 Cliquez dans la scène pour placer le point</span>
+        <div class="barre">
+          <nav class="b-modes" id="modes"></nav>
+          <div class="b-droite">
+            <div class="conseil" id="conseil"></div>
+            <div class="b-cat" id="catalogue"></div>
+            <div class="b-outils" id="outils"></div>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
   <div id="modal-root"></div>

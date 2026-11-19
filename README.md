@@ -71,15 +71,35 @@ Tracés irréguliers post-embrasement, lecture PID positive due aux produits de 
 
 ## Atelier de scènes (`editor.html`) — façon Les Sims
 
-Cinq modes, de la construction au dossier partagé :
+Une barre de **boutons ronds en bas de l'écran** : les modes à gauche, les outils du mode et le **catalogue** juste au-dessus, une bulle de conseil qui explique l'outil choisi. Les listes du niveau (pièces, objets, tracés, constats, photos) sont à gauche, la sélection s'édite à droite. Une aide illustrée s'ouvre à la première visite (touche **H**).
 
 | Mode | Ce qu'on y fait |
 |---|---|
-| 🏗️ **Construire** | Dessiner les pièces à la souris sur une grille (pas de 25 cm), les déplacer, les redimensionner par les bords ; poser portes, fenêtres, baies, portes de garage sur les murs ; catalogue de mobilier (touche **R** pour pivoter) ; **niveaux** (R+1, R+2… avec reprise de l'emprise), **trémies** et escaliers |
+| 🏗️ **Construire** | Dessiner les pièces à la souris sur une grille (pas de 25 cm), les déplacer, les redimensionner par les bords ; poser portes, fenêtres, baies, portes de garage ; **sols extérieurs** (allée, terrasse, parking : gravier, enrobé, dalles, terrasse bois, herbe, terre, sable…) et **terrain** autour du bâtiment ; catalogue d'objets ; **import de modèles 3D** ; **niveaux** (R+1, R+2…), **trémies** et escaliers |
 | 🔥 **Effets du feu** | Par pièce : hauteur de la couche chaude et densité de suie ; pinceaux muraux (tracé en V, clean burn, calcination, zone protégée, démarcation) et au sol (tracés irréguliers, consommation, zone protégée, débris) ; degré de combustion de chaque objet |
-| 📍 **Indices & photos** | Poser les **constats** dans la 3D avec leur **lecture** (interprétation réelle), pièges éventuels, référence NFPA 921 (chapitre / section) et autres sources éventuelles ; **témoins de température** (matériau, fondu ou intact, alliage) ; **épingler de vraies photos** à l'endroit et dans la direction de la prise de vue, liées ou non à un constat ; zone de fouille |
+| 📍 **Indices & photos** | Poser les **constats** dans la 3D avec leur **lecture** (interprétation réelle), pièges éventuels, référence NFPA 921 (chapitre / section) et autres sources éventuelles ; **témoins de température** (matériau, fondu ou intact, alliage) ; **épingler de vraies photos** à l'endroit et dans la direction de la prise de vue ; zone de fouille |
 | 🧾 **Enquête** | Mission, compte rendu SDIS, témoins, OSINT, prélèvements et résultats, hypothèses, solution, pièges, chronologie ; génération automatique des zones |
 | 📘 **RETEX** | Auteur, contexte, enseignements, points positifs, axes d'amélioration, recommandations ; **aperçu de la vue Analyse** ; **export HTML autonome** |
+
+### Objets intelligents (à la manière du BIM)
+
+Chaque objet, pièce, sol ou ouverture a un onglet **📋 Fiche technique** : matériau (avec sa température de fusion et un classement indicatif à confirmer), **réaction au feu** (Euroclasse, ancien classement M), **résistance au feu**, **procès-verbal** (numéro, laboratoire, date), fabricant, référence, date d'installation, alimentation et puissance, état, observations, **photos** et **documents joints** (PV en PDF, notice, facture). Les fiches apparaissent dans la vue Analyse (section *Inventaire technique*, clic sur un objet dans la 3D) et dans le jeu, quand l'enquêteur clique sur un objet documenté.
+
+### Modèles 3D importés
+
+Catalogue › **📦 Modèles 3D** › *Importer* : **glTF/GLB** (Blender), **DAE** (export Collada de SketchUp), **OBJ**, **STL**, **FBX**. L'échelle est détectée (mm, cm) et réglable (m, cm, mm, pouce), ainsi que l'orientation (axe Z vers le haut). Le modèle se pose, se déplace, se pivote, se « brûle » et se documente comme n'importe quel objet ; il est enregistré dans le dossier et inclus dans l'export RETEX (40 Mo maximum par fichier ; le format .skp natif n'est pas lisible : exporter en .dae ou .glb).
+
+### Annuler, rétablir, raccourcis
+
+| Raccourci | Action |
+|---|---|
+| Ctrl+Z / Ctrl+Y (ou Ctrl+Maj+Z) | Annuler / rétablir (boutons ↶ ↷ en haut) |
+| Ctrl+C / Ctrl+V / Ctrl+D | Copier / coller / dupliquer (objet, pièce avec son mobilier, constat) |
+| Suppr · Échap | Supprimer · désélectionner ou quitter l'outil |
+| Flèches (Maj : pas de 25 cm) | Déplacer la sélection de 5 cm |
+| R (Maj+R) · Q / E | Pivoter l'objet de 90° (15°) · pivoter la vue |
+| 1 à 5 · V P T O F X · G | Modes · sélection, pièce, sols, porte, fenêtre, gomme · grille |
+| Ctrl+S · H ou ? | Enregistrer le brouillon · aide |
 
 ### Un dossier, deux vues
 
@@ -99,13 +119,16 @@ index.html              Jeu (QG, enquête, débriefing)
 editor.html             Atelier de scènes (construction, effets, indices, enquête, RETEX)
 dist/retex-viewer.js    Visionneuse RETEX autonome (générée par esbuild)
 css/style.css
-vendor/                 Three.js r160 (embarqué, hors ligne)
+vendor/                 Three.js r160 et ses chargeurs de modèles (embarqués, hors ligne)
 js/main.js              QG : missions, équipement, référentiel, carrière
 js/state.js             Sauvegarde locale (carrière, scénarios formateur)
 js/engine/              Moteur 3D (scène, textures procédurales des effets du feu)
 js/game/                Logique d'enquête et notation
 js/screens/             Écrans : enquête, débriefing, rapport, outils d'analyse
 js/editor/              Atelier de scènes (schéma, formulaires, outils)
+css/atelier.css         Interface de l'Atelier (barre ronde, catalogue)
+js/engine/modeles.js    Import des modèles 3D (glTF, DAE, OBJ, STL, FBX)
+js/data/bim.js          Fiches techniques des objets (matériaux, réaction au feu, PV)
 js/retex/               Export et point d'entrée du dossier RETEX autonome
 js/stockage.js          IndexedDB (dossiers, brouillon, photos)
 js/data/nfpa.js         Référentiel NFPA 921 (2011), reformulé en français

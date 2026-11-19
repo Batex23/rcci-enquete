@@ -284,3 +284,15 @@ details.voir li { margin: 3px 0; line-height: 1.35; }
 .comp-carte .avant { margin-top: 8px; font-size: 12.5px; color: #7a7366; }
 .comp-carte .avant.ok { color: #1f5f3a; }
 .comp-gains { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+
+/* Fiches techniques (BIM) */
+.fiche-bim table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.fiche-bim th { text-align: left; width: 38%; color: #6b6457; font-weight: 600; padding: 3px 6px 3px 0; vertical-align: top; }
+.fiche-bim td { padding: 3px 0; }
+.fiche-bim .fb-t { font-weight: 800; margin-bottom: 4px; }
+.fiche-bim .fb-i { margin-top: 6px; font-size: 12.5px; background: #fff7e0; color: #6b5110; border-radius: 6px; padding: 4px 8px; }
+.fiche-bim .fb-ph { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.fiche-bim .fb-ph img { width: 90px; height: 66px; object-fit: cover; border-radius: 6px; }
+.fiche-bim .fb-docs a { display: block; font-size: 13px; margin-top: 4px; }
+.inv-g { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.inv-c { border: 1px solid #ddd5c4; border-radius: 8px; padding: 8px 10px; break-inside: avoid; }
