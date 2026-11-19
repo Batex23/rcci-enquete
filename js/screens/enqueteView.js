@@ -333,7 +333,7 @@ export function ouvrirEnquete(scnSrc, ctx) {
     $$('[data-s]', b).forEach(x => x.onclick = () => {
       const r = E.analyserScelle(x.dataset.s, x.dataset.a);
       if (r.erreur) { toast(r.erreur, 'ko'); return; }
-      ctx.save(); son('ok'); pop(`🔬 Résultats du labo reçus (−${r.cout} cr)`, 'gold'); renderAll();
+      ctx.save(); son('ok'); pop(`🔬 Résultats du labo reçus (−${r.cout} cr)`, 'gold'); renderAll(); if (r.avance) toast('💼 Le cabinet t\'avance les frais d\'analyse : ils seront repris sur tes honoraires.', 'info', 5000);
     });
   }
 

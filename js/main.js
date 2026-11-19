@@ -12,6 +12,7 @@ import { jouabilite } from './game/prepa.js';
 import { BADGES, etoiles } from './game/badges.js';
 import { DOMAINES, PALIERS, NOMS_NIVEAU, xpDe, progression, bonusHonoraires } from './game/competences.js';
 import { entrainement as salleEntrainement } from './screens/entrainement.js';
+import { ouvrirLabo3d } from './screens/labo3d.js';
 import { FUSIONS } from './data/thermique.js';
 import { son } from './game/sons.js';
 
@@ -20,6 +21,7 @@ const ctx = {
   app,
   save: () => sauver(app.c),
   allerQG: (o) => allerQG(o),
+  ouvrirLabo: (poste) => ouvrirLabo(poste),
   onLeave: null,
 };
 
@@ -88,6 +90,20 @@ async function missions(b) {
   $$('[data-del]', b).forEach(x => x.onclick = async () => {
     if (await confirmer('Supprimer ce scénario ?', 'Il sera retiré de ce navigateur.', 'Supprimer')) { await supprimerScenarioPerso(x.dataset.del); allerQG(); }
   });
+}
+
+function ouvrirLabo(poste) {
+  try {
+    if (ctx.onLeave) { ctx.onLeave(); ctx.onLeave = null; }
+    app.onglet = 'entrainement';
+    document.body.classList.add('en-jeu');
+    son('page');
+    ouvrirLabo3d(ctx, poste);
+  } catch (e) {
+    console.error(e);
+    toast('Impossible d\'ouvrir le laboratoire 3D sur cet appareil.', 'ko');
+    allerQG('entrainement');
+  }
 }
 
 function lancer(scn) {

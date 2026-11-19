@@ -8,7 +8,7 @@ export function carriereVide() {
   return {
     nom: 'Enquêteur',
     xp: 0,
-    credits: 2500,
+    credits: 600,
     outils: OUTILS.filter(o => o.base).map(o => o.id),
     missions: {}, // id -> { meilleur, tentatives, dernier }
     reglages: { feedback: 'immediat', lueurs: true },

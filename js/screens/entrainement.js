@@ -6,6 +6,7 @@ import { DOMAINES, crediter, niveauDe, NOMS_NIVEAU } from '../game/competences.j
 import { BADGES } from '../game/badges.js';
 import { $, $$, h, esc, modal, ref, toast } from '../ui.js';
 import { son } from '../game/sons.js';
+import { TP, DEFIS_FOUR } from './labo3d.js';
 
 const melange = a => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 const choisir = a => a[Math.floor(Math.random() * a.length)];
@@ -99,19 +100,30 @@ export const LABO = { nom: 'Dr Lina Morel', role: 'ingénieure du laboratoire', 
 export function entrainement(b, ctx) {
   const c = ctx.app.c;
   c.entrainement ||= {};
+  c.laboTP ||= {};
   const jour = new Date().toISOString().slice(0, 10);
-  b.innerHTML = `<div class="labo-entete"><span class="av">${LABO.avatar}</span><div><b>Bienvenue au laboratoire.</b> Ici, pas d'enquête : on <b>expérimente</b> pour comprendre les phénomènes. Chaque poste lance une courte série d'expériences ; chaque bonne observation fait progresser la compétence correspondante, et la première série du jour de chaque poste est rémunérée.<small>— ${esc(LABO.nom)}, ${esc(LABO.role)}</small></div></div>
-    <div class="labo-etagere" aria-hidden="true"><span>⚗️</span><span>🧪</span><span>🧫</span><span>🌡️</span><span>🧯</span><span>🔬</span><span>🧪</span><span>⚖️</span><span>🥽</span></div>
+  const faitTP = id => id === 'four' ? DEFIS_FOUR.every(d => c.laboTP['four-' + d.id]?.reussi) : !!c.laboTP[id]?.reussi;
+  b.innerHTML = `<div class="labo-entete"><span class="av">${LABO.avatar}</span><div><b>Bienvenue au laboratoire.</b> Ici, pas d'enquête : on <b>expérimente</b> pour comprendre la science du feu. Entre dans la salle, approche-toi d'un poste et fais tes travaux pratiques. Chaque expérience réussie fait progresser une compétence, et la première réussite du jour de chaque poste est payée par une petite prime.<small>— ${esc(LABO.nom)}, ${esc(LABO.role)}</small></div></div>
+    <div class="labo-porte"><div class="lp-vitre"><span>🔥</span><span>🔺</span><span>🧱</span><span>🔬</span></div><div class="lp-txt"><h3>La salle d'expériences</h3><p>Une vraie pièce en 3D : four de fusion, banc du tétraèdre du feu, mur d'essai au feu, microscope… Tourne autour, clique sur un poste et lance l'expérience.</p><button class="btn-j go lp-go" data-entrer>🚪 Entrer dans le laboratoire</button></div></div>
+    <h3 class="labo-h">Travaux pratiques</h3>
+    <div class="paillasse">${TP.map((t, i) => { const d = DOMAINES.find(y => y.id === t.dom); return `<div class="poste">
+      <div class="app-labo"><span>${t.ic}</span><i>TP ${i + 1} · ${esc(t.nom)}</i></div>
+      <p>${esc(t.desc)}</p>
+      <div class="small">${d.ic} ${esc(d.nom)} · niv. ${niveauDe(c, d.id)} · ${faitTP(t.id) ? '<b style="color:#2e7d4f">✓ réussi</b>' : 'à faire'}</div>
+      <div class="go-l"><button class="btn-j go" data-tp="${t.id}">▶ Aller au poste</button></div></div>`; }).join('')}</div>
+    <h3 class="labo-h">Révisions express <small>(séries de questions rapides)</small></h3>
     <div class="paillasse">${EXERCICES.map((x, i) => { const st = c.entrainement[x.id] || {}; const d = DOMAINES.find(y => y.id === x.dom); return `<div class="poste">
-      <div class="app-labo"><span>${x.ic}</span><i>Poste ${i + 1} · ${esc(x.poste)}</i></div>
+      <div class="app-labo"><span>${x.ic}</span><i>${esc(x.poste)}</i></div>
       <h4>${esc(x.nom)}</h4><p>${esc(x.desc)}</p>
       <div class="small">${d.ic} ${esc(d.nom)} · niv. ${niveauDe(c, d.id)} · record : ${st.meilleur ?? '—'} / ${x.n}</div>
-      <div class="go-l"><button class="btn-j go" data-ex="${x.id}">▶ Lancer l'expérience</button>${st.jour === jour ? '<span class="small muted">rémunération du jour perçue</span>' : `<span class="small" style="color:#9a7a20">jusqu'à +${x.n * 15} cr</span>`}</div></div>`; }).join('')}</div>
+      <div class="go-l"><button class="btn-j" data-ex="${x.id}">▶ Lancer la série</button>${st.jour === jour ? '<span class="small muted">prime du jour perçue</span>' : `<span class="small" style="color:#9a7a20">jusqu'à +${x.n * 5} cr</span>`}</div></div>`; }).join('')}</div>
     <div class="paillasse futur">${FUTURS.map(x => `<div class="poste verrou"><div class="app-labo"><span>${x.ic}</span><i>${esc(x.poste)}</i></div><h4>${esc(x.nom)}</h4><p>${esc(x.desc)}</p><div class="small">🔒 Études plus poussées : bientôt</div></div>`).join('')}</div>`;
-  $$('[data-ex]', b).forEach(x => x.onclick = () => lancer(EXERCICES.find(e => e.id === x.dataset.ex), ctx, () => (ctx.allerQG ? ctx.allerQG('entrainement') : entrainement(b, ctx))));
+  $$('[data-ex]', b).forEach(x => x.onclick = () => lancerExercice(EXERCICES.find(e => e.id === x.dataset.ex), ctx, () => (ctx.allerQG ? ctx.allerQG('entrainement') : entrainement(b, ctx))));
+  $('[data-entrer]', b).onclick = () => ctx.ouvrirLabo?.();
+  $$('[data-tp]', b).forEach(x => x.onclick = () => ctx.ouvrirLabo?.(x.dataset.tp));
 }
 
-function lancer(ex, ctx, fin) {
+export function lancerExercice(ex, ctx, fin) {
   const c = ctx.app.c;
   const qs = ex.gen();
   let i = 0, bons = 0, rep = null;
@@ -130,7 +142,7 @@ function lancer(ex, ctx, fin) {
   const bilan = () => {
     const st = c.entrainement[ex.id] ||= {};
     const jour = new Date().toISOString().slice(0, 10);
-    const cr = st.jour === jour ? 0 : bons * 15;
+    const cr = st.jour === jour ? 0 : bons * 5;
     if (cr) { c.credits += cr; st.jour = jour; }
     st.meilleur = Math.max(st.meilleur || 0, bons); st.sessions = (st.sessions || 0) + 1;
     const montees = crediter(c, { [ex.dom]: bons * 10 });
@@ -147,7 +159,7 @@ function lancer(ex, ctx, fin) {
       ${montees.map(mm => `<div class="chip ok" style="margin-top:8px">${mm.dom.ic} Niveau ${mm.n} (${NOMS_NIVEAU[mm.n - 1]})${mm.n === 3 ? ` — avantage : ${esc(mm.dom.avantage.nom)}` : ''}</div>`).join('')}
       ${nouveauBadge ? `<div style="margin-top:8px"><span class="badge-gagne">${BADGES.find(x => x.id === 'assidu').ic} ${esc(BADGES.find(x => x.id === 'assidu').nom)}</span></div>` : ''}
       <div style="display:flex;gap:8px;justify-content:center;margin-top:16px"><button class="btn-j go" data-again>↻ Relancer l'expérience</button><button class="btn-j ghost" data-close>Fermer</button></div></div>`;
-    $('[data-again]', corps).onclick = () => { m.close(); lancer(ex, ctx, fin); };
+    $('[data-again]', corps).onclick = () => { m.close(); lancerExercice(ex, ctx, fin); };
     $('[data-close]', corps).onclick = () => m.close();
     if (montees.length) toast(`${montees[0].dom.ic} ${montees[0].dom.nom} : niveau ${montees[0].n} !`, 'ok');
   };

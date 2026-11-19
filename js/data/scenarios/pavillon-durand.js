@@ -12,7 +12,7 @@ export default {
   type: 'habitation',
   difficulte: 1,
   gradeMin: 0,
-  recompense: { credits: 3000, bonusMax: 1500, xp: 500 },
+  recompense: { credits: 2500, bonusMax: 1000, xp: 500 },
   resume: 'Pavillon de plain-pied, feu de nuit dans le séjour, deux occupants évacués. Une voisine évoque une dispute familiale. Le mandant veut l\'origine et la cause.',
 
   mission: {

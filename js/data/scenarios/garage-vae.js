@@ -10,7 +10,7 @@ export default {
   type: 'habitation',
   difficulte: 4,
   gradeMin: 0,
-  recompense: { credits: 5000, bonusMax: 2500, xp: 1000 },
+  recompense: { credits: 4500, bonusMax: 2000, xp: 1000 },
   resume: 'Garage attenant ravagé en pleine nuit. Des détonations, des débris projetés partout, plusieurs zones brûlées… et une rumeur dans le quartier.',
   intro: 'Niveau 4 : feu de garage en pleine nuit. Les voisins parlent de <b>détonations</b> et il y a <b>plusieurs zones brûlées</b>. Garde la tête froide : des foyers multiples ne veulent pas forcément dire « incendie volontaire ». Et attention aux <b>débris de batterie</b> : ils peuvent se rallumer.',
 

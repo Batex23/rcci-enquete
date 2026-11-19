@@ -9,7 +9,7 @@ export default {
   type: 'habitation',
   difficulte: 1,
   gradeMin: 0,
-  recompense: { credits: 1500, bonusMax: 500, xp: 300 },
+  recompense: { credits: 800, bonusMax: 200, xp: 300 },
   resume: 'Ta première enquête, en doublon avec ton tuteur. Une maison de plain-pied, un feu limité à la cuisine. On apprend la méthode pas à pas.',
 
   mission: {

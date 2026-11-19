@@ -397,3 +397,93 @@ body { font: 15px/1.5 var(--sans); }
 .modal.labo-m { background: #f6fafc; }
 .modal.labo-m .modal-h { background: linear-gradient(90deg, #e3eef5, #f6fafc); border-bottom: 2px solid #b9cfdd; }
 .modal.labo-m .wiz-steps span.on { background: #3d8fbf; }
+
+/* ---------- Laboratoire : entrée et salle 3D ---------- */
+.labo-porte { display: flex; gap: 18px; align-items: stretch; margin-top: 18px; background: linear-gradient(135deg, #2c3e4c, #1d2a33); color: #eef4f8; border-radius: 14px; padding: 16px; box-shadow: 0 10px 24px rgba(20, 30, 40, .3); }
+.lp-vitre { flex: none; width: 190px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 10px; background: linear-gradient(160deg, rgba(190, 225, 245, .35), rgba(120, 170, 200, .15)); border: 6px solid #8fa4b2; border-radius: 10px; font-size: 34px; place-items: center; }
+.lp-txt h3 { margin: 0 0 6px; font-size: 22px; color: #fff; }
+.lp-txt p { margin: 0 0 12px; line-height: 1.45; color: #cfdde6; }
+.lp-go { font-size: 17px; padding: 12px 20px; }
+.labo-h { margin: 22px 0 -10px; font-size: 17px; color: #2a4152; }
+.labo-h small { font-weight: 500; color: #5b7385; font-size: 13px; }
+@media (max-width: 640px) { .labo-porte { flex-direction: column; } .lp-vitre { width: auto; } }
+
+.l3 { background: #202a31; }
+.l3-etiquettes { position: absolute; inset: 0; pointer-events: none; z-index: 4; overflow: hidden; }
+.l3-et { position: absolute; left: 0; top: 0; pointer-events: auto; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; padding: 6px 12px 6px 8px; border-radius: 999px; border: 2px solid #fff; background: rgba(29, 55, 73, .88); color: #fff; font: 700 14px var(--sans); cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, .35); transition: background .15s; }
+.l3-et span { font-size: 18px; }
+.l3-et i { font-style: normal; color: #7dffa8; }
+.l3-et:hover, .l3-et.survol { background: #3d8fbf; }
+.l3-et.pers { background: rgba(255, 253, 246, .92); color: #1e2433; border-color: #3d8fbf; }
+.l3.focus .l3-et { opacity: .0; pointer-events: none; }
+.l3-haut { top: 14px; left: 14px; display: flex; gap: 10px; align-items: center; }
+.l3-haut .btn-j { background: #fffdf6; color: #1e2433; }
+.l3-titre { padding: 8px 14px; font-size: 15px; }
+.l3-prog { color: #cfe3ef; font-size: 13px; }
+.l3-lina { left: 14px; bottom: 16px; width: 400px; display: flex; gap: 10px; align-items: flex-end; }
+.l3-lina .portrait { flex: none; width: 70px; height: 70px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #eaf5fb, #9cc3da); border: 3px solid #fff; display: grid; place-items: center; font-size: 40px; cursor: pointer; box-shadow: 0 6px 20px rgba(0, 0, 0, .4); }
+.l3-lina .bulle { font-size: 14px; line-height: 1.45; transition: opacity .25s, transform .25s; }
+.l3-lina .bulle b { display: block; font: 800 11.5px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #2f7fb0; margin-bottom: 2px; }
+.l3-lina.cache .bulle { opacity: 0; transform: translateY(10px); pointer-events: none; }
+.l3.focus .l3-lina { width: 320px; }
+.l3-aide { left: 50%; transform: translateX(-50%); bottom: 14px; background: rgba(20, 30, 38, .7); color: #dfeaf1; font-size: 13px; padding: 6px 14px; border-radius: 999px; pointer-events: none; }
+.l3.focus .l3-aide { display: none; }
+.l3-panel { top: 14px; right: 14px; bottom: 14px; width: 420px; display: flex; flex-direction: column; background: #f6fafc; color: #1f2d36; border-radius: 16px; box-shadow: 0 12px 34px rgba(0, 0, 0, .45); overflow: hidden; border: 1px solid #b9cfdd; }
+.l3-panel[hidden] { display: none; }
+.l3-ph { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: linear-gradient(90deg, #dbeaf3, #f6fafc); border-bottom: 2px solid #b9cfdd; }
+.l3-ph .ic { font-size: 28px; }
+.l3-ph h3 { margin: 0; flex: 1; font-size: 17px; }
+.l3-pb { padding: 12px 14px 16px; overflow-y: auto; flex: 1; font-size: 14px; line-height: 1.45; }
+.l3-pb p { margin: 0 0 8px; }
+.l3-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+.l3-tabs button { border: 1px solid #b9cfdd; background: #fff; border-radius: 999px; padding: 5px 10px; font: 700 12.5px var(--sans); cursor: pointer; color: #2a4152; }
+.l3-tabs button.on { background: #3d8fbf; border-color: #3d8fbf; color: #fff; }
+.l3-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
+.l3-chips button { position: relative; border: 2px solid #d0dde5; background: #fff; border-radius: 10px; padding: 5px 9px; font: 700 13px var(--sans); cursor: pointer; text-align: left; color: #1f2d36; }
+.l3-chips button small { display: block; font-weight: 500; font-size: 11px; color: #6b7d88; }
+.l3-chips button.on { border-color: #3d8fbf; background: #e4f1f9; }
+.l3-chips button em { position: absolute; top: -8px; right: -8px; width: 20px; height: 20px; border-radius: 50%; background: #e67e22; color: #fff; font: 800 12px/20px var(--sans); text-align: center; font-style: normal; }
+.l3-chips button:disabled { cursor: default; opacity: .85; }
+.l3-thermo { display: flex; gap: 14px; align-items: center; margin: 6px 0 10px; }
+.l3-thermo .tube { position: relative; width: 18px; height: 150px; border-radius: 9px; background: #e3e9ed; border: 2px solid #b9cfdd; margin-right: 92px; }
+.l3-thermo .tube i { position: absolute; left: 2px; right: 2px; bottom: 2px; border-radius: 7px; background: linear-gradient(0deg, #ffb347, #e74c3c); transition: height .1s linear; }
+.l3-thermo .rep { position: absolute; left: 22px; transform: translateY(50%); font-size: 11px; font-weight: 700; color: #3b4b55; white-space: nowrap; padding-left: 6px; border-left: 2px solid #8fa4b2; line-height: 1; }
+.l3-temp { font: 900 32px/1 var(--sans); color: #c0392b; }
+.l3-slider { display: block; margin: 4px 0 8px; }
+.l3-slider input { width: 100%; }
+.l3-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+.l3-row.end { justify-content: flex-end; }
+.l3-journal { background: #fff; border: 1px dashed #b9cfdd; border-radius: 10px; padding: 8px 10px; font-size: 13px; max-height: 170px; overflow-y: auto; }
+.l3-journal div { padding: 2px 0; }
+.l3-note { margin-top: 10px; background: #fffbe9; border-radius: 10px; padding: 8px 10px; font-size: 13px; }
+.l3-note summary { cursor: pointer; font-weight: 800; }
+.l3-ordre { margin: 6px 0 0 18px; padding: 0; }
+.l3-q ul { margin: 4px 0 8px 18px; padding: 0; }
+.l3-tri { display: flex; gap: 12px; align-items: center; }
+.l3-tetra { width: 170px; flex: none; }
+.l3-etat { font-weight: 800; margin-bottom: 6px; color: #5b6b75; }
+.l3-etat.on { color: #d35400; }
+.l3-jauge { height: 12px; border-radius: 6px; background: #e3e9ed; overflow: hidden; }
+.l3-jauge i { display: block; height: 100%; background: linear-gradient(90deg, #e74c3c 0 70%, #2e9e5b 76%); background-size: 420px 100%; transition: width .15s; }
+.l3-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 10px 0; }
+.l3-actions .btn-j { justify-content: center; }
+.l3-lbl { font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: #5b7385; margin-top: 6px; }
+.l3-mesure { display: flex; gap: 8px; margin: 6px 0; }
+.l3-mesure div { flex: 1; background: #fff; border: 1px solid #d0dde5; border-radius: 10px; padding: 6px 10px; }
+.l3-mesure span { display: block; font-size: 11.5px; color: #6b7d88; }
+.l3-mesure b { font-size: 20px; color: #c0392b; }
+.l3-tab { width: 100%; border-collapse: collapse; font-size: 13px; margin: 6px 0; background: #fff; }
+.l3-tab th, .l3-tab td { border: 1px solid #d0dde5; padding: 4px 6px; text-align: left; }
+.l3-tab th { background: #e4f1f9; }
+.l3-bilan { text-align: center; padding: 10px 0; }
+.l3-bilan .gros { font: 900 44px/1 var(--sans); margin-bottom: 10px; }
+.l3-gain { margin: 10px 0; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center; }
+.l3-liste { display: flex; flex-direction: column; gap: 6px; }
+.l3-liste .btn-j { text-align: left; display: block; }
+.l3-liste small { display: block; font-weight: 500; opacity: .8; }
+@media (max-width: 900px) {
+  .l3-panel { top: auto; left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 58vh; }
+  .l3.focus .l3-lina { display: none; }
+  .l3-lina { width: auto; right: 8px; left: 8px; }
+  .l3-aide { display: none; }
+}

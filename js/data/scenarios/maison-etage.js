@@ -10,7 +10,7 @@ export default {
   type: 'habitation',
   difficulte: 3,
   gradeMin: 0,
-  recompense: { credits: 4000, bonusMax: 2000, xp: 800 },
+  recompense: { credits: 3500, bonusMax: 1500, xp: 800 },
   resume: 'Maison à étage, toiture partiellement effondrée autour de la cheminée. Le feu a voyagé de haut en bas : à toi de remonter le fil.',
   intro: 'Niveau 3 : maison à étage, feu de toiture. Le toit est en partie <b>effondré</b>, sois prudent. Ici le feu a voyagé <b>de haut en bas</b> : méfie-toi de ce que tu verras au sol. Je te laisse mener, je reste derrière toi.',
 

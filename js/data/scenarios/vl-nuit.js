@@ -11,7 +11,7 @@ export default {
   type: 'vehicule',
   difficulte: 5,
   gradeMin: 1,
-  recompense: { credits: 6000, bonusMax: 3000, xp: 1200 },
+  recompense: { credits: 6000, bonusMax: 2500, xp: 1200 },
   resume: 'Une citadine a brûlé dans l\'allée d\'un pavillon à 3 h du matin. Un rappel constructeur, une menace, une rumeur… et deux zones brûlées au sol.',
   intro: 'Niveau 5 : ton premier <b>feu de véhicule</b>. Ici, la question « volontaire ou accidentel ? » se pose vraiment. Rappelle-toi : on ne conclut à un incendie volontaire qu\'avec des <b>faits matériels</b>, jamais par élimination ni sur un mobile. Et <b>qui</b> a mis le feu n\'est pas ta question : la tienne, c\'est <b>comment</b>.',
 

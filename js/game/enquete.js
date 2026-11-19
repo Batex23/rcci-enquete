@@ -258,7 +258,9 @@ export class Enquete {
     const p = this.scn.prelevements.find(x => x.id === s.prelevement);
     const a = p.analyses.find(x => x.id === aid);
     const cout = this.coutAnalyse(a, p);
-    if (this.c.credits < cout) return { erreur: `Crédits insuffisants (${cout} requis).` };
+    // Avance du cabinet : on peut descendre jusqu'à -2 000 cr, repris sur les honoraires (évite d'être bloqué)
+    const avance = this.c.credits < cout;
+    if (this.c.credits - cout < -2000) return { erreur: `Crédits insuffisants (${cout} requis) et avance du cabinet épuisée.` };
     this.c.credits -= cout; this.depenses += cout;
     let r;
     if (!s.okCont) r = a.resultats.mauvaisContenant || { texte: 'Échantillon altéré par le conditionnement : résultat non interprétable.' };
@@ -270,7 +272,7 @@ export class Enquete {
       this.ajouterFait({ id, texte: `${a.nom} (${s.id}) — ${r.texte}`, court: `Labo ${s.id} : ${a.nom}`, type: 'labo', source: 'Laboratoire', partiel: !!r.partiel });
     }
     this.log(`Analyse ${a.nom} sur ${s.id} (${cout} cr).`);
-    return { resultat: r, cout };
+    return { resultat: r, cout, avance };
   }
 
   // -------------------------------------------------- témoins

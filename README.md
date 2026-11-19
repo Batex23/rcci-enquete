@@ -23,7 +23,12 @@ Le joueur mène des enquêtes sur des scènes d'incendie en **3D low-poly (vue i
 ### Progresser : compétences et laboratoire
 
 - **Compétences** (onglet 🎓) : Méthode, Lecture des tracés, Températures, Électricité, Entretiens & sources, Raisonnement, Prélèvements & labo. Chaque analyse juste rapporte des points dans le domaine concerné (5 niveaux, de Novice à Maître). Chaque niveau gagné augmente les honoraires de 1 % ; au **niveau 3**, un avantage se débloque sur le terrain : photo automatique avant fouille, une lecture erronée barrée, témoins de température mis en évidence, analyses de labo moins chères, questions orientées signalées, aide à la certitude.
-- **Le laboratoire** (onglet 🔬) : une zone d'expérimentation pour comprendre les phénomènes, hors enquête. Quatre postes : *Four de fusion* (fondu ou intact ? fourchettes de température tirées au hasard), *Banc d'essai* (mythe ou réalité ?), *Cellule d'essai au feu* (lecture des tracés), *Microscope* (arc, feu ou alliage ?). Les expériences font progresser les compétences ; la première série du jour de chaque poste est rémunérée. D'autres postes (calorimètre, chromatographe, grande cellule) accueilleront plus tard des études plus poussées.
+- **Le laboratoire** (onglet 🔬) : une vraie **salle en 3D** où l'on fait des travaux pratiques sur la science du feu, hors enquête, guidé par Dr Lina Morel. On tourne autour, on clique sur un poste et un panneau donne le protocole.
+  - **TP 1 · Four de fusion** (jusqu'à 1 200 °C) : choix de 6 témoins (paraffine, PVC, polyéthylène, polypropylène, étain, plomb, zamac, zinc, aluminium, verre, laiton, cuivre, acier), consigne de température, lueur d'incandescence, journal d'observation. Trois défis : *Qui fond en premier ?*, *Le four mystère* (température cachée à encadrer), *Le piège de l'alliage* (fil de cuivre sur aluminium).
+  - **TP 2 · Tétraèdre du feu** : bec de gaz, cloche en verre avec oxymètre, robinet de gaz, brumisateur, poudre. Il faut éteindre la flamme des quatre façons (comburant, combustible, énergie, réaction en chaîne), puis répondre aux questions de Lina.
+  - **TP 3 · Mur d'essai** : brûleur de 50, 100 ou 200 kW au centre, contre un mur ou dans un angle de cloisons en plâtre. Hauteur de flamme calculée (corrélation de Heskestad, méthode « miroir »), tracés en V qui se dessinent sur le plâtre, combustion propre près du foyer.
+  - **Postes de révision** : microscope (arc, feu ou alliage ?), tableau des tracés, banc des idées reçues. Ce sont les séries de questions rapides.
+  - Chaque TP réussi fait progresser une compétence. La première réussite du jour de chaque poste rapporte une petite prime (10 cr par TP, 5 cr par bonne réponse dans les séries). D'autres postes (calorimètre, chromatographe, grande cellule) accueilleront plus tard des études plus poussées.
 
 ### Les enquêtes
 
@@ -64,7 +69,7 @@ Tracés irréguliers post-embrasement, lecture PID positive due aux produits de 
 
 ## Progression
 
-- **Crédits** : honoraires des missions (selon la note), dépensés en équipements et en analyses de laboratoire.
+- **Crédits** : on démarre avec 600 cr. Les honoraires des missions (selon la note) vont de 800 cr pour le tutoriel à 6 000 cr pour le feu de véhicule. Ils servent à payer les équipements (de 400 cr pour les pots à 15 000 cr pour le laboratoire interne) et les analyses de laboratoire. Il faut donc enchaîner les expertises pour s'équiper : après le tutoriel, on peut s'offrir un ou deux petits outils, pas tout le catalogue. Si les crédits manquent pour une analyse en cours d'enquête, le cabinet avance les frais (jusqu'à 2 000 cr) et les reprend sur les honoraires : on n'est jamais bloqué.
 - **Grades** : Enquêteur stagiaire → Enquêteur RCCI → Enquêteur confirmé → Expert RCCI → Expert près la cour d'appel.
 - **Équipements** : jauge de carbonisation/calcination, contenants pour liquides inflammables, kit de cartographie des arcs, PID, calculateur de dynamique du feu (Thomas, Babrauskas, Heskestad), OSINT pro, drone, photogrammétrie, véhicule d'investigation, équipe cynophile, laboratoire interne.
 - **Modes** : *Formation* (correction immédiate) ou *Expertise* (tout est révélé au débriefing), aide à la recherche activable.
@@ -135,7 +140,8 @@ js/data/nfpa.js         Référentiel NFPA 921 (2011), reformulé en français
 js/data/sources.js      Bibliographie et correspondances NFPA 921 → autres sources
 js/data/thermique.js    Témoins de température (fusion, ramollissement, alliages)
 js/game/competences.js  Compétences, niveaux et avantages
-js/screens/entrainement.js  Le laboratoire (postes d'expérimentation)
+js/screens/entrainement.js  Le laboratoire : page d'entrée, séries de révision
+js/screens/labo3d.js        La salle 3D du laboratoire (four, tétraèdre, mur d'essai)
 js/data/materiaux.js    Températures, puissances, fusion (tableau mnémotechnique de l'auteur)
 js/data/scenarios/      Scénarios d'enquête (JSON)
 ```
