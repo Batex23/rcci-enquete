@@ -27,6 +27,10 @@ Le joueur mène des enquêtes sur des scènes d'incendie en **3D low-poly (vue i
   - **TP 1 · Four de fusion** (jusqu'à 1 200 °C) : choix de 6 témoins (paraffine, PVC, polyéthylène, polypropylène, étain, plomb, zamac, zinc, aluminium, verre, laiton, cuivre, acier), consigne de température, lueur d'incandescence, journal d'observation. Trois défis : *Qui fond en premier ?*, *Le four mystère* (température cachée à encadrer), *Le piège de l'alliage* (fil de cuivre sur aluminium).
   - **TP 2 · Tétraèdre du feu** : bec de gaz, cloche en verre avec oxymètre, robinet de gaz, brumisateur, poudre. Il faut éteindre la flamme des quatre façons (comburant, combustible, énergie, réaction en chaîne), puis répondre aux questions de Lina.
   - **TP 3 · Mur d'essai** : brûleur de 50, 100 ou 200 kW au centre, contre un mur ou dans un angle de cloisons en plâtre. Hauteur de flamme calculée (corrélation de Heskestad, méthode « miroir »), tracés en V qui se dessinent sur le plâtre, combustion propre près du foyer.
+  - **TP 4 · Cellule d'essai** (feu en compartiment, à la manière de CFAST) : pièce de 3,6 × 2,4 × 2,4 m et feu de canapé. On règle la porte (fermée, ouverte, ou ouverte/fermée en cours de feu), une trappe de désenfumage de 0,3 ou 0,7 m², un sprinkleur (68 °C) et une porte coupe-feu asservie au détecteur (57 °C). On suit la couche chaude (température, hauteur libre de fumées), l'oxygène, l'étouffement et la reprise violente à l'ouverture, l'embrasement généralisé et la ligne de démarcation qui se dépose sur les murs.
+  - **TP 5 · Tube de déflagration** : méthane ou propane dans un tube de 3 m, avec rotamètres, bougie d'allumage, chronométrage du front de flamme et courbe vitesse / concentration. On y voit les LIE/LSE, la stœchiométrie et l'explosimètre étalonné méthane (% LIE, alarmes à 10 et 20 %, correction pour un autre gaz).
+  - **TP 6 · Point éclair** (sous la sorbonne) : essence, éthanol, white-spirit, gazole, huile de friture. On y voit l'éclair, le point de feu, l'auto-inflammation, le couvercle qui étouffe et l'eau sur l'huile (boule de feu). Défi : identifier un « liquide X » par son point éclair.
+  - Les TP 4 à 6 s'inspirent des travaux pratiques « Incendie – risques chimiques » de l'IUT HSE (simulation incendie, propagation de flamme, explosimétrie). Les modèles sont simplifiés et donnent des ordres de grandeur pédagogiques.
   - **Postes de révision** : microscope (arc, feu ou alliage ?), tableau des tracés, banc des idées reçues. Ce sont les séries de questions rapides.
   - Chaque TP réussi fait progresser une compétence. La première réussite du jour de chaque poste rapporte une petite prime (10 cr par TP, 5 cr par bonne réponse dans les séries). D'autres postes (calorimètre, chromatographe, grande cellule) accueilleront plus tard des études plus poussées.
 
@@ -142,6 +146,8 @@ js/data/thermique.js    Témoins de température (fusion, ramollissement, alliag
 js/game/competences.js  Compétences, niveaux et avantages
 js/screens/entrainement.js  Le laboratoire : page d'entrée, séries de révision
 js/screens/labo3d.js        La salle 3D du laboratoire (four, tétraèdre, mur d'essai)
+js/screens/laboTP.js        Postes cellule d'essai, tube de déflagration, point éclair
+js/screens/laboOutils.js    Petits outils 3D partagés par le laboratoire
 js/data/materiaux.js    Températures, puissances, fusion (tableau mnémotechnique de l'auteur)
 js/data/scenarios/      Scénarios d'enquête (JSON)
 ```

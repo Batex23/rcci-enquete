@@ -12,17 +12,16 @@ import { voirAussiHtml } from '../data/sources.js';
 import { $, $$, h, esc, ref, toast } from '../ui.js';
 import { son } from '../game/sons.js';
 import { EXERCICES, LABO, lancerExercice } from './entrainement.js';
+import { clamp, melange, nb, jourCourant, mat, boite, cyl, texCanvas, paillasse, verrerie, affiche } from './laboOutils.js';
+import { TP_PLUS, creerCellule, creerTube, creerEclair, panCellule, panTube, panEclair } from './laboTP.js';
 
-const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
-const melange = a => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
-const nb = (v, d = 1) => v.toLocaleString('fr-FR', { maximumFractionDigits: d, minimumFractionDigits: d });
-const jourCourant = () => new Date().toISOString().slice(0, 10);
 
 // ------------------------------------------------------------------ données des TP
 export const TP = [
   { id: 'four', ic: '🔥', nom: 'Four de fusion', dom: 'thermo', desc: 'Chauffe des témoins jusqu\'à 1 200 °C et observe ce qui fond, ramollit ou résiste.' },
   { id: 'triangle', ic: '🔺', nom: 'Tétraèdre du feu', dom: 'raisonnement', desc: 'Éteins une flamme de quatre façons différentes pour comprendre ce dont un feu a besoin.' },
   { id: 'mur', ic: '🧱', nom: 'Mur d\'essai', dom: 'traces', desc: 'Place un brûleur au centre, contre un mur ou dans un angle : flammes et tracés en V changent.' },
+  ...TP_PLUS,
 ];
 export const DEFIS_FOUR = [
   { id: 'ordre', nom: 'Qui fond en premier ?', desc: 'Range cinq témoins dans l\'ordre où ils vont fondre, puis lance la chauffe pour vérifier.' },
@@ -57,48 +56,6 @@ function nomLueur(T) {
   return 'jaune vif';
 }
 
-// ------------------------------------------------------------------ petits outils 3D
-const mat = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.75, metalness: 0, ...o });
-function boite(p, w, hh, d, m, x, y, z) { const o = new THREE.Mesh(new THREE.BoxGeometry(w, hh, d), m); o.position.set(x, y, z); p.add(o); return o; }
-function cyl(p, rt, rb, hh, m, x, y, z, seg = 20) { const o = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, hh, seg), m); o.position.set(x, y, z); p.add(o); return o; }
-function texCanvas(w, hh, draw) { const cv = document.createElement('canvas'); cv.width = w; cv.height = hh; draw(cv.getContext('2d'), w, hh); const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; }
-
-function paillasse(scene, x, z, w, d, rot = 0) {
-  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = rot; scene.add(g);
-  boite(g, w, 0.82, d - 0.06, mat('#e4e9ec'), 0, 0.45, -0.03);
-  boite(g, w, 0.08, d - 0.1, mat('#5a646b'), 0, 0.04, -0.05);
-  boite(g, w + 0.04, 0.06, d + 0.02, mat('#2d3a40', { roughness: 0.45 }), 0, 0.89, 0);
-  const n = Math.max(1, Math.round(w / 0.6));
-  for (let i = 0; i < n; i++) {
-    const cx = -w / 2 + (i + 0.5) * w / n;
-    boite(g, w / n - 0.04, 0.74, 0.01, mat('#d5dde1'), cx, 0.47, d / 2 - 0.055);
-    boite(g, 0.14, 0.02, 0.02, mat('#8c969c', { metalness: 0.6 }), cx, 0.78, d / 2 - 0.04);
-  }
-  return g;
-}
-
-function verrerie(p, x, y, z, couleur, type = 0) {
-  const verre = new THREE.MeshStandardMaterial({ color: '#d8eef6', transparent: true, opacity: 0.35, roughness: 0.1, depthWrite: false });
-  const liq = mat(couleur, { roughness: 0.3 });
-  if (type === 0) { // erlenmeyer
-    cyl(p, 0.025, 0.08, 0.14, verre, x, y + 0.07, z); cyl(p, 0.022, 0.022, 0.06, verre, x, y + 0.17, z);
-    cyl(p, 0.05, 0.075, 0.05, liq, x, y + 0.026, z);
-  } else if (type === 1) { // bécher
-    cyl(p, 0.05, 0.05, 0.13, verre, x, y + 0.065, z); cyl(p, 0.046, 0.046, 0.06, liq, x, y + 0.031, z);
-  } else { // ballon
-    const b = new THREE.Mesh(new THREE.SphereGeometry(0.07, 16, 12), verre); b.position.set(x, y + 0.07, z); p.add(b);
-    const l = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 12, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), liq); l.position.set(x, y + 0.07, z); p.add(l);
-    cyl(p, 0.018, 0.018, 0.1, verre, x, y + 0.17, z);
-  }
-}
-
-function affiche(scene, x, y, z, w, hh, rotY, draw) {
-  const t = texCanvas(512, Math.round(512 * hh / w), draw);
-  const o = new THREE.Mesh(new THREE.PlaneGeometry(w, hh), new THREE.MeshStandardMaterial({ map: t, roughness: 0.9 }));
-  o.position.set(x, y, z); o.rotation.y = rotY; scene.add(o); return o;
-}
-
-function lignes(c, txt, x, y, lh) { txt.forEach((l, i) => c.fillText(l, x, y + i * lh)); }
 
 // ------------------------------------------------------------------ la salle
 function construireSalle(scene) {
@@ -147,9 +104,9 @@ function construireSalle(scene) {
   boite(sb, 0.08, 1.3, 0.8, mat('#d9e0e4'), -0.76, 1.6, 0); boite(sb, 0.08, 1.3, 0.8, mat('#d9e0e4'), 0.76, 1.6, 0);
   boite(sb, 1.6, 0.35, 0.8, mat('#cfd7dc'), 0, 2.42, 0);
   boite(sb, 1.44, 0.7, 0.02, new THREE.MeshStandardMaterial({ color: '#cfe8f3', transparent: true, opacity: 0.3, depthWrite: false }), 0, 1.9, 0.38);
-  for (let i = 0; i < 3; i++) verrerie(sb, -0.4 + i * 0.4, 0.9, -0.05, coul[i + 2], (i + 1) % 3);
+  for (const [i, x] of [[0, -0.62], [1, 0.62]]) verrerie(sb, x, 0.9, -0.12, coul[i + 2], (i + 1) % 3);
   // extincteurs muraux
-  for (const [x, z, r] of [[6.9, 1.6, -Math.PI / 2], [-1.6, -4.88, 0]]) {
+  for (const [x, z, r] of [[6.9, 4.5, -Math.PI / 2], [-1.6, -4.88, 0]]) {
     const e = new THREE.Group(); e.position.set(x, 0, z); e.rotation.y = r; scene.add(e);
     cyl(e, 0.08, 0.08, 0.5, mat('#c8231b', { roughness: 0.4 }), 0, 0.85, 0);
     cyl(e, 0.03, 0.03, 0.08, mat('#222'), 0, 1.13, 0);
@@ -598,6 +555,9 @@ const AIDE = {
   microscope: 'Au microscope, on examine des conducteurs fondus : arc électrique, feu ou alliage ? Une petite série pour t\'entraîner l\'œil.',
   tableau: 'Le tableau des tracés : on révise la lecture des marques laissées par le feu sur les parois.',
   banc: 'Le banc des idées reçues : bidon, bougie, allumettes… On confronte les croyances aux essais et à la NFPA 921.',
+  cellule: 'Voici notre petite maison à feu : une pièce de 2,4 × 3,6 m avec un canapé. Change la porte, la trappe ou le sprinkleur et regarde la couche de fumées chaudes : c\'est elle qui laisse les lignes de démarcation sur les murs.',
+  tube: 'Le tube de déflagration : on y enferme un mélange gaz + air et on l\'allume avec une bougie. Trop pauvre ou trop riche, rien ne se passe. Entre les deux… regarde la vitesse du front de flamme.',
+  eclair: 'Sous la sorbonne, la coupelle de point éclair. Chauffe doucement et présente la flamme pilote tous les quelques degrés : tu verras d\'abord un éclair, puis une flamme qui tient.',
   lina: 'Je suis là pour t\'aider. Clique sur un poste pour commencer une expérience. Si tu es perdu, le bouton « Vue d\'ensemble » te ramène au milieu de la salle.',
 };
 
@@ -623,7 +583,7 @@ export function ouvrirLabo3d(ctx, posteInitial = null) {
   cont.appendChild(renderer.domElement);
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(50, 1, 0.05, 80);
-  const VUE = { cam: new THREE.Vector3(-0.3, 6.1, 8.3), cible: new THREE.Vector3(-0.3, 0.6, -1.2) };
+  const VUE = { cam: new THREE.Vector3(-0.2, 8.6, 10.6), cible: new THREE.Vector3(-0.2, 0.4, 0) };
   camera.position.copy(VUE.cam);
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.target.copy(VUE.cible); controls.enableDamping = true; controls.dampingFactor = 0.12;
@@ -635,10 +595,10 @@ export function ouvrirLabo3d(ctx, posteInitial = null) {
   paillasse(scene, -4.2, -4.5, 3.0, 0.8);
   paillasse(scene, 0.4, -4.5, 3.0, 0.8);
   const lina = creerLina(scene);
-  const postes = [creerFour(scene, L), creerTriangle(scene, L), creerMur(scene, L), ...creerRevisions(scene),
+  const postes = [creerFour(scene, L), creerTriangle(scene, L), creerMur(scene, L), creerCellule(scene, L), creerTube(scene, L), creerEclair(scene, L), ...creerRevisions(scene),
     { id: 'lina', ancre: new THREE.Vector3(-2.1, 2.25, -1.7), cam: new THREE.Vector3(-1.3, 1.8, 0.9), cible: new THREE.Vector3(-1.6, 1.45, -1.7), groupe: lina }];
   const INFO = {
-    four: { ic: '🔥', nom: 'TP 1 · Four de fusion' }, triangle: { ic: '🔺', nom: 'TP 2 · Tétraèdre du feu' }, mur: { ic: '🧱', nom: 'TP 3 · Mur d\'essai' },
+    four: { ic: '🔥', nom: 'TP 1 · Four de fusion' }, triangle: { ic: '🔺', nom: 'TP 2 · Tétraèdre du feu' }, mur: { ic: '🧱', nom: 'TP 3 · Mur d\'essai' }, cellule: { ic: '🏠', nom: 'TP 4 · Cellule d\'essai' }, tube: { ic: '💥', nom: 'TP 5 · Tube de déflagration' }, eclair: { ic: '🧪', nom: 'TP 6 · Point éclair' },
     microscope: { ic: '🔬', nom: 'Microscope' }, tableau: { ic: '🧾', nom: 'Tableau des tracés' }, banc: { ic: '⚗️', nom: 'Banc des idées reçues' }, lina: { ic: LABO.avatar, nom: LABO.nom },
   };
   for (const p of postes) if (p.groupe) p.groupe.traverse(o => { o.userData.poste = p.id; });
@@ -653,7 +613,7 @@ export function ouvrirLabo3d(ctx, posteInitial = null) {
   }
   function estFait(id) {
     if (id === 'four') return DEFIS_FOUR.every(d => c.laboTP['four-' + d.id]?.reussi);
-    if (id === 'triangle' || id === 'mur') return !!c.laboTP[id]?.reussi;
+    if (TP.some(t => t.id === id)) return !!c.laboTP[id]?.reussi;
     const ex = postes?.find?.(p => p.id === id)?.ex; return ex ? (c.entrainement?.[ex]?.meilleur ?? 0) > 0 : false;
   }
   function majProg() {
@@ -692,10 +652,11 @@ export function ouvrirLabo3d(ctx, posteInitial = null) {
     panel.innerHTML = `<div class="l3-ph"><span class="ic">${INFO[id].ic}</span><h3>${esc(INFO[id].nom)}</h3><button class="btn-j ghost l3-retour">↩ Vue d'ensemble</button></div><div class="l3-pb"></div>`;
     $('.l3-retour', panel).onclick = () => focus(null);
     const pb = $('.l3-pb', panel);
-    const f = { four: panFour, triangle: panTriangle, mur: panMur, lina: panLina }[id];
+    const O = { L, quiz, recompenser, fait: estFait };
+    const f = { four: panFour, triangle: panTriangle, mur: panMur, lina: panLina, cellule: b => panCellule(b, O), tube: b => panTube(b, O), eclair: b => panEclair(b, O) }[id];
     if (f) f(pb); else panRevision(pb, postes.find(p => p.id === id));
   }
-  function fermerPanel() { panel.hidden = true; panel.innerHTML = ''; L.four.majUI = null; L.triangle.majUI = null; L.mur.majUI = null; }
+  function fermerPanel() { panel.hidden = true; panel.innerHTML = ''; for (const k of ['four', 'triangle', 'mur', 'cellule', 'tube', 'eclair']) L[k].majUI = null; }
 
   // déplacement de caméra
   let anim = null;
@@ -732,7 +693,7 @@ export function ouvrirLabo3d(ctx, posteInitial = null) {
   const resize = () => {
     const w = cont.clientWidth || 800, hh = cont.clientHeight || 600; renderer.setSize(w, hh, false); camera.aspect = w / hh; camera.updateProjectionMatrix();
     const k = Math.max(1, Math.pow(1.5 / camera.aspect, 0.7));
-    VUE.cam.set(-0.3, 0.6 + 5.5 * k, -1.2 + 9.5 * k);
+    VUE.cam.set(-0.2, 0.4 + 8.2 * k, 10.6 * k);
     if (!courant && !anim) { camera.position.copy(VUE.cam); controls.target.copy(VUE.cible); }
   };
   const ro = new ResizeObserver(resize); ro.observe(cont); resize();
@@ -751,7 +712,7 @@ export function ouvrirLabo3d(ctx, posteInitial = null) {
     }
     controls.target.x = clamp(controls.target.x, -6.5, 6.5); controls.target.z = clamp(controls.target.z, -4.8, 4.5); controls.target.y = clamp(controls.target.y, 0.3, 2.6);
     controls.update();
-    L.four.update(dt); L.triangle.update(dt, temps); L.mur.update(dt, temps);
+    L.four.update(dt); L.triangle.update(dt, temps); L.mur.update(dt, temps); L.cellule.update(dt, temps); L.tube.update(dt, temps); L.eclair.update(dt, temps);
     lina.rotation.y = 0.35 + Math.sin(temps * 0.6) * 0.08;
     renderer.render(scene, camera);
     const w = cont.clientWidth, hh = cont.clientHeight;

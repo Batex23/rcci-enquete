@@ -400,7 +400,7 @@ body { font: 15px/1.5 var(--sans); }
 
 /* ---------- Laboratoire : entrée et salle 3D ---------- */
 .labo-porte { display: flex; gap: 18px; align-items: stretch; margin-top: 18px; background: linear-gradient(135deg, #2c3e4c, #1d2a33); color: #eef4f8; border-radius: 14px; padding: 16px; box-shadow: 0 10px 24px rgba(20, 30, 40, .3); }
-.lp-vitre { flex: none; width: 190px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 10px; background: linear-gradient(160deg, rgba(190, 225, 245, .35), rgba(120, 170, 200, .15)); border: 6px solid #8fa4b2; border-radius: 10px; font-size: 34px; place-items: center; }
+.lp-vitre { flex: none; width: 210px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; padding: 10px; background: linear-gradient(160deg, rgba(190, 225, 245, .35), rgba(120, 170, 200, .15)); border: 6px solid #8fa4b2; border-radius: 10px; font-size: 34px; place-items: center; }
 .lp-txt h3 { margin: 0 0 6px; font-size: 22px; color: #fff; }
 .lp-txt p { margin: 0 0 12px; line-height: 1.45; color: #cfdde6; }
 .lp-go { font-size: 17px; padding: 12px 20px; }
@@ -487,3 +487,7 @@ body { font: 15px/1.5 var(--sans); }
   .l3-lina { width: auto; right: 8px; left: 8px; }
   .l3-aide { display: none; }
 }
+.l3-m6 { display: grid; grid-template-columns: repeat(3, 1fr); }
+.l3-m6 b { font-size: 17px; }
+.l3-graphe { display: block; width: 100%; height: auto; margin: 8px 0 2px; border: 1px solid #d0dde5; border-radius: 8px; background: #fff; }
+.l3-q .choix small { font-weight: 500; opacity: .75; }
