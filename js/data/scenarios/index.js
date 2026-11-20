@@ -3,9 +3,11 @@ import pavillonDurand from './pavillon-durand.js';
 import maisonEtage from './maison-etage.js';
 import garageVae from './garage-vae.js';
 import vlNuit from './vl-nuit.js';
+import conteneurBess from './conteneur-bess.js';
+import notreDame from './notre-dame.js';
 
 // Scénarios intégrés, dans l'ordre de progression
-export const SCENARIOS = [tutoCuisine, pavillonDurand, maisonEtage, garageVae, vlNuit];
+export const SCENARIOS = [tutoCuisine, pavillonDurand, maisonEtage, garageVae, vlNuit, conteneurBess, notreDame];
 
 // Missions à venir (affichées verrouillées sur le tableau des missions)
 export const A_VENIR = [

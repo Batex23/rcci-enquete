@@ -84,6 +84,6 @@ export function jouabilite(src) {
   if ((scn.hypotheses.origines || []).length < 2) m.push('au moins 2 hypothèses d\'origine');
   if ((scn.hypotheses.causes || []).length < 2) m.push('au moins 2 hypothèses de cause');
   if (!scn.hypotheses.origines.some(o => o.id === scn.solution.origine)) m.push('l\'origine retenue (solution)');
-  if (!scn.hypotheses.causes.some(o => o.id === scn.solution.cause)) m.push('la cause retenue (solution)');
+  if (scn.solution.cause && !scn.hypotheses.causes.some(o => o.id === scn.solution.cause)) m.push('la cause retenue (solution)');
   return { ok: !m.length, manques: m };
 }

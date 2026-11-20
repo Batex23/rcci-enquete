@@ -66,10 +66,12 @@ export function ouvrirDebrief(E, ctx) {
       <div class="hero-card">
         <div class="kicker">Solution de référence</div>
         <p><b>Origine :</b> ${esc(O(sol.origine)?.nom)} ${E.rapport.origine === sol.origine ? '✅' : '❌'}</p>
-        <p><b>Cause :</b> ${esc(C(sol.cause)?.nom)} ${E.rapport.cause === sol.cause ? '✅' : '❌'}</p>
-        <p><b>Premier combustible :</b> ${esc(C(sol.cause)?.premierCombustible)}<br><b>Source :</b> ${esc(C(sol.cause)?.source)}</p>
+        <p><b>Cause :</b> ${esc(C(sol.cause)?.nom || sol.causeTexte || 'Indéterminée')} ${E.rapport.cause === sol.cause ? '✅' : '❌'}</p>
+        <p><b>Premier combustible :</b> ${esc(C(sol.cause)?.premierCombustible || 'Non déterminé')}<br><b>Source :</b> ${esc(C(sol.cause)?.source || 'Non déterminée')}</p>
         <p><b>Certitude attendue au vu de VOS données :</b> ${esc(ev.certAttendue)} · <b>classification :</b> ${esc(ev.classAttendue)}</p>
         <p class="small muted">Faits clés : ${sol.faitsCles.map(f => `<span class="chip ${E.faits.has(f) ? 'ok' : ''}">${f}</span>`).join(' ')}</p>
+        ${sol.noteFinale ? `<div class="panel" style="margin-top:8px">${sol.noteFinale}</div>` : ''}
+        ${scn.sources?.length ? `<details class="voir" style="margin-top:8px"><summary>📚 Sources publiques de cette étude de cas</summary><ul>${scn.sources.map(x => `<li>${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.titre)}</a>` : esc(x.titre)}</li>`).join('')}</ul></details>` : ''}
       </div>
     </div>
 

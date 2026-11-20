@@ -187,7 +187,7 @@ export class Scene3D {
       const c = axeX ? (z0 + z1) / 2 : (x0 + x1) / 2;
       return axeX ? new THREE.Vector3(x0 + u, y, c + off) : new THREE.Vector3(c + off, y, z0 + u);
     };
-    const cell = 0.55;
+    const cell = t.maille || 0.55;
     const nu = Math.ceil(L / cell), nv = Math.ceil(ram / cell);
     for (const s of [-1, 1]) {
       for (let i = 0; i < nu; i++) for (let j = 0; j < nv; j++) {
@@ -263,15 +263,20 @@ export class Scene3D {
     const c = cv.getContext('2d'); const r = rng(42);
     const T = { herbe: ['#5f6e43', 'rgba(40,55,25,0.25)', 'rgba(150,160,90,0.18)', 'rgba(190,170,120,0.18)'], terre: ['#6e5640', 'rgba(45,32,20,0.3)', 'rgba(150,120,85,0.25)', 'rgba(90,110,60,0.2)'],
       sable: ['#cdb98f', 'rgba(150,125,80,0.3)', 'rgba(245,235,205,0.3)', 'rgba(120,140,80,0.15)'], gravier: ['#9d968a', 'rgba(70,65,60,0.4)', 'rgba(225,220,210,0.45)', 'rgba(110,105,95,0.2)'],
-      enrobe: ['#4b4b4d', 'rgba(20,20,20,0.35)', 'rgba(140,140,140,0.22)', 'rgba(90,90,90,0.15)'], beton: ['#9d9b95', 'rgba(60,60,60,0.2)', 'rgba(200,200,195,0.2)', 'rgba(120,120,115,0.15)'] }[bat.terrain || 'herbe'] || null;
+      enrobe: ['#4b4b4d', 'rgba(20,20,20,0.35)', 'rgba(140,140,140,0.22)', 'rgba(90,90,90,0.15)'], dalle: ['#b3ab9c', 'rgba(80,75,65,0.25)', 'rgba(220,214,200,0.3)', 'rgba(120,112,100,0.18)'], beton: ['#9d9b95', 'rgba(60,60,60,0.2)', 'rgba(200,200,195,0.2)', 'rgba(120,120,115,0.15)'] }[bat.terrain || 'herbe'] || null;
     const [b0, g1, g2, t3] = T || ['#5f6e43', 'rgba(40,55,25,0.25)', 'rgba(150,160,90,0.18)', 'rgba(190,170,120,0.18)'];
     c.fillStyle = b0; c.fillRect(0, 0, 512, 512);
     for (let i = 0; i < 9000; i++) { c.fillStyle = r() < 0.5 ? g1 : g2; c.fillRect(r() * 512, r() * 512, 2, 3); }
     for (let i = 0; i < 40; i++) { c.fillStyle = t3; c.beginPath(); c.arc(r() * 512, r() * 512, 6 + r() * 20, 0, 7); c.fill(); }
     const tex = new THREE.CanvasTexture(cv); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(8, 8);
     tex.colorSpace = THREE.SRGBColorSpace;
-    const g = new THREE.Mesh(new THREE.PlaneGeometry(70, 70), mat(0xffffff, { map: tex }));
+    const _p = toutesPieces(bat), _xs = _p.flatMap(p => [p.x, p.x + p.w]), _zs = _p.flatMap(p => [p.z, p.z + p.d]);
+    const ext = _p.length ? Math.max(Math.max(..._xs) - Math.min(..._xs), Math.max(..._zs) - Math.min(..._zs)) : 0;
+    const taille = Math.max(70, ext + 40);
+    const g = new THREE.Mesh(new THREE.PlaneGeometry(taille, taille), mat(0xffffff, { map: tex }));
+    tex.repeat.set(8 * taille / 70, 8 * taille / 70);
     g.rotation.x = -Math.PI / 2; g.receiveShadow = true;
+    if (_p.length) g.position.set((Math.min(..._xs) + Math.max(..._xs)) / 2, 0, (Math.min(..._zs) + Math.max(..._zs)) / 2);
     g.userData.sol = 'exterieur';
     this.root.add(g);
     // terrasse et allée
@@ -286,9 +291,12 @@ export class Scene3D {
     const _all = toutesPieces(bat); const xs = _all.flatMap(p => [p.x, p.x + p.w]), zs = _all.flatMap(p => [p.z, p.z + p.d]);
     if (!_all.length) { xs.push(0, 1); zs.push(0, 1); }
     const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cz = (Math.min(...zs) + Math.max(...zs)) / 2;
-    for (let i = 0; i < 14; i++) {
-      const a = rr() * Math.PI * 2, d = 12 + rr() * 9;
+    const rayon = Math.max(12, Math.hypot(Math.max(...xs) - Math.min(...xs), Math.max(...zs) - Math.min(...zs)) / 2 + 3);
+    const dansPiece = (x, z) => _all.some(p => x > p.x - 1.5 && x < p.x + p.w + 1.5 && z > p.z - 1.5 && z < p.z + p.d + 1.5);
+    for (let i = 0; i < (bat.vegetation === false ? 0 : 14); i++) {
+      const a = rr() * Math.PI * 2, d = rayon + rr() * 9;
       const x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d;
+      if (dansPiece(x, z)) continue;
       const t = new THREE.Group();
       const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 1.4, 6), mat('#5a4330')); tr.position.y = 0.7;
       const cn = new THREE.Mesh(new THREE.ConeGeometry(0.9 + rr() * 0.6, 3 + rr() * 2, 7), mat(rr() < 0.5 ? '#2f4a2c' : '#3b5a33'));
@@ -688,6 +696,72 @@ export class Scene3D {
         const def = this.scn?.modeles?.[o.modele];
         const ph = box(0.5, 0.5, 0.5, '#d9a441', 0, 0, 0, { transparent: true, opacity: 0.35 });
         if (def) instanceModele(o.modele, def, o).then(m => { g.remove(ph); g.add(m); this._cutDirty = true; }).catch(err => { console.warn('Modèle 3D :', err); ph.material.color.set('#c0392b'); });
+        break;
+      }
+      // ---- stockage d'énergie (conteneur de batteries)
+      case 'rangeeRacks': {
+        // une rangée de racks de batteries le long de x ; o.n racks, o.pas (m), o.brules : { indexRack: 0..1 }, o.module : { rack, n } module le plus atteint
+        const n = o.n || 10, pas = o.pas || 0.6, H = o.H || 2.2, D = o.D || 0.62;
+        const br = o.brules || {};
+        for (let i = 0; i < n; i++) {
+          const bi = Math.min(1, (br[i] || 0) + b * 0.3);
+          const x = (i + 0.5) * pas - n * pas / 2;
+          box(pas - 0.04, H, D, col('#3d4349', bi * 0.8), x, 0, 0);
+          box(pas - 0.06, 0.16, D + 0.01, col('#20262b', bi), x, H - 0.2, 0); // BPU en tête
+          for (let k = 0; k < 17; k++) {
+            const touche = o.module && o.module.rack === i ? Math.max(0, 1 - Math.abs(k + 1 - o.module.n) / 4) : 0;
+            const m = box(pas - 0.1, 0.085, 0.02, col('#9aa3aa', Math.min(1, bi * 0.6 + touche)), x, 0.12 + k * 0.108, D / 2 + 0.005);
+            if (touche > 0.9) m.material.color.set('#120e0c');
+          }
+        }
+        break;
+      }
+      case 'ventilo': box(o.L || 1.4, 0.35, 0.55, col('#d8dcdf', b), 0, 0, 0); box((o.L || 1.4) * 0.3, 0.06, 0.2, col('#9aa3aa', b), (o.L || 1.4) * 0.3, -0.06, 0.25); break;
+      case 'bouteillesGaz': for (let i = 0; i < (o.n || 2); i++) { cyl(0.13, 0.13, 1.5, col('#c0392b', b), i * 0.3, 0, 0, 14); cyl(0.04, 0.04, 0.12, '#888', i * 0.3, 1.5, 0, 8); } break;
+      case 'centraleIncendie': box(0.45, 0.6, 0.15, col('#e9e6df', b), 0, 1.2, 0); box(0.3, 0.12, 0.02, '#2f7fb0', 0, 1.55, 0.08); break;
+      case 'transfo': box(o.L || 2.2, o.H || 1.8, o.D || 1.4, col('#6f7a82', b), 0, 0, 0); for (let i = 0; i < 3; i++) cyl(0.06, 0.06, 0.4, '#8a6a3a', -0.5 + i * 0.5, o.H || 1.8, 0, 10); break;
+      case 'baieServeur': box(o.L || 0.6, o.H || 2.0, 0.8, col('#24292e', b), 0, 0, 0); for (let i = 0; i < 6; i++) box((o.L || 0.6) - 0.08, 0.04, 0.02, i % 2 ? '#3fbf6f' : '#5f6b74', 0, 0.3 + i * 0.25, 0.41); break;
+      case 'fut': cyl(0.29, 0.29, 0.88, col(o.couleur || '#2f5e8a', b), 0, 0, 0, 16); break;
+      case 'lanceMonitor': box(0.5, 0.12, 0.5, '#7d858c', 0, 0, 0); { const t = cyl(0.05, 0.05, 0.9, '#c0392b', 0, 0.12, 0, 10); t.rotation.z = 0.9; t.position.set(0.3, 0.45, 0); } break;
+      // ---- patrimoine (cathédrale)
+      case 'echafaudage': {
+        const W = o.w || 8, Dd = o.d || 8, H = o.H || 8, p = 2, acier = col('#9aa3a9', b * 0.7);
+        const nx = Math.round(W / p), nz = Math.round(Dd / p), ny = Math.round(H / p);
+        const tube = (L, x, y, z, axe) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, L, 5), mat(acier)); m.position.set(x, y, z); if (axe === 'x') m.rotation.z = Math.PI / 2; if (axe === 'z') m.rotation.x = Math.PI / 2; g.add(m); return m; };
+        const def = (y) => (o.deforme || 0) * Math.max(0, y / H) * 0.6;
+        for (let i = 0; i <= nx; i++) for (let k = 0; k <= nz; k++) { if (i > 0 && i < nx && k > 0 && k < nz) continue; const x = -W / 2 + i * p, z = -Dd / 2 + k * p; const m = tube(H, x, H / 2, z, 'y'); m.rotation.z = (o.deforme || 0) * 0.08 * (x > 0 ? -1 : 1); }
+        for (let j = 1; j <= ny; j++) { const y = j * p; for (const z of [-Dd / 2, Dd / 2]) tube(W, def(y), y, z, 'x'); for (const x of [-W / 2, W / 2]) tube(Dd, x, y, def(y), 'z'); }
+        for (let j = 1; j <= ny; j += 2) box(W, 0.04, 0.6, col('#8a6a3a', Math.min(1, b + 0.2)), 0, j * p, -Dd / 2 + 0.3);
+        break;
+      }
+      case 'fleche': {
+        // base octogonale de la flèche, effondrée : tronçons calcinés et pièces de bois tombées
+        const r = rng(91);
+        for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; const m = box(0.35, 0.6 + r() * 1.6, 0.35, CHAR, Math.cos(a) * 1.6, 0, Math.sin(a) * 1.6); m.rotation.z = (r() - 0.5) * 0.4; }
+        for (let i = 0; i < 14; i++) { const m = box(0.25, 0.25, 2 + r() * 4, i % 4 ? CHAR : '#3a3029', (r() - 0.5) * 3, 0.1 + r() * 0.5, (r() - 0.5) * 3); m.rotation.set((r() - 0.5) * 0.6, r() * 3, (r() - 0.5) * 0.4); }
+        break;
+      }
+      case 'cloche': { const m = cyl(0.12, 0.28, 0.4, col('#8a6d3b', b * 0.4), 0, 0, 0, 16); if (o.couchee) { m.rotation.z = 1.4; m.position.y = 0.25; } cyl(0.03, 0.03, 0.1, '#5a4a30', 0, 0.4, 0, 8); break; }
+      case 'coq': { box(0.5, 0.05, 0.2, col('#b8693a', b), 0, 0.02, 0).rotation.y = 0.4; box(0.12, 0.3, 0.05, col('#a85a30', b), 0.15, 0.05, 0).rotation.z = 0.6; break; }
+      case 'ascenseur': { const H = o.H || 12; box(0.4, H, 0.4, col('#c9a227', b * 0.6), 0, 0, 0); box(1.4, 2.0, 1.3, col('#d0d4d7', b), 0.9, o.cabine ?? 0, 0); box(0.5, 1.6, 0.35, col('#e3e6e8', b), -0.6, 0, 0.6); break; }
+      case 'megots': { const r = rng(Math.round((o.x + 3) * 41 + o.z * 13)); for (let i = 0; i < (o.n || 7); i++) { const m = cyl(0.006, 0.006, 0.035, i % 3 ? '#e8d9b0' : '#c47a3a', (r() - 0.5) * (o.w || 1), 0, (r() - 0.5) * (o.d || 0.4), 6); m.rotation.z = Math.PI / 2; m.rotation.y = r() * 3; m.position.y = 0.006; } break; }
+      case 'plombFondu': {
+        const r = rng(Math.round((o.x + 9) * 23 + o.z * 7));
+        for (let i = 0; i < (o.n || 6); i++) { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.2 + r() * 0.6, 0.25 + r() * 0.7, 0.03, 9), mat('#8f979e', { emissive: 0x0 })); m.position.set((r() - 0.5) * (o.w || 3), 0.015, (r() - 0.5) * (o.d || 3)); m.scale.z = 0.4 + r(); g.add(m); }
+        break;
+      }
+      case 'ferme': {
+        // restes d'une ferme de charpente en chêne : entrait et arbalétriers calcinés, plus ou moins consumés
+        const L = o.L || 12, h = (o.H || 8) * (1 - (o.consume ?? 0.7));
+        const e = box(L * (1 - (o.consume ?? 0.7) * 0.5), 0.3, 0.3, CHAR, 0, 0, 0); e.userData.fouillable = true;
+        if (h > 0.4) for (const s of [-1, 1]) { const a = box(0.28, h, 0.28, '#2a221c', s * L * 0.38, 0.3, 0); a.rotation.z = s * 0.5; }
+        break;
+      }
+      case 'pignon': {
+        const L = o.L || 12, H = o.H || 9;
+        const sh = new THREE.Shape([new THREE.Vector2(-L / 2, 0), new THREE.Vector2(L / 2, 0), new THREE.Vector2(0, H)]);
+        const m = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 0.6, bevelEnabled: false }), mat(col('#d9cfbc', b * 0.6)));
+        m.position.z = -0.3; g.add(m);
         break;
       }
       default: box(0.4, 0.4, 0.4, '#888');

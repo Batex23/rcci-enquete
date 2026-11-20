@@ -1,0 +1,366 @@
+// Niveau final — Notre-Dame de Paris, 15 avril 2019 : étude de cas réelle.
+// Construite uniquement à partir d'informations rendues publiques (parquet de Paris, sapeurs-pompiers de Paris,
+// ministère de la Culture, presse). Aucune personne n'est nommée et aucune entreprise n'est citée.
+// L'enquête judiciaire est toujours en cours : le jeu ne tranche pas à sa place. La « bonne » conclusion
+// est celle que permettent les données publiques : origine dans les combles à la base de la flèche,
+// cause accidentelle probable mais source non déterminée.
+// Les dialogues sont des reconstitutions pédagogiques fondées sur ces éléments publics.
+export default {
+  id: 'notre-dame',
+  version: 1,
+  ordre: 7,
+  requiert: 'conteneur-bess',
+  titre: 'Notre-Dame de Paris — 15 avril 2019',
+  titreCourt: 'Notre-Dame de Paris',
+  niveauLabel: 'Niveau final · Cas réel',
+  type: 'patrimoine',
+  difficulte: 7,
+  gradeMin: 3,
+  recompense: { credits: 10000, bonusMax: 4000, xp: 1800 },
+  resume: 'La charpente médiévale de la cathédrale a brûlé, la flèche s\'est effondrée. Une scène immense, presque entièrement consumée, et une enquête judiciaire toujours ouverte.',
+  intro: 'Niveau final : un <b>cas réel</b>, reconstitué uniquement à partir de <b>sources publiques</b>. Personne n\'y est nommé. L\'enquête judiciaire est <b>toujours en cours</b> : ton rôle n\'est pas de deviner ce que les juges diront, mais d\'aller aussi loin que les données le permettent… et pas plus loin. Parfois, la conclusion la plus solide est « <b>indéterminée</b> ».',
+
+  mission: {
+    mandant: 'Étude de cas pédagogique — relecture d\'enquête à partir des éléments rendus publics',
+    reference: 'ETUDE-NDP-2019',
+    dateSinistre: 'Lundi 15 avril 2019, en fin de journée',
+    heureAlerte: '18h18 (première alarme du système de détection incendie)',
+    adresse: 'Cathédrale Notre-Dame de Paris, île de la Cité, Paris 4e',
+    ordre: 'À partir des éléments publics (parquet de Paris, sapeurs-pompiers de Paris, ministère de la Culture, presse), reconstituer la démarche de recherche des causes : zone d\'origine, hypothèses de cause, niveau de certitude et classification.',
+    preservation: 'Scène gelée par l\'enquête judiciaire. Pendant des mois, déblaiement des voûtes et des combles avec tri des vestiges. Risque d\'effondrement des voûtes et pollution au plomb.',
+  },
+  rapportSdis: [
+    '18h18 — Première alarme du système de détection. La vérification est faite dans les combles de la sacristie, où il n\'y a rien.',
+    '18h43 — Nouvelle vérification : le feu est découvert dans les combles de la cathédrale. Seconde alarme et évacuation vers 18h45.',
+    '≈ 18h50 — Fumées puis flammes visibles depuis l\'extérieur, au pied de la flèche, au niveau de l\'échafaudage de restauration.',
+    '18h51 — Appel des sapeurs-pompiers de Paris ; premier engin sur place quelques minutes plus tard. Le feu de toiture s\'étend très vite (environ 2 800 m²).',
+    '19h50 — Effondrement de la flèche, qui crève la voûte de la croisée du transept.',
+    '≈ 21h00 — Le feu menace le beffroi de la tour nord ; une vingtaine de sapeurs-pompiers s\'y engagent pour le défendre.',
+    '22h50 — Les tours sont annoncées sauvées. Plus de 600 sapeurs-pompiers mobilisés au total.',
+    '16 avril — Feu maîtrisé dans la nuit, déclaré éteint dans la matinée ; surveillance des foyers résiduels.',
+  ],
+  meteo: 'Soirée douce et sèche. Vent d\'est-sud-est d\'environ 3 m/s, qui a porté le panache le long de la Seine et poussé le feu vers les tours.',
+
+  securite: {
+    ref: '12.3',
+    options: [
+      { id: 'struct', t: 'Ne rien faire sans validation de la stabilité : voûtes percées, maçonneries fragilisées, risque d\'effondrement', ok: true },
+      { id: 'plomb', t: 'Protection contre le plomb : combinaison jetable, protection respiratoire adaptée, sas de décontamination, suivi médical', ok: true },
+      { id: 'hauteur', t: 'Travailler depuis des moyens sécurisés (nacelles, plateformes, harnais) au-dessus du vide', ok: true },
+      { id: 'coord', t: 'Coordonner chaque geste avec l\'enquête judiciaire (scellés, tri des vestiges) et les services du patrimoine', ok: true },
+      { id: 'voute', t: 'Marcher directement sur les voûtes encombrées de débris pour gagner du temps', ok: false, fb: 'Les voûtes ont été percées et chargées de débris gorgés d\'eau : on n\'y circule qu\'après étaiement et sur des cheminements validés (NFPA 921, chap. 12.3).' },
+    ],
+  },
+
+  batiment: {
+    hauteur: 1.2, epaisseur: 0.6,
+    terrain: 'dalle', vegetation: false,
+    niveaux: [
+      { id: 'combles', nom: 'Combles et extrados des voûtes (« la forêt »)', altitude: 0, hauteur: 1.2,
+        pieces: [
+          { id: 'nef', nom: 'Combles de la nef (travées est)', x: 0, z: 0, w: 20, d: 12, sol: 'dalle', sansMurs: true, peinture: '#cfc6b4', couche: 0.2, suie: 0.95 },
+          { id: 'croisee', nom: 'Croisée du transept (base de la flèche)', x: 20, z: 0, w: 12, d: 12, sol: 'dalle', sansMurs: true, peinture: '#cfc6b4', couche: 0.1, suie: 1 },
+          { id: 'choeur', nom: 'Combles du chœur', x: 32, z: 0, w: 14, d: 12, sol: 'dalle', sansMurs: true, peinture: '#cfc6b4', couche: 0.2, suie: 0.95 },
+          { id: 'transeptN', nom: 'Combles du bras nord du transept', x: 20, z: -10, w: 12, d: 10, sol: 'dalle', sansMurs: true, peinture: '#cfc6b4', couche: 0.2, suie: 0.95 },
+          { id: 'transeptS', nom: 'Combles du bras sud du transept', x: 20, z: 12, w: 12, d: 10, sol: 'dalle', sansMurs: true, peinture: '#cfc6b4', couche: 0.2, suie: 0.95 },
+          { id: 'pcsecu', nom: 'Poste de sécurité (schéma, hors de l\'édifice)', x: 52, z: -8, w: 5, d: 5, sol: 'carrelage', peinture: '#e9e6df', couche: 1.2, suie: 0 },
+          { id: 'sacristie', nom: 'Combles de la sacristie (schéma)', x: 52, z: 2, w: 8, d: 7, sol: 'parquet', peinture: '#d8cfbd', couche: 1.2, suie: 0 },
+        ],
+        parois: [
+          { x0: 0, z0: 0, x1: 20, z1: 0, nom: 'Mur gouttereau nord de la nef' },
+          { x0: 20, z0: 0, x1: 20, z1: -10 }, { x0: 20, z0: -10, x1: 32, z1: -10 }, { x0: 32, z0: -10, x1: 32, z1: 0 },
+          { x0: 32, z0: 0, x1: 46, z1: 0, nom: 'Mur gouttereau nord du chœur' }, { x0: 46, z0: 0, x1: 46, z1: 12 },
+          { x0: 46, z0: 12, x1: 32, z1: 12 }, { x0: 32, z0: 12, x1: 32, z1: 22 }, { x0: 32, z0: 22, x1: 20, z1: 22 },
+          { x0: 20, z0: 22, x1: 20, z1: 12 }, { x0: 20, z0: 12, x1: 0, z1: 12, nom: 'Mur gouttereau sud de la nef' }, { x0: 0, z0: 12, x1: 0, z1: 0 },
+        ],
+        ouvertures: [
+          { type: 'porte', x: 52, z: -5.5, axe: 'v', w: 0.9, h: 1.1 },
+          { type: 'porte', x: 52, z: 5.5, axe: 'v', w: 0.9, h: 1.1 },
+        ],
+        objets: [
+          // Pignons de pierre (les toitures qu'ils portaient ont disparu)
+          { id: 'pignon-o', type: 'pignon', x: 0, z: 6, rot: 90, L: 12, H: 9 },
+          { id: 'pignon-n', type: 'pignon', x: 26, z: -10, rot: 0, L: 12, H: 9 },
+          { id: 'pignon-s', type: 'pignon', x: 26, z: 22, rot: 0, L: 12, H: 9 },
+          // Croisée : échafaudage de restauration, flèche effondrée, vestiges électriques
+          { id: 'echafaudage', type: 'echafaudage', nom: 'Échafaudage de restauration de la flèche', x: 26, z: 6, w: 10, d: 10, H: 8, deforme: 1, brule: 0.7,
+            fiche: { materiau: 'acier', materiauLibre: 'Tubes en acier, planchers bois, autour de la base de la flèche', etat: 'détruit par le feu', notes: 'Resté debout mais déformé par la chaleur ; démonté pièce par pièce en 2020.' } },
+          { id: 'fleche', type: 'fleche', nom: 'Vestiges de la flèche', x: 26, z: 6,
+            fiche: { materiau: 'bois', materiauLibre: 'Flèche du XIXe siècle : environ 500 t de bois et 250 t de plomb, 93 m de haut (ordres de grandeur publiés)', etat: 'détruit par le feu' } },
+          { id: 'cloche-1', type: 'cloche', nom: 'Petite cloche de la flèche', x: 22.6, z: 10.2, couchee: true, brule: 0.7 },
+          { id: 'cloche-2', type: 'cloche', x: 23.4, z: 10.8, couchee: true, brule: 0.7 },
+          { id: 'cable-cloches', type: 'cable', points: [[21.5, 0.05, 10.0], [22.6, 0.08, 10.4], [24, 0.05, 10.9]], brule: 1 },
+          { id: 'megots', type: 'megots', nom: 'Mégots (selon la presse)', x: 21.6, y: 4.04, z: 1.3, n: 7, w: 1.2, d: 0.4 },
+          { id: 'ascenseur', type: 'ascenseur', nom: 'Ascenseur de chantier (schéma)', x: 33.2, z: 13.4, H: 8, cabine: 2,
+            fiche: { materiauLibre: 'Monte-charge de l\'échafaudage, alimenté électriquement', energie: 'secteur 230 V', etat: 'dégradé', notes: 'Position schématique : les plans détaillés du chantier ne sont pas publics.' } },
+          { id: 'gravats-croisee', type: 'gravats', x: 22, z: 2.5, w: 3, d: 3, poutres: 6, couleurs: ['#2a2420', '#8f979e', '#cfc6b4', '#3a3029'] },
+          // Nef, chœur, transept : charpente consumée, plomb fondu, débris
+          { id: 'ferme-n1', type: 'ferme', x: 1.5, z: 6, rot: 90, L: 12, H: 8, consume: 0.75 },
+          { id: 'ferme-n2', type: 'ferme', x: 3.5, z: 6, rot: 90, L: 12, H: 8, consume: 0.8 },
+          { id: 'ferme-n3', type: 'ferme', x: 15.5, z: 6, rot: 90, L: 12, H: 8, consume: 0.9 },
+          { id: 'ferme-n4', type: 'ferme', x: 17.8, z: 6, rot: 90, L: 12, H: 8, consume: 0.95 },
+          { id: 'gravats-nef', type: 'gravats', x: 6.5, z: 6, w: 5, d: 6, poutres: 8, couleurs: ['#2a2420', '#8f979e', '#3a3029'] },
+          { id: 'plomb-nef', type: 'plombFondu', x: 13, z: 3, w: 4, d: 3, n: 7 },
+          { id: 'coq', type: 'coq', nom: 'Coq de la flèche (retrouvé dans les décombres)', x: 8.5, z: 8.5, brule: 0.4 },
+          { id: 'ferme-c1', type: 'ferme', x: 34.5, z: 6, rot: 90, L: 12, H: 8, consume: 0.95 },
+          { id: 'ferme-c2', type: 'ferme', x: 43.5, z: 6, rot: 90, L: 12, H: 8, consume: 0.8 },
+          { id: 'gravats-choeur', type: 'gravats', x: 39, z: 6, w: 6, d: 6, poutres: 8, couleurs: ['#2a2420', '#8f979e', '#3a3029'] },
+          { id: 'plomb-choeur', type: 'plombFondu', x: 37, z: 9.5, w: 4, d: 2, n: 5 },
+          { id: 'gravats-tn', type: 'gravats', x: 26, z: -3, w: 6, d: 3, poutres: 5, couleurs: ['#2a2420', '#cfc6b4', '#3a3029'] },
+          { id: 'gravats-ts', type: 'gravats', x: 26, z: 17, w: 6, d: 4, poutres: 5, couleurs: ['#2a2420', '#8f979e', '#3a3029'] },
+          // Poste de sécurité et combles de la sacristie (schémas)
+          { id: 'ssi', type: 'centraleIncendie', nom: 'Écran du système de détection incendie', x: 56.8, z: -6, rot: -90 },
+          { id: 'bureau-pc', type: 'bureau', x: 55.5, z: -6, rot: 90 },
+          { id: 'chaise-pc', type: 'chaise', x: 54.6, z: -6 },
+          { id: 'ferme-sacr', type: 'ferme', x: 56, z: 5.5, rot: 0, L: 7, H: 3, consume: 0 },
+        ],
+        traces: [
+          { piece: 'nef', cote: 'sol', type: 'debris', densite: 0.7 },
+          { piece: 'croisee', cote: 'sol', type: 'debris', densite: 0.9 },
+          { piece: 'choeur', cote: 'sol', type: 'debris', densite: 0.7 },
+          { piece: 'transeptN', cote: 'sol', type: 'debris', densite: 0.6 },
+          { piece: 'transeptS', cote: 'sol', type: 'debris', densite: 0.5 },
+        ],
+        tremies: [
+          { x: 24, z: 4, w: 4, d: 4 },
+          { x: 9, z: 4.5, w: 3, d: 3 },
+          { x: 24.5, z: -6.5, w: 3, d: 2.5 },
+        ],
+      },
+    ],
+  },
+
+  zones: [
+    { id: 'abords', nom: 'Vue d\'ensemble de la cathédrale', exterieur: true, rang: 0, cible: [24, 1, 6], zoom: 0.35, azimut: 210, desc: 'Combles, voûtes percées, échafaudage de la flèche, pignons.' },
+    { id: 'pc', nom: 'Poste de sécurité', piece: 'pcsecu', rang: 1, cible: [54.5, 0, -5.5], zoom: 1.3 },
+    { id: 'sacristie', nom: 'Combles de la sacristie', piece: 'sacristie', rang: 1, cible: [56, 0, 5.5], zoom: 1.0 },
+    { id: 'transeptS', nom: 'Bras sud du transept', piece: 'transeptS', rang: 2, cible: [26, 0, 17], zoom: 0.7 },
+    { id: 'choeur', nom: 'Combles du chœur', piece: 'choeur', rang: 2, cible: [39, 0, 6], zoom: 0.6 },
+    { id: 'transeptN', nom: 'Bras nord du transept', piece: 'transeptN', rang: 3, cible: [26, 0, -5], zoom: 0.7 },
+    { id: 'nef', nom: 'Combles de la nef', piece: 'nef', rang: 3, cible: [10, 0, 6], zoom: 0.55 },
+    { id: 'croisee', nom: 'Croisée du transept', piece: 'croisee', rang: 4, cible: [26, 0, 6], zoom: 0.6 },
+  ],
+
+  observations: [
+    { id: 'N01', zone: 'abords', pos: [24, 3, 6], titre: 'Vue d\'ensemble',
+      description: 'Charpente et couverture détruites sur la nef, le chœur et le transept. Flèche effondrée. Trois percements de voûte : à la croisée, dans la nef et dans le bras nord du transept. Tours et beffrois sauvés. L\'échafaudage de restauration, autour de la base de la flèche, est resté debout mais déformé.',
+      analyse: { question: 'Que t\'apprend cette vue d\'ensemble ?', ref: '17.3.1.3 / 6.3.2.4', options: [
+        { t: 'Une charpente consumée sur toute sa longueur : les dégâts seuls ne suffiront pas, il faudra s\'appuyer sur la chronologie, les images et les témoignages.', ok: true, fb: 'Exact : après des heures de feu généralisé, les tracés du début ont disparu. Les autres sources d\'information prennent le relais.' },
+        { t: 'L\'endroit le plus détruit est forcément l\'origine.', ok: false, fb: 'Non : la durée et la ventilation détruisent tout autant loin de l\'origine (NFPA 921, chap. 17.4.1.4).' },
+        { t: 'Trois percements de voûte : trois départs de feu.', ok: false, fb: 'Ce sont des chutes de matériaux (flèche, charpente), pas des foyers indépendants.' },
+      ] } },
+    { id: 'N02', zone: 'pc', pos: [56.6, 1.0, -6], titre: 'Le journal de la détection incendie',
+      description: 'Première alarme à 18h18. Le message désignait une zone des combles que l\'équipe a comprise comme les combles de la sacristie : la vérification a été faite là-bas, sans rien trouver. Le feu n\'est découvert qu\'à 18h43, dans les combles de la cathédrale.',
+      analyse: { question: 'Comment classes-tu ce retard ?', ref: '20.2 / 13.3', options: [
+        { t: 'La détection a fonctionné tôt ; le retard vient de la localisation et de l\'interprétation de l\'alarme : un facteur qui a aggravé les conséquences, pas une cause du feu.', ok: true, fb: 'Exact : on distingue ce qui a mis le feu de ce qui l\'a laissé grandir.' },
+        { t: 'La détection est tombée en panne.', ok: false, fb: 'Elle a déclenché dès 18h18 : c\'est la levée de doute qui a échoué.' },
+        { t: 'Un retard aussi long prouve une volonté de nuire.', ok: false, fb: 'Rien ne l\'indique : une erreur d\'interprétation d\'un message complexe suffit à l\'expliquer.' },
+      ] } },
+    { id: 'N03', zone: 'pc', pos: [55.4, 1.0, -7.2], titre: 'La chronologie consolidée',
+      description: 'Sources publiques : 18h18 première alarme ; 18h43 découverte du feu ; vers 18h50 flammes visibles de l\'extérieur au pied de la flèche ; 18h51 appel des pompiers ; 19h50 effondrement de la flèche.',
+      analyse: { question: 'Que t\'apprend cette chronologie sur le départ du feu ?', ref: '20.2', options: [
+        { t: 'Le feu existait déjà à 18h18 : il a démarré avant, et s\'est développé au moins 25 à 30 minutes sans intervention.', ok: true, fb: 'Exact : la première détection donne une borne « au plus tard » du départ, pas son heure exacte.' },
+        { t: 'Le feu a démarré à 18h18 précisément.', ok: false, fb: 'La détection voit des fumées déjà produites : le feu a commencé avant.' },
+      ] } },
+    { id: 'N04', zone: 'sacristie', pos: [56, 1.0, 5.5], titre: 'Les combles de la sacristie',
+      description: 'Combles d\'un bâtiment voisin de la cathédrale. Aucune fumée, aucune trace de feu.',
+      analyse: { question: 'Qu\'en retiens-tu ?', ref: '17.3.1.3', options: [
+        { t: 'Ils sont hors de cause : la première vérification s\'est faite au mauvais endroit.', ok: true, fb: 'Exact : ce constat écarte une zone et confirme l\'erreur de levée de doute.' },
+        { t: 'Le feu a pu partir d\'ici et gagner la cathédrale.', ok: false, fb: 'Aucune trace de feu ici : impossible.' },
+      ] } },
+    { id: 'N05', zone: 'abords', pos: [26, 6, 6], titre: 'Les images du public et des médias',
+      description: 'Les premières photos et vidéos montrent des fumées puis des flammes au pied de la flèche, à la croisée du transept, au niveau de l\'échafaudage, avant l\'extension du feu au reste de la toiture. Les juges ont fait réaliser une reconstitution en 3D à partir de ces images.',
+      analyse: { question: 'Que valent ces images pour l\'origine ?', ref: '17.3.3.1 / 13.3', options: [
+        { t: 'Elles désignent la base de la flèche comme zone d\'origine probable : c\'est là que le feu est visible en premier.', ok: true, fb: 'Exact : ici, les images valent mieux que les dégâts pour situer l\'origine. Elles se croisent avec les témoignages.' },
+        { t: 'Elles montrent seulement l\'endroit où le feu a percé la toiture, sans rapport avec l\'origine.', ok: false, fb: 'C\'est une limite à garder en tête, mais l\'apparition précoce et localisée au pied de la flèche est une donnée forte.' },
+      ] } },
+    { id: 'N06', zone: 'nef', pos: [3, 1.0, 6], titre: 'Les restes de la charpente de la nef',
+      description: 'Charpente en chêne du XIIIe siècle (environ 1 300 arbres, d\'après les historiens). Entraits et arbalétriers presque entièrement consumés, profondément carbonisés sur toute la longueur.',
+      analyse: { question: 'Ces profondeurs de carbonisation départagent-elles les zones ?', ref: '17.4.3 / 6.3.2.4', options: [
+        { t: 'Peu : après des heures de feu généralisé, la carbonisation est profonde partout et ne permet plus de remonter au départ.', ok: true, fb: 'Exact : un relevé de carbonisation compare des expositions, il ne fonctionne plus quand tout a brûlé jusqu\'au bout.' },
+        { t: 'Oui : la nef est la plus carbonisée, c\'est donc l\'origine.', ok: false, fb: 'Piège : l\'exposition la plus longue n\'est pas l\'origine, surtout avec le vent qui a poussé le feu vers l\'ouest.' },
+      ] } },
+    { id: 'N07', zone: 'nef', pos: [13, 0.4, 3], titre: 'Coulées de plomb et ferrures',
+      description: 'Le plomb de la couverture a fondu et coulé sur les voûtes. Les tirants et ferrures en fer de la charpente sont tordus mais pas fondus.',
+      thermo: { items: [
+        { mat: 'plomb', etat: 'fondu', objet: 'Couverture en plomb' },
+        { mat: 'acier', etat: 'intact', objet: 'Tirants et ferrures en fer de la charpente' },
+      ], fb: 'Exact : au moins ≈ 327 °C et moins de ≈ 1 430 °C. Une fourchette très large et banale pour un feu de charpente de plusieurs heures : elle ne départage aucune hypothèse.' } },
+    { id: 'N08', zone: 'croisee', pos: [26, 0.5, 6], titre: 'La base de la flèche',
+      description: 'La flèche s\'est effondrée dans la croisée en crevant la voûte. Bois carbonisé et plomb mêlés, en partie tombés dans la cathédrale. La zone a ensuite été noyée par les lances.',
+      analyse: { question: 'Que peut-on encore y lire ?', ref: '17.3.1.7 / 18.6.5.1', options: [
+        { t: 'Peu de chose en place : l\'effondrement et l\'extinction ont détruit ou déplacé les indices du départ ; il faudra travailler sur les vestiges triés et sur les données.', ok: true, fb: 'Exact : quand la zone d\'origine est détruite, on le dit, et on s\'appuie sur d\'autres sources.' },
+        { t: 'Tout est encore lisible : il suffit de fouiller.', ok: false, fb: 'Une flèche de centaines de tonnes est tombée là : les indices ont été écrasés et déplacés.' },
+      ] } },
+    { id: 'N09', zone: 'croisee', pos: [22, 4, 2], titre: 'L\'échafaudage de restauration',
+      description: 'Échafaudage monté autour de la base de la flèche pour sa restauration. Selon les entreprises, les équipes l\'avaient quitté en fin d\'après-midi, avant la première alarme, et aucun travail par point chaud n\'était en cours.',
+      analyse: { question: 'Que fais-tu de cette activité de chantier ?', ref: '18.3 / 13.4', options: [
+        { t: 'C\'est une activité humaine récente dans la zone d\'origine : horaires, tâches, outils et comportements (fumeurs) sont à documenter.', ok: true, fb: 'Exact : un chantier en cours multiplie les sources d\'ignition possibles. On les inventorie toutes.' },
+        { t: 'Un chantier, donc forcément la cause.', ok: false, fb: 'Présence n\'est pas cause : il faut des faits qui relient une source précise au départ.' },
+      ] } },
+    { id: 'N10', zone: 'croisee', pos: [21.6, 4.1, 1.3], titre: 'Les mégots de l\'échafaudage',
+      description: 'Selon la presse, sept mégots ont été retrouvés sur l\'échafaudage. Des ouvriers ont reconnu avoir fumé sur le chantier, en violation des consignes.',
+      analyse: { question: 'Que valent ces mégots ?', ref: '18.4.2 / 18.6.5', options: [
+        { t: 'Une source d\'ignition possible est présente : il faut tester sa compétence (une cigarette sur du chêne massif ou sur des déchets de chantier ?) sans la tenir pour démontrée.', ok: true, fb: 'Exact : un mégot peut couver longtemps sur un combustible fin, beaucoup plus difficilement sur une poutre de chêne. L\'hypothèse reste ouverte.' },
+        { t: 'Les mégots prouvent la cause.', ok: false, fb: 'Non : des mégots retrouvés ne montrent ni lequel a été mal éteint, ni qu\'il a enflammé quoi que ce soit.' },
+        { t: 'Sans intérêt, ils sont dehors.', ok: false, fb: 'L\'échafaudage est au contact de la zone d\'origine probable : la piste se documente.' },
+      ] } },
+    { id: 'N11', zone: 'croisee', pos: [22.6, 0.4, 10.2], titre: 'Les cloches électrifiées de la flèche',
+      description: 'La charpente n\'avait pas d\'installation électrique permanente. Mais, selon la presse, de petites cloches de la flèche avaient été équipées d\'un dispositif électrique de tintement, laissé en place, avec des câbles dans les combles. Elles auraient sonné vers 18h00. Un marteau aurait été retrouvé en position de frappe.',
+      analyse: { question: 'Quel statut donnes-tu à ce dispositif ?', ref: '18.3 / 8.9', options: [
+        { t: 'Une installation électrique sous tension dans la zone d\'origine probable : une source d\'ignition possible, à tester sur les vestiges, sans la tenir pour démontrée.', ok: true, fb: 'Exact : c\'est l\'une des deux pistes accidentelles retenues par le parquet. Encore faut-il une trace matérielle d\'un défaut.' },
+        { t: 'C\'est la preuve d\'un court-circuit.', ok: false, fb: 'Non : la présence d\'une installation n\'est pas un défaut. Il faut une donnée qui montre une défaillance avant le feu.' },
+        { t: 'Hors de cause : il n\'y avait pas d\'électricité dans la charpente.', ok: false, fb: 'Pas d\'installation permanente, mais des installations ajoutées (cloches, chantier) : on ne les écarte pas sans faits.' },
+      ] } },
+    { id: 'N12', zone: 'transeptS', pos: [33.2, 1.5, 13.4], titre: 'Les ascenseurs du chantier',
+      description: 'L\'échafaudage était desservi par des monte-charges alimentés électriquement (position schématique ici). Selon l\'AFP (novembre 2024), les experts ont relevé des défaillances dans l\'installation électrique d\'un ascenseur, qui n\'auraient probablement pas causé le feu mais auraient pu favoriser sa propagation.',
+      analyse: { question: 'Comment l\'intègres-tu ?', ref: '18.3 / 18.7', options: [
+        { t: 'Une autre installation électrique proche, à verser au dossier : les experts la jugent probablement non causale, elle ne peut pas porter seule une conclusion.', ok: true, fb: 'Exact : « probablement non causal » n\'est ni une preuve ni une élimination définitive.' },
+        { t: 'Défaillance trouvée, donc cause trouvée.', ok: false, fb: 'Une défaillance qui peut aggraver une propagation n\'est pas la source d\'ignition.' },
+      ] } },
+    { id: 'N13', zone: 'transeptN', pos: [26, 0.5, -5.2], titre: 'Le percement de la voûte du bras nord',
+      description: 'Voûte percée par la chute de pièces de charpente. Débris de bois carbonisé et de plomb autour du trou.',
+      analyse: { question: 'Est-ce un autre départ de feu ?', ref: '22.2.1', options: [
+        { t: 'Non : c\'est une chute de matériaux enflammés, conséquence de la destruction de la charpente.', ok: true, fb: 'Exact : des foyers « multiples » créés par des chutes ne sont pas des départs indépendants.' },
+        { t: 'Oui : un second foyer, donc un incendie volontaire.', ok: false, fb: 'Piège classique : les chutes de matériaux expliquent ce percement.' },
+      ] } },
+    { id: 'N14', zone: 'choeur', pos: [39, 0.6, 6], titre: 'Les combles du chœur',
+      description: 'Charpente du chœur, plus ancienne encore (XIIe siècle), entièrement consumée. Le feu y est arrivé depuis la croisée.',
+      analyse: { question: 'Cette zone peut-elle être l\'origine ?', ref: '17.4.2', options: [
+        { t: 'Rien ne l\'indique : les images montrent le feu à la croisée d\'abord, puis son extension vers l\'est et l\'ouest.', ok: true, fb: 'Exact : la chronologie visuelle place le chœur en zone de propagation.' },
+        { t: 'Oui : c\'est la partie la plus ancienne, donc la plus fragile.', ok: false, fb: 'L\'ancienneté du bois ne désigne pas une origine.' },
+      ] } },
+    { id: 'N15', zone: 'abords', pos: [10, 2, 12.5], titre: 'Accès, effraction et accélérants',
+      description: 'Accès aux combles contrôlés par l\'équipe de sécurité et le chantier ; aucune trace d\'effraction rendue publique. Selon le parquet, aucun élément de l\'enquête ne va dans le sens d\'un acte volontaire.',
+      analyse: { question: 'Que vaut l\'hypothèse d\'un acte volontaire ?', ref: '22.3 / 18.6.5', options: [
+        { t: 'Elle n\'est soutenue par aucun fait : on l\'écarte, sans pour autant tenir une cause accidentelle pour démontrée.', ok: true, fb: 'Exact : écarter une hypothèse ne prouve pas les autres (negative corpus).' },
+        { t: 'Un tel bâtiment est une cible : l\'acte volontaire est probable.', ok: false, fb: 'Un mobile supposé n\'est pas un fait de la scène.' },
+      ] } },
+    { id: 'N16', zone: 'croisee', couche: 2, pos: [23.0, 0.2, 10.4], titre: 'Vestiges électriques dans les décombres',
+      description: 'Dans les débris triés de la croisée : morceaux de câbles et éléments mécaniques du dispositif des cloches, très dégradés, mêlés au bois et au plomb, déplacés par l\'effondrement.',
+      analyse: { question: 'Que peuvent-ils démontrer ?', ref: '17.3.1.7 / 8.11', options: [
+        { t: 'Des fusions peuvent venir du feu comme d\'un défaut ; sans position d\'origine connue, il est très difficile de les rattacher à un départ : à confier aux experts, avec prudence.', ok: true, fb: 'Exact : un vestige déplacé perd une partie de sa valeur.' },
+        { t: 'Une perle de fusion suffit à prouver la cause électrique.', ok: false, fb: 'Il faut savoir où était ce conducteur, s\'il était sous tension et si la fusion précède le feu.' },
+      ] },
+      prelevement: 'P1' },
+    { id: 'N17', zone: 'croisee', couche: 3, pos: [22, 0.1, 3], titre: 'L\'extrados autour du percement',
+      description: 'Une fois les couches retirées : pierre des voûtes noircie, coulées de plomb figées, débris fins de bois carbonisé. Rien de ce qui se trouvait au niveau du plancher des combles avant le feu n\'est resté en place.',
+      analyse: { question: 'Qu\'en conclus-tu pour la fouille ?', ref: '17.3.2 / 18.6.5.1', options: [
+        { t: 'La fouille a été menée jusqu\'au bout mais ne livre pas de preuve de la source : c\'est un résultat en soi, à écrire dans le rapport.', ok: true, fb: 'Exact : une absence d\'indice exploitable se documente aussi.' },
+        { t: 'Puisqu\'on ne trouve rien, c\'est que tout a été effacé volontairement.', ok: false, fb: 'Non : l\'effondrement et des heures de feu suffisent à l\'expliquer.' },
+      ] },
+      prelevement: 'P2' },
+  ],
+
+  fouille: {
+    zone: 'croisee', ref: '17.3.2',
+    aire: { x: 21, z: 1.5, w: 9, d: 9 },
+    couches: [
+      { n: 1, nom: 'Flèche effondrée', description: 'Bois carbonisé et plomb de la flèche tombés en dernier.', h: 0.3, couleur: '#2a2420' },
+      { n: 2, nom: 'Charpente et échafaudage de la croisée', description: 'Pièces de charpente, tubes et planchers d\'échafaudage, vestiges des cloches.', h: 0.2, couleur: '#3a3029' },
+      { n: 3, nom: 'Extrados de la voûte', description: 'Le niveau du plancher des combles, autour du percement.', h: 0.05, couleur: '#8f8778' },
+    ],
+  },
+
+  prelevements: [
+    { id: 'P1', nom: 'Vestiges électriques du dispositif des cloches (sous scellé)', type: 'objet', contenantsOK: ['carton', 'potMetal'],
+      analyses: [{ id: 'elec', nom: 'Expertise des vestiges électriques et des installations techniques', cout: 1200,
+        resultats: {
+          ok: { fait: 'NF20', texte: 'État public des expertises : des analyses ont été ordonnées en 2023 sur les éléments retrouvés dans les décombres, le point de départ et les installations techniques. À ce jour, aucune conclusion rendue publique ne démontre ni n\'exclut une défaillance électrique.' },
+        } }] },
+    { id: 'P2', nom: 'Débris carbonisés et suies de l\'extrados de la croisée', type: 'liquide', contenantsOK: ['potMetal', 'bocal', 'sachetNylon'], temoinRequis: true,
+      temoin: 'Débris de charpente prélevés dans les combles du chœur (même nature, loin de la zone d\'origine)',
+      analyses: [{ id: 'gcms', nom: 'Recherche de résidus de liquides inflammables (GC-MS)', cout: 300,
+        resultats: {
+          ok: { fait: 'NF21', texte: 'Aucun résidu de liquide inflammable mis en évidence. D\'après les informations publiques, rien n\'étaye un acte volontaire.' },
+          sansTemoin: { fait: 'NF21', partiel: true, texte: 'Composés de pyrolyse du bois. Sans échantillon de comparaison, interprétation limitée.' },
+          mauvaisContenant: { texte: 'Échantillon non exploitable : contenant perméable aux composés volatils.' },
+        } }] },
+  ],
+
+  temoins: [
+    { id: 'T1', nom: 'Agent du poste de sécurité', role: 'Sécurité incendie de la cathédrale (rôle, non nommé)', avatar: '🧑‍💼', questions: [
+      { id: 'q1', type: 'ouverte', q: 'Que s\'est-il passé à 18h18 ?', r: 'L\'écran a affiché une alarme feu avec une zone des combles. On a envoyé quelqu\'un vérifier : il est monté dans les combles de la sacristie, il n\'a rien vu. C\'est à 18h43, en revérifiant, qu\'on a compris que c\'était dans les combles de la cathédrale.', fait: { id: 'NF1', texte: 'Alarme à 18h18, vérification dans les combles de la sacristie, feu découvert à 18h43.' } },
+    ] },
+    { id: 'T2', nom: 'Responsable d\'une entreprise du chantier', role: 'Restauration de la flèche (rôle, non nommé)', avatar: '👷', questions: [
+      { id: 'q1', type: 'ouverte', q: 'Que faisaient vos équipes ce jour-là ?', r: 'Elles travaillaient sur l\'échafaudage de la flèche et l\'ont quitté en fin d\'après-midi, avant l\'alarme. Il n\'y avait aucun travail par point chaud : ni soudure, ni chalumeau.', fait: { id: 'NF2', texte: 'Équipes parties en fin d\'après-midi ; aucun travail par point chaud.' } },
+      { id: 'q2', type: 'fermee', q: 'Des ouvriers fumaient-ils sur l\'échafaudage ?', r: 'Oui, certains l\'ont reconnu, alors que c\'était interdit. Nous l\'avons dit publiquement.', fait: { id: 'NF3', texte: 'Des ouvriers ont reconnu avoir fumé sur l\'échafaudage, malgré l\'interdiction.' } },
+      { id: 'q3', type: 'orientee', q: 'Un de vos ouvriers a bien laissé une cigarette allumée, non ?', r: 'Euh… je ne peux pas l\'exclure… peut-être, oui…', fait: { id: 'NF16', texte: 'Le responsable « ne peut pas exclure » qu\'une cigarette ait été laissée allumée (sur suggestion).', contamine: true }, piege: 'Question orientée : tu as obtenu une réponse qui épouse ta suggestion, sans valeur de preuve (NFPA 921, chap. 13.4).' },
+    ] },
+    { id: 'T3', nom: 'Officier des sapeurs-pompiers de Paris', role: 'Commandement des opérations de secours (rôle)', avatar: '🧑‍🚒', questions: [
+      { id: 'q1', type: 'ouverte', q: 'Qu\'avez-vous vu en arrivant ?', r: 'Le feu était déjà installé dans les combles, à la croisée, au pied de la flèche. La toiture brûlait sur une grande surface et le vent poussait le feu vers l\'ouest, vers les tours. Pas de compartimentage dans ces combles : on savait que ça irait très vite.', fait: { id: 'NF4', texte: 'À l\'arrivée des secours, feu installé dans les combles à la croisée, au pied de la flèche ; vent poussant vers les tours.' } },
+      { id: 'q2', type: 'ouverte', q: 'Comment l\'intervention a-t-elle évolué ?', r: 'La flèche est tombée vers 19h50 en crevant la voûte. Ensuite, tout s\'est joué sur les beffrois de la tour nord : une vingtaine de pompiers sont montés par les escaliers pour les défendre. Les tours ont été sauvées.', fait: { id: 'NF5', texte: 'Effondrement de la flèche vers 19h50 ; défense des beffrois de la tour nord, tours sauvées.' } },
+    ] },
+  ],
+
+  osint: [
+    { id: 'O1', source: 'tout', motsCles: [['parquet'], ['parquet', 'paris'], ['enquete', 'notre-dame'], ['communique']], titre: 'Parquet de Paris — fin de l\'enquête préliminaire (juin 2019)',
+      extrait: 'Aucun élément ne va dans le sens d\'un acte volontaire. Deux pistes accidentelles sont étudiées : un dysfonctionnement du système électrique ou une cigarette mal éteinte. Une information judiciaire est ouverte contre X.',
+      fait: { id: 'NF10', texte: 'Parquet (2019) : rien n\'indique un acte volontaire ; deux pistes accidentelles, électrique ou cigarette.' }, fiabilite: 'Source officielle.' },
+    { id: 'O2', source: 'presse', motsCles: [['afp'], ['enquete', '2024'], ['expertises'], ['simulation', '3d']], titre: 'Dépêche AFP (novembre 2024) — « la justice cherche toujours »',
+      extrait: 'Enquête toujours en cours, aucune mise en examen. Nouvelles expertises ordonnées en 2023 ; une synthèse et une reconstitution en 3D sont demandées pour départager les hypothèses. Des défaillances ont été relevées dans l\'alarme et dans l\'installation électrique d\'un ascenseur, probablement sans rôle dans le départ.',
+      fait: { id: 'NF11', texte: 'AFP (2024) : enquête en cours, cause non déterminée, reconstitution 3D demandée pour départager les hypothèses.' }, fiabilite: 'Agence de presse citant le parquet et des sources proches du dossier.' },
+    { id: 'O3', source: 'presse', motsCles: [['cloches'], ['megots'], ['mégots'], ['hebdomadaire']], titre: 'Presse d\'investigation (2019) — cloches électrifiées et mégots',
+      extrait: 'Un hebdomadaire révèle que de petites cloches de la flèche avaient été électrifiées, avec des câbles dans les combles, et que sept mégots ont été retrouvés sur l\'échafaudage.',
+      fait: { id: 'NF12', texte: 'Presse : cloches électrifiées dans la flèche, câbles dans les combles, mégots sur l\'échafaudage.' }, fiabilite: 'Presse d\'investigation : informations non confirmées officiellement dans le détail.' },
+    { id: 'O4', source: 'tout', motsCles: [['attentat'], ['criminel'], ['complot'], ['reseaux']], titre: 'Réseaux sociaux — « c\'est un attentat »',
+      extrait: 'Des messages viraux affirment, sans aucun élément, que l\'incendie est criminel.',
+      fait: { id: 'NF13', texte: 'Rumeurs en ligne d\'incendie criminel, sans élément.' }, fiabilite: 'Aucune : rumeur.', piege: true },
+    { id: 'O5', source: 'meteo', motsCles: [['meteo'], ['météo'], ['vent'], ['airparif']], titre: 'Observations du 15 avril 2019',
+      extrait: 'Temps sec ; vent d\'est-sud-est d\'environ 3 m/s ; le panache est parti le long de la Seine.',
+      fait: { id: 'NF14', texte: 'Vent d\'est-sud-est (≈ 3 m/s), temps sec.' }, fiabilite: 'Source institutionnelle.' },
+    { id: 'O6', source: 'tout', motsCles: [['culture', 'securite'], ['brumisation'], ['retex'], ['ministere']], titre: 'Ministère de la Culture — sécurité incendie de la cathédrale reconstruite',
+      extrait: 'Leçons retenues : limiter les sources d\'ignition électriques dans les combles, purger les réseaux anciens, recouper les combles par des parois coupe-feu, fiabiliser la détection, installer une brumisation.',
+      fait: { id: 'NF15', texte: 'Retour d\'expérience officiel : réduire les sources électriques en combles, compartimenter, fiabiliser la détection.' }, fiabilite: 'Source officielle.' },
+  ],
+
+  hypotheses: {
+    origines: [
+      { id: 'NO1', nom: 'Combles de la croisée du transept, à la base de la flèche (niveau de l\'échafaudage)', pos: [26, 0.5, 6], ok: true, soutien: ['N05', 'NF4', 'N03', 'N08', 'N14'], refute: [] },
+      { id: 'NO2', nom: 'Combles de la sacristie', pos: [56, 0.5, 5.5], soutien: ['N02'], refute: ['N04'] },
+      { id: 'NO3', nom: 'Combles de la nef, côté des tours', pos: [3, 0.5, 6], soutien: ['N06'], refute: ['N05', 'NF4'] },
+      { id: 'NO4', nom: 'Combles du chœur', pos: [39, 0.5, 6], soutien: [], refute: ['N05', 'N14'] },
+    ],
+    causes: [
+      { id: 'NC2', nom: 'Défaillance électrique (dispositif des cloches de la flèche, installations du chantier)', premierCombustible: 'Bois de charpente ou d\'échafaudage', source: 'Arc ou échauffement électrique', classification: 'accidentelle', origine: 'NO1', ouverte: true,
+        soutien: ['N11', 'N12', 'N16', 'NF10'], refute: [], competence: { source: 'Arc électrique', combustible: 'Bois' } },
+      { id: 'NC3', nom: 'Mégot mal éteint (fumeurs sur l\'échafaudage)', premierCombustible: 'Déchets ou bois du chantier', source: 'Cigarette', classification: 'accidentelle', origine: 'NO1', ouverte: true,
+        soutien: ['N10', 'NF3', 'NF10'], refute: [], competence: { source: 'Cigarette', combustible: 'Bois' } },
+      { id: 'NC4', nom: 'Travaux par point chaud (soudure, chalumeau)', premierCombustible: 'Bois de charpente', source: 'Flamme ou particules chaudes', classification: 'accidentelle', origine: 'NO1', soutien: [], refute: ['NF2'] },
+      { id: 'NC5', nom: 'Acte volontaire (intrusion, accélérant)', premierCombustible: '—', source: 'Flamme nue', classification: 'volontaire', soutien: ['NF13'], refute: ['N15', 'NF10', 'NF21'] },
+    ],
+  },
+
+  solution: {
+    origine: 'NO1', cause: '', classification: 'indeterminee', certitude: 'possible',
+    causeTexte: 'Indéterminée : deux hypothèses accidentelles (défaillance électrique, mégot mal éteint) restent possibles, aucune n\'a pu être démontrée ni exclue',
+    faitsCles: ['N02', 'N03', 'N05', 'N08', 'N10', 'N11', 'N15', 'NF10', 'NF11', 'NF20'],
+    noteFinale: '<b>Pourquoi « indéterminée » ?</b> La zone d\'origine est bien établie par les images et les témoignages. Mais la zone a été détruite, deux sources d\'ignition accidentelles plausibles coexistent et aucune donnée publique ne permet d\'en démontrer une ni d\'éliminer l\'autre. Retenir l\'une des deux serait conclure par élimination ou par intuition. La NFPA 921 impose alors une cause et une classification « indéterminées » (chap. 18.6.5.1 et 19.2.1). <i>Cette étude de cas s\'arrête à l\'état public de l\'enquête judiciaire, toujours en cours ; elle sera à revoir si la justice rend ses conclusions.</i>',
+    pieges: [
+      { id: 'zone', titre: 'La zone la plus carbonisée est-elle l\'origine ?', ref: '17.4.1.4 / 17.4.3', texte: 'Après des heures de feu, poussé par le vent vers l\'ouest, la nef est autant détruite que la croisée. Les images situent le départ à la base de la flèche.', faits: ['N06'], origine: 'NO3' },
+      { id: 'megot', titre: 'Mégots retrouvés = cause trouvée ?', ref: '18.4.2 / 13.4', texte: 'Des mégots et des fumeurs rendent l\'hypothèse possible, pas démontrée. Une réponse obtenue par une question orientée n\'a aucune valeur.', faits: ['NF16'], cause: 'NC3' },
+      { id: 'cloches', titre: 'Une installation électrique = un court-circuit ?', ref: '18.6.5', texte: 'Le dispositif des cloches et les ascenseurs sont des sources possibles. Sans trace d\'un défaut antérieur au feu, les retenir serait conclure par intuition.', faits: [], cause: 'NC2' },
+      { id: 'criminel', titre: '« C\'est forcément criminel »', ref: '22.3 / 4.3.8', texte: 'Le symbole du lieu et les rumeurs ne sont pas des faits. Rien dans le dossier public n\'étaye un acte volontaire.', faits: ['NF13'], cause: 'NC5' },
+      { id: 'retard', titre: 'Le retard d\'alerte est-il une cause ?', ref: '20.2', texte: 'La levée de doute au mauvais endroit a laissé le feu grandir : un facteur aggravant majeur, mais pas ce qui l\'a allumé.', faits: ['N02'] },
+    ],
+  },
+
+  reconstitution: [
+    { t: '18:00', titre: 'Fin d\'après-midi : le chantier a été quitté ; les cloches tintent (selon la presse).', feu: 0, fumee: {} },
+    { t: '18:18', titre: 'Première alarme : des fumées sont détectées dans les combles. La vérification se fait dans les combles de la sacristie.', feu: 0.1, fumee: { croisee: 0.3 } },
+    { t: '18:43', titre: 'Le feu est découvert ; il gagne la charpente autour de la base de la flèche.', feu: 0.35, fumee: { croisee: 0.6, nef: 0.3, choeur: 0.25, transeptN: 0.2, transeptS: 0.2 } },
+    { t: '18:51', titre: 'Appel des pompiers ; flammes visibles au pied de la flèche, sur l\'échafaudage.', feu: 0.55, fumee: { croisee: 0.8, nef: 0.5, choeur: 0.4, transeptN: 0.35, transeptS: 0.35 } },
+    { t: '19:50', titre: 'Effondrement de la flèche à travers la voûte de la croisée.', feu: 0.9, flash: ['croisee'], fumee: { croisee: 0.95, nef: 0.8, choeur: 0.7, transeptN: 0.6, transeptS: 0.6 } },
+    { t: '21:00', titre: 'Toute la charpente de la nef et du chœur est embrasée ; le feu menace le beffroi nord.', feu: 1, flash: ['nef', 'choeur', 'transeptN', 'transeptS'], fumee: { croisee: 1, nef: 1, choeur: 1, transeptN: 0.9, transeptS: 0.9 } },
+    { t: '22:50', titre: 'Les tours sont sauvées ; la charpente est consumée.', feu: 0.4, fumee: { nef: 0.6, choeur: 0.6, croisee: 0.5 } },
+  ],
+  dynamique: { piece: 'croisee', L: 12, l: 12, H: 10, ouvertures: [{ nom: 'Toiture percée (après rupture de la couverture)', w: 6, h: 4 }, { nom: 'Lucarnes et ouvertures du chantier', w: 2, h: 1 }], combustible: 'Canapé Polyuréthanne' },
+
+  sources: [
+    { titre: 'Parquet de Paris — communiqués sur l\'enquête (2019)', url: 'https://fr.wikipedia.org/wiki/Incendie_de_Notre-Dame_de_Paris' },
+    { titre: 'RTBF / AFP — « Cinq ans après, la justice cherche toujours ce qui a déclenché l\'incendie » (2024)', url: 'https://www.rtbf.be/article/cinq-ans-apres-la-justice-cherche-toujours-ce-qui-a-declenche-l-incendie-de-notre-dame-de-paris-11461279' },
+    { titre: 'Allô Dix-Huit, hors-série « Notre-Dame de Paris, au cœur d\'une opération hors norme » (BSPP, 2019)', url: '' },
+    { titre: 'Ministère de la Culture — « 15 avril 2019 : de la sidération à la mobilisation générale »', url: 'https://www.culture.gouv.fr/fr/regions/drac-ile-de-france/Actualites/actualite-a-la-une/les-premiers-mois-cruciaux-du-sauvetage-de-notre-dame-de-paris' },
+    { titre: 'Sécurité de la cathédrale reconstruite — retour d\'expérience présenté aux sapeurs-pompiers (2023)', url: 'https://www.pompiers.fr/sites/default/files/jour_1_-_04_retex_notre-dame_de_paris.pdf' },
+  ],
+};

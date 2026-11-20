@@ -112,7 +112,8 @@ export function valider(s) {
   for (const k of ['origines', 'causes']) for (const hy of s.hypotheses?.[k] || []) for (const f of [...(hy.soutien || []), ...(hy.refute || [])]) if (!faits.has(f)) warn.push(`Hypothèse ${hy.id} : fait « ${f} » introuvable.`);
   const sol = s.solution || {};
   if (!(s.hypotheses?.origines || []).some(o => o.id === sol.origine)) err.push('Solution : origine inconnue.');
-  if (!(s.hypotheses?.causes || []).some(o => o.id === sol.cause)) err.push('Solution : cause inconnue.');
+  if (sol.cause && !(s.hypotheses?.causes || []).some(o => o.id === sol.cause)) err.push('Solution : cause inconnue.');
+  if (!sol.cause && sol.classification !== 'indeterminee') err.push('Solution : une cause indéterminée impose la classification « indéterminée ».');
   if (s.fouille && !zones.includes(s.fouille.zone)) err.push('Fouille : zone inconnue.');
   if (!(s.reconstitution || []).length || s.reconstitution.length < 2) err.push('Reconstitution : au moins deux étapes.');
   return { err, warn, nFaits: faits.size };

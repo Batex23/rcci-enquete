@@ -1,0 +1,365 @@
+// Niveau 6 — Conteneur de stockage d'énergie (batteries lithium-ion) d'une centrale solaire.
+// Scénario fictif (lieux, sociétés, personnes, marques), transposé d'un retour d'expérience publié par le BEA-RI
+// (rapport d'enquête MTE-BEARI-2026-05). Les données techniques sont reformulées et simplifiées.
+export default {
+  id: 'conteneur-bess',
+  version: 1,
+  ordre: 6,
+  requiert: 'vl-nuit',
+  titre: 'Centrale de Pratu-Longu — conteneur de batteries',
+  titreCourt: 'Conteneur de batteries',
+  niveauLabel: 'Niveau 6 · Site industriel',
+  type: 'industriel',
+  difficulte: 6,
+  gradeMin: 2,
+  recompense: { credits: 7500, bonusMax: 3000, xp: 1300 },
+  resume: 'Un conteneur de 646 modules lithium-ion a brûlé et explosé deux fois dans une centrale solaire. Ici, la scène parle peu : ce sont les données qui racontent le feu.',
+  intro: 'Niveau 6 : un <b>site industriel</b> et une enquête « multi-parties » : exploitant, intégrateur et fabricant des batteries ont chacun intérêt à une conclusion. Les dégâts visibles sont limités : la clé est dans les <b>données enregistrées</b> (supervision, BMS, alarmes). Construis une <b>chronologie</b>, méfie-toi des déclarations intéressées et des alarmes mal lues.',
+
+  mission: {
+    mandant: 'Expert judiciaire désigné par le tribunal de commerce — vous êtes son sapiteur incendie',
+    reference: 'EXJ-26-0412',
+    dateSinistre: 'Jeudi 16 avril 2026, après-midi',
+    heureAlerte: '15h45 (technicien d\'astreinte de l\'exploitant)',
+    adresse: 'Centrale photovoltaïque de Pratu-Longu, 20 270 (commune fictive, Haute-Corse)',
+    ordre: 'Déterminer l\'origine et la cause de l\'incendie du conteneur de stockage n°1 (BESS) de la société Sunaria Stockage (exploitant), conçu par Volta Systèmes (intégrateur) et équipé de modules Hanseon HX3 (fabricant). Toutes les sociétés sont fictives.',
+    preservation: 'Conteneur 1 sous surveillance, modules en partie encore chargés. Données de supervision sauvegardées par l\'exploitant à la demande de l\'expert. Démontage du rack d\'origine présumé prévu en présence de toutes les parties.',
+  },
+  rapportSdis: [
+    '15h30 — L\'exploitant reçoit une alarme à distance : détection feu, déclenchement de l\'extinction automatique, déconnexion du convertisseur.',
+    '15h45 — Appel 18 du technicien d\'astreinte : feu dans un conteneur de batteries, gaz inerte libéré, batteries chargées à environ 90 %.',
+    '16h10 — Arrivée : fumée blanche sortant du conteneur 1, au centre du bâtiment. Portes du conteneur fermées ; porte arrière légèrement cintrée. 40 à 50 °C à la caméra thermique au niveau des portes.',
+    '17h24 — Appel à la cellule d\'appui aux situations d\'urgence (experts risques chimiques) et à un spécialiste des feux de batteries.',
+    '18h30 — Ouverture de la porte ouest pour une attaque aux extincteurs CO₂ : plafond de fumée dense qui forme des rouleaux ; explosion ; le binôme est projeté au sol (prise en charge, blessures légères).',
+    '20h00 — Deux lances monitor aux entrées du conteneur, 1 500 L/min, arrosage continu ou par phases selon la caméra thermique.',
+    'Jours suivants — Refroidissement prolongé puis surveillance des points chauds : 12 jours d\'intervention, environ 12 000 m³ d\'eau.',
+  ],
+  meteo: 'Journée ensoleillée et sèche, 18 °C, vent faible, aucun orage.',
+
+  securite: {
+    ref: '12.3',
+    options: [
+      { id: 'charge', t: 'Considérer les modules comme encore chargés : énergie résiduelle, ré-inflammation possible, pas de démontage sans protocole', ok: true },
+      { id: 'atmo', t: 'Mesurer l\'atmosphère (explosimètre, CO, gaz acides) avant toute entrée ; ventiler depuis l\'extérieur', ok: true },
+      { id: 'epi', t: 'Protection respiratoire, gants et combinaison adaptés aux résidus corrosifs des batteries, casque', ok: true },
+      { id: 'consign', t: 'Faire vérifier la consignation électrique par l\'exploitant : couper le réseau ne décharge pas les racks', ok: true },
+      { id: 'ouvrir', t: 'Ouvrir les deux portes en grand et entrer aussitôt pour aérer', ok: false, fb: 'Les gaz inflammables dégagés par les cellules s\'accumulent et peuvent exploser à l\'ouverture : c\'est ce qui a blessé le binôme. On mesure, on ventile de l\'extérieur, on n\'entre qu\'ensuite (NFPA 921, chap. 12.3).' },
+    ],
+  },
+
+  batiment: {
+    hauteur: 2.6, epaisseur: 0.12,
+    terrain: 'gravier',
+    toiture: { axe: 'x', x0: 0, x1: 18, z0: 0, z1: 9, altitude: 2.6, hauteur: 2.2, debord: 0.4, couleur: '#b5532f', maille: 0.9 },
+    niveaux: [
+      { id: 'rdc', nom: 'Bâtiment énergie', altitude: 0, hauteur: 2.6,
+        pieces: [
+          { id: 'ess1', nom: 'Conteneur 1 (batteries)', x: 2, z: 0.6, w: 12, d: 2.44, sol: 'beton', peinture: '#d5dadd', couche: 1.0, suie: 0.92 },
+          { id: 'ess2', nom: 'Conteneur 2 (batteries)', x: 2, z: 5.6, w: 12, d: 2.44, sol: 'beton', peinture: '#d5dadd', couche: 2.4, suie: 0.08 },
+          { id: 'allee', nom: 'Allée centrale du bâtiment', x: 0, z: 3.04, w: 15, d: 2.56, sol: 'beton', ouverte: true, peinture: '#999', couche: 2.4, suie: 0.1 },
+          { id: 'est', nom: 'Passage est', x: 14, z: 0.6, w: 1, d: 2.44, sol: 'beton', ouverte: true, peinture: '#999', couche: 2.4, suie: 0.2 },
+          { id: 'pcs', nom: 'Local conversion / transformation', x: 15, z: 0.6, w: 3, d: 7.44, sol: 'beton', peinture: '#e2e2dc', couche: 2.4, suie: 0.04 },
+          { id: 'parvis', nom: 'Aire d\'intervention', x: -8, z: 0, w: 8, d: 9, sol: 'gravier', ouverte: true, peinture: '#888', couche: 2.6, suie: 0 },
+          { id: 'supervision', nom: 'Local de supervision', x: 21, z: 2, w: 4, d: 3.2, sol: 'carrelage', peinture: '#e9e6df', couche: 2.6, suie: 0 },
+        ],
+        parois: [
+          { x0: 0, z0: 0, x1: 18, z1: 0, nom: 'Bardage sud' },
+          { x0: 0, z0: 9, x1: 18, z1: 9, nom: 'Bardage nord' },
+          { x0: 18, z0: 0, x1: 18, z1: 9, nom: 'Bardage est' },
+          { x0: 0, z0: 0, x1: 0, z1: 3.04, nom: 'Bardage ouest' },
+          { x0: 0, z0: 5.6, x1: 0, z1: 9, nom: 'Bardage ouest' },
+        ],
+        ouvertures: [
+          { type: 'porte', x: 2, z: 1.82, axe: 'v', w: 1.0, h: 2.1, nom: 'Porte ouest du conteneur 1' },
+          { type: 'porte', x: 14, z: 1.82, axe: 'v', w: 1.0, h: 2.1, nom: 'Porte arrière (est) du conteneur 1' },
+          { type: 'porte', x: 2, z: 6.82, axe: 'v', w: 1.0, h: 2.1 },
+          { type: 'porte', x: 15, z: 4.3, axe: 'v', w: 1.0, h: 2.1 },
+          { type: 'porte', x: 21, z: 3.6, axe: 'v', w: 0.9, h: 2.1 },
+          { type: 'fenetre', x: 23, z: 2, axe: 'h', w: 1.0, h: 1.0, allege: 1.0 },
+        ],
+        objets: [
+          // Conteneur 1 : deux rangées de 19 racks (BSC2 + BSC3 au nord, BSC1 + BSC4 au sud)
+          { id: 'racks-nord', type: 'rangeeRacks', nom: 'Rangée nord : BSC2 (racks N1 à N10) et BSC3 (racks N11 à N19)', x: 8, z: 0.96, rot: 0, n: 19, brules: { 14: 0.85, 13: 0.3, 15: 0.45, 2: 0.35, 3: 0.35 }, module: { rack: 14, n: 10 }, brule: 0.2,
+            fiche: { materiau: 'liion', materiauLibre: 'Modules Hanseon HX3 (marque fictive), chimie NMC, 28 cellules « pouch » de 63 Ah par module (2P14S)', energie: 'batterie lithium-ion', reference: '17 modules par rack, BPU en tête (contacteurs, fusibles 200 A), fusible 300 A par module', etat: 'détruit par le feu', notes: 'Rack 1 du BSC3 (N15) le plus atteint. Indice de protection des modules : IP20 (aucune protection contre l\'eau).' } },
+          { id: 'racks-sud', type: 'rangeeRacks', nom: 'Rangée sud : BSC1 et BSC4', x: 8, z: 2.68, rot: 180, n: 19, brules: {}, brule: 0.25 },
+          { id: 'ventilo-1', type: 'ventilo', nom: 'Ventilo-convecteur au-dessus du BSC3', x: 10.8, y: 2.2, z: 1.0, L: 1.4,
+            fiche: { materiau: 'acier', materiauLibre: 'Caisson isolé (mousse synthétique), bac à condensats latéral, évacuation par tuyau souple le long du rack', energie: 'secteur 230 V', etat: 'dégradé', notes: 'Alimenté en eau glacée par le groupe froid du local de conversion.' } },
+          { id: 'ventilo-2', type: 'ventilo', x: 5.0, y: 2.2, z: 1.0, L: 1.4 },
+          { id: 'ventilo-3', type: 'ventilo', x: 10.8, y: 2.2, z: 2.62, L: 1.4 },
+          { id: 'ventilo-4', type: 'ventilo', x: 5.0, y: 2.2, z: 2.62, L: 1.4 },
+          { id: 'eau-glacee', type: 'cable', points: [[2.3, 2.5, 1.82], [8, 2.52, 1.82], [13.7, 2.5, 1.82]], brule: 0.6 },
+          { id: 'gaz-inerte', type: 'bouteillesGaz', nom: 'Bouteilles de gaz inertant (azote / argon)', x: 2.35, z: 2.5, n: 2,
+            fiche: { materiauLibre: 'Mélange 50 % azote / 50 % argon, objectif < 12,5 % d\'oxygène en 120 s, une seule décharge', reference: 'Dimensionné pour un feu d\'origine électrique (référentiel APSAD R13)', etat: 'bon état' } },
+          { id: 'centrale-1', type: 'centraleIncendie', nom: 'Centrale de détection et d\'extinction', x: 2.12, z: 1.1, rot: 90 },
+          { id: 'fut', type: 'fut', nom: 'Fût métallique', x: 14.55, z: 1.05, couleur: '#2f5e8a' },
+          { id: 'debris-1', type: 'debris', x: 11, z: 1.8, w: 1.4, d: 0.6 },
+          // Conteneur 2 (référence intacte)
+          { id: 'racks-n2', type: 'rangeeRacks', x: 8, z: 5.96, rot: 0, n: 19 },
+          { id: 'racks-s2', type: 'rangeeRacks', x: 8, z: 7.68, rot: 180, n: 19 },
+          { id: 'ventilo-5', type: 'ventilo', x: 10.8, y: 2.2, z: 6.0, L: 1.4 },
+          // Local de conversion / transformation
+          { id: 'onduleur-1', type: 'armoire', nom: 'Convertisseur de puissance (PCS)', x: 16.5, z: 1.2, rot: 0 },
+          { id: 'onduleur-2', type: 'armoire', x: 16.5, z: 2.6, rot: 0 },
+          { id: 'transfo', type: 'transfo', nom: 'Transformateur HT', x: 16.5, z: 6.4, rot: 90, L: 1.8, D: 1.2 },
+          { id: 'froid', type: 'transfo', nom: 'Groupe de production d\'eau glacée', x: 17.2, z: 4.3, rot: 90, L: 1.0, H: 1.2, D: 0.9 },
+          // Supervision
+          { id: 'serveur', type: 'baieServeur', nom: 'Serveur de supervision (SCADA)', x: 24.5, z: 2.5, rot: -90,
+            fiche: { materiauLibre: 'Serveur local : une semaine de données détaillées ; historien distant sans limite de durée', energie: 'secteur 230 V', etat: 'bon état', notes: 'Les horloges des différentes bases (BMS, supervision, CPI) ne sont pas synchronisées.' } },
+          { id: 'bureau-sup', type: 'bureau', x: 22.2, z: 4.5, rot: 180 },
+          { id: 'chaise-sup', type: 'chaise', x: 22.2, z: 3.9 },
+          // Abords
+          { id: 'monitor-1', type: 'lanceMonitor', x: 0.7, z: 1.8, rot: 180 },
+          { id: 'monitor-2', type: 'lanceMonitor', x: 14.5, z: 2.6, rot: 0 },
+        ],
+        traces: [
+          { piece: 'ess1', cote: 'N', type: 'V', u: 9.0, y0: 1.4, angle: 28, force: 0.8 },
+          { piece: 'ess1', cote: 'S', type: 'demarcation', y: 1.0, u0: 0, u1: 12 },
+          { piece: 'ess1', cote: 'N', type: 'demarcation', y: 1.0, u0: 0, u1: 12 },
+          { piece: 'ess1', cote: 'sol', type: 'debris', densite: 0.25 },
+          { piece: 'est', cote: 'N', type: 'demarcation', y: 1.9, u0: 0, u1: 1 },
+        ],
+        tremies: [],
+      },
+    ],
+  },
+
+  zones: [
+    { id: 'abords', nom: 'Abords et bâtiment énergie', exterieur: true, rang: 0, cible: [9, 0.8, 4.5], zoom: 0.5, azimut: 220, toiture: 'visible', desc: 'Bardage, portes, toiture, aire d\'intervention et lances.' },
+    { id: 'pcs', nom: 'Local de conversion', piece: 'pcs', rang: 1, cible: [16.5, 0, 4.3], zoom: 1.0 },
+    { id: 'supervision', nom: 'Local de supervision', piece: 'supervision', rang: 1, cible: [23, 0, 3.6], zoom: 1.4 },
+    { id: 'ess2', nom: 'Conteneur 2', piece: 'ess2', rang: 2, cible: [8, 0, 6.8], zoom: 0.85 },
+    { id: 'ess1', nom: 'Conteneur 1', piece: 'ess1', rang: 4, cible: [9.5, 0, 1.8], zoom: 0.95 },
+  ],
+
+  observations: [
+    { id: 'B01', zone: 'abords', pos: [0.1, 1.6, 4.3], titre: 'Le bâtiment énergie',
+      description: 'Bâtiment de type agricole : bardage bois, toiture en tuiles intacte. Portes du bardage côté ouest endommagées (ouvertes par les secours). Traces de suie limitées au-dessus des deux portes du conteneur 1. Aucune trace thermique sur le conteneur 2 ni sur le local de conversion.',
+      analyse: { question: 'Que retiens-tu de cet extérieur ?', ref: '17.3.1.3 / 17.3.1.7', options: [
+        { t: 'Le feu est resté contenu dans le conteneur 1 ; les dégâts du bardage viennent de l\'intervention.', ok: true, fb: 'Exact : on lit l\'extérieur en distinguant ce qui vient du feu de ce qui vient des secours.' },
+        { t: 'Le feu a pris dans le bardage bois et a gagné le conteneur.', ok: false, fb: 'Le bardage n\'est pas brûlé : les dégâts sont mécaniques (ouverture des portes).' },
+        { t: 'Rien à tirer de l\'extérieur.', ok: false, fb: 'Si : il délimite la zone atteinte et écarte le conteneur 2 et le local de conversion.' },
+      ] } },
+    { id: 'B02', zone: 'abords', pos: [14.1, 1.2, 1.4], titre: 'La porte arrière (est) du conteneur 1',
+      description: 'Vantail légèrement cintré vers l\'extérieur. Serrure, crémone et gonds intacts, aucune trace d\'outil. À 30 cm, un fût métallique porte une marque d\'impact fraîche exactement à hauteur du vantail.',
+      analyse: { question: 'Comment lis-tu cette porte ?', ref: '17.3.1.7 / 22.3', options: [
+        { t: 'Elle a été poussée violemment depuis l\'intérieur (surpression) et a heurté le fût : pas d\'effraction.', ok: true, fb: 'Bien vu : déformation vers l\'extérieur, impact sur le fût, aucune trace d\'outil. Une surpression interne l\'explique.' },
+        { t: 'Elle a été forcée de l\'extérieur : quelqu\'un est entré.', ok: false, fb: 'Aucune trace d\'outil, serrure intacte, cintrage vers l\'extérieur : rien n\'indique une effraction.' },
+        { t: 'Un défaut de fabrication sans rapport.', ok: false, fb: 'L\'impact frais sur le fût relie cette déformation à l\'événement.' },
+      ] } },
+    { id: 'B03', zone: 'abords', pos: [-2.5, 0.3, 4.5], titre: 'L\'aire d\'intervention',
+      description: 'Deux lances monitor, sol détrempé, fossé creusé autour du site pour retenir les eaux. Environ 12 000 m³ d\'eau projetés en 12 jours, dont un arrosage direct des racks pendant les premières 48 h.',
+      analyse: { question: 'Pourquoi le noter dans ton enquête ?', ref: '17.3.1.7', options: [
+        { t: 'L\'eau projetée sur des modules chargés a pu créer des courts-circuits et des départs secondaires : il faudra distinguer ces dégâts de ceux du départ.', ok: true, fb: 'Exact : les modifications après le feu font partie des données à interpréter.' },
+        { t: 'C\'est sans rapport avec la détermination de l\'origine.', ok: false, fb: 'Si : des points chauds secondaires peuvent brouiller la lecture des racks.' },
+      ] } },
+    { id: 'B04', zone: 'pcs', pos: [16.4, 1.4, 1.9], titre: 'Le local de conversion et de transformation',
+      description: 'Convertisseurs, transformateur et groupe froid sans aucune trace thermique. Le relevé de la caméra thermique pendant l\'intervention n\'a montré aucune élévation de température ici. L\'organe de coupure côté conteneur 1 est ouvert.',
+      analyse: { question: 'Qu\'en conclus-tu ?', ref: '8.6 / 17.3.1.3', options: [
+        { t: 'Le local est hors de cause ; la coupure est la déconnexion automatique commandée par l\'alarme incendie.', ok: true, fb: 'Exact : un organe ouvert après une alarme est une conséquence attendue, pas un défaut.' },
+        { t: 'L\'organe ouvert prouve un court-circuit côté conversion.', ok: false, fb: 'Il s\'ouvre sur alarme incendie : c\'est prévu. Et rien n\'a chauffé dans ce local.' },
+      ] } },
+    { id: 'B05', zone: 'pcs', pos: [17.2, 1.0, 4.3], titre: 'Témoins de température du local',
+      description: 'Gaines PVC des câbles de puissance intactes, capot ABS du coffret du groupe froid intact.',
+      thermo: { items: [
+        { mat: 'pvc', etat: 'intact', objet: 'Gaines des câbles de puissance (PVC)' },
+        { mat: 'abs', etat: 'intact', objet: 'Capot du coffret du groupe froid (ABS)' },
+      ], fb: 'Exact : moins de ≈ 75–100 °C dans le local de conversion. Il n\'a pas participé au feu.' } },
+    { id: 'B06', zone: 'supervision', pos: [24.4, 1.5, 2.5], titre: 'Le serveur de supervision',
+      description: 'Local intact. Le serveur conserve une semaine de données détaillées ; un historien distant conserve le reste. Données disponibles : tensions des bi-cellules, températures des sondes, courants des racks, alarmes BMS, ouvertures de portes, ambiance (température, humidité), mesures des contrôleurs d\'isolement. Les horloges des différentes bases ne sont pas synchronisées.',
+      analyse: { question: 'Que fais-tu de ce serveur ?', ref: '13.3 / 16.3', options: [
+        { t: 'C\'est une source d\'information de premier ordre : faire une copie conservatoire des données en présence des parties et noter les décalages d\'horloge.', ok: true, fb: 'Exact : les données électroniques sont des indices à préserver comme les autres, avec leurs limites (horodatage).' },
+        { t: 'Sans intérêt : seuls les dégâts physiques comptent.', ok: false, fb: 'Ici, les dégâts physiques sont limités : les données sont souvent la meilleure source sur le début du feu.' },
+        { t: 'Laisser l\'exploitant extraire et trier seul ce qui est utile.', ok: false, fb: 'L\'exploitant est partie à l\'expertise : l\'extraction se fait de façon contradictoire.' },
+      ] } },
+    { id: 'B07', zone: 'supervision', pos: [22.2, 1.0, 4.4], titre: 'Le journal des alarmes',
+      description: 'Supervision de l\'exploitant (horodatage indicatif) : 15:31:48 « détection feu » ; 15:32 « intrusion conteneur 1 » pendant près de 2 minutes ; 15:50 « intrusion conteneur 1 » pendant quelques secondes. L\'alarme « intrusion » est déclenchée par le contact d\'ouverture des portes du conteneur.',
+      analyse: { question: 'Comment lis-tu ces alarmes « intrusion » ?', ref: '20.2 / 13.3', options: [
+        { t: 'Ce sont des ouvertures de porte, pas forcément des personnes : à confronter aux autres données (extinction, ambiance) avant toute conclusion.', ok: true, fb: 'Exact : le libellé d\'une alarme ne dit pas sa cause. Ici personne n\'était sur le site.' },
+        { t: 'Quelqu\'un est entré dans le conteneur à 15:32 : piste criminelle.', ok: false, fb: 'Piège : « intrusion » est le nom d\'un contact de porte. Un gaz libéré sous pression peut ouvrir une porte.' },
+        { t: 'Des bugs informatiques, à ignorer.', ok: false, fb: 'Une donnée gênante ne s\'ignore pas : elle s\'explique.' },
+      ] } },
+    { id: 'B08', zone: 'supervision', pos: [22.6, 1.0, 4.6], titre: 'L\'ambiance du conteneur le jour du feu',
+      description: 'Relevés à la minute : avant 15:32, 19 à 26 °C et 29 % d\'humidité, point de rosée sous la température du circuit d\'eau glacée. À 15:32, chute brève de l\'humidité ; à partir de 15:35, montée progressive de la température ; vers 15:50, saut brutal et saturation des capteurs.',
+      analyse: { question: 'Que racontent ces courbes ?', ref: '20.2', options: [
+        { t: 'Le gaz inerte chasse l\'air humide à 15:32 (et pousse la porte), l\'échauffement continue malgré l\'inertage, puis les gaz s\'enflamment vers 15:50 (première explosion, porte entrouverte).', ok: true, fb: 'Exact : en croisant ambiance et alarmes, les deux « intrusions » trouvent une explication physique.' },
+        { t: 'La climatisation a provoqué de la condensation juste avant le feu.', ok: false, fb: 'Avant 15:32, l\'air est sec (29 %) et le point de rosée reste sous la température des surfaces froides : la condensation est peu probable.' },
+        { t: 'L\'extinction a éteint le feu à 15:32.', ok: false, fb: 'La température continue de monter : l\'inertage n\'arrête pas un emballement thermique.' },
+      ] } },
+    { id: 'B09', zone: 'supervision', pos: [23.0, 1.0, 4.6], titre: 'Les données du rack N15 (BSC3, rack 1)',
+      description: 'À 15:32:24, baisse de tension des bi-cellules 10 puis 9 du module 10. 26 s plus tard, la bi-cellule 1 tombe à 0 V (perte de la chaîne de mesure). Courants anormaux circulant à l\'intérieur du module 10 (jusqu\'à 300 A), variations minimes partout ailleurs. Température : +3 °C seulement avant la perte des capteurs, qui sont éloignés des cellules concernées.',
+      analyse: { question: 'Que t\'apprennent ces données ?', ref: '20.2 / 18.3', options: [
+        { t: 'Le premier signe de défaillance est localisé à l\'intérieur du module 10, sur deux bi-cellules voisines ; la faible hausse de température vient de la position des sondes.', ok: true, fb: 'Exact : c\'est la donnée la plus précoce et la plus précise du dossier.' },
+        { t: 'Le rack entier a été traversé par un courant de court-circuit externe.', ok: false, fb: 'Les autres modules du rack varient à peine : les courants restent dans le module 10.' },
+        { t: '+3 °C : il n\'y a pas eu d\'échauffement à ce moment-là.', ok: false, fb: 'Une sonde éloignée mesure peu : l\'absence de mesure n\'est pas l\'absence de phénomène.' },
+      ] } },
+    { id: 'B10', zone: 'supervision', pos: [23.4, 1.0, 4.6], titre: 'L\'historique d\'exploitation',
+      description: 'Mois précédents : températures des modules dans la plage du fabricant (23 ± 4 °C), courants et tensions dans les spécifications (quelques dépassements bas de tension, limités), état de santé conforme. Jour J : charge depuis 9h30, état de charge 93,5 % à 15:32, sans alarme préalable.',
+      analyse: { question: 'Que vaut l\'hypothèse d\'une exploitation hors spécifications ?', ref: '18.3 / 18.6', options: [
+        { t: 'Elle ne trouve aucun appui dans les données : ni surcharge, ni surchauffe, ni défaut de gestion avant 15:32.', ok: true, fb: 'Exact : les données permettent de réfuter cette hypothèse.' },
+        { t: 'Une charge à 93,5 % est en soi une surcharge.', ok: false, fb: 'Non : c\'est dans la plage d\'utilisation. Un état de charge élevé aggrave les conséquences, il ne crée pas le défaut.' },
+      ] } },
+    { id: 'B11', zone: 'supervision', pos: [23.8, 1.0, 4.6], titre: 'Les contrôleurs permanents d\'isolement',
+      description: 'Deux contrôleurs placés en amont des convertisseurs (mesure globale, pas par rack). Résistance d\'isolement habituelle de 300 à 500 Ω/V. Chute brutale vers 15:32, mais la valeur reste au-dessus de 200 kΩ. Horodatage non synchronisé avec les données BMS.',
+      analyse: { question: 'Comment l\'interprètes-tu ?', ref: '8.9 / 18.3', options: [
+        { t: 'Un défaut d\'isolement de cette ampleur ne suffit pas à expliquer le départ ; et la position des contrôleurs limite ce qu\'on peut en déduire.', ok: true, fb: 'Exact : une mesure se lit avec ses limites (position, résolution, horodatage).' },
+        { t: 'La chute d\'isolement prouve un arc entre le rack et le châssis à l\'origine du feu.', ok: false, fb: 'Un tel arc ferait chuter l\'isolement beaucoup plus bas. Et on ne sait pas si la chute précède ou suit le premier défaut.' },
+      ] } },
+    { id: 'B12', zone: 'ess2', pos: [8, 1.3, 6.4], titre: 'Le conteneur 2',
+      description: 'Racks, ventilo-convecteurs, bacs à condensats et câblages identiques au conteneur 1, sans aucune atteinte. Bacs à condensats secs, dépôts calcaires anciens semblables.',
+      analyse: { question: 'À quoi te sert ce conteneur ?', ref: '17.3.3.1 / 18.3', options: [
+        { t: 'De référence : il montre l\'aménagement et l\'état « normal » d\'une installation identique.', ok: true, fb: 'Exact : un exemplaire de comparaison aide à reconnaître ce qui est anormal dans le conteneur sinistré.' },
+        { t: 'À rien : il n\'a pas brûlé.', ok: false, fb: 'Un équipement identique non sinistré est précieux pour comparer.' },
+      ] } },
+    { id: 'B13', zone: 'ess1', pos: [6.0, 1.5, 1.82], titre: 'Vue générale du conteneur 1',
+      description: 'Dépôt de suie sur tous les équipements. La plupart des modules ont gardé leur forme. Fusion des plastiques et carbonisation des gaines en partie haute (câbles, isolant des canalisations d\'eau glacée). Plancher intact, sans trace de combustion.',
+      analyse: { question: 'Que t\'indique cet ensemble ?', ref: '6.3.2.3 / 6.3.2.4', options: [
+        { t: 'Une forte chaleur accumulée en partie haute (couche de gaz chauds), sans embrasement généralisé du conteneur.', ok: true, fb: 'Exact : les dégâts « par le haut » et le plancher intact signent une couche chaude, pas un flashover.' },
+        { t: 'Un embrasement généralisé : tout a brûlé uniformément.', ok: false, fb: 'Le plancher est intact et les modules ont gardé leur forme : il n\'y a pas eu d\'embrasement généralisé.' },
+      ] } },
+    { id: 'B14', zone: 'ess1', pos: [3.0, 1.5, 2.95], titre: 'L\'affiche de consignes et les montants des racks',
+      description: 'Affiche de consignes encore lisible, mais son film de protection en polyéthylène a fondu. Montants des racks en alliage d\'aluminium intacts, même en partie haute.',
+      thermo: { items: [
+        { mat: 'pe', etat: 'fondu', objet: 'Film de protection de l\'affiche (polyéthylène)' },
+        { mat: 'alualliage', etat: 'intact', objet: 'Montants des racks (alliage d\'aluminium)' },
+      ], fb: 'Exact : plus de ≈ 130 °C mais moins de ≈ 600 °C dans le volume du conteneur. Chaud, mais loin d\'un embrasement généralisé.' } },
+    { id: 'B15', zone: 'ess1', pos: [11.0, 1.1, 1.3], titre: 'Le rack N15 (BSC3, rack 1)',
+      description: 'Le rack le plus atteint du conteneur. Les gaines isolantes des connexions en façade des modules ont totalement brûlé au niveau du module 10, et de moins en moins en s\'éloignant de ce module, vers le haut comme vers le bas.',
+      analyse: { question: 'Que montre ce gradient ?', ref: '17.4.2 / 6.2', options: [
+        { t: 'L\'intensité maximale est au module 10 : les vecteurs de dégâts convergent vers lui.', ok: true, fb: 'Exact : le gradient de dégradation des gaines désigne le module 10.' },
+        { t: 'Le feu est venu du plafond et a descendu le rack.', ok: false, fb: 'Les dégâts diminuent aussi vers le haut : le maximum est au milieu, au module 10.' },
+        { t: 'Tous les modules ont brûlé de la même façon.', ok: false, fb: 'Non : le gradient est net.' },
+      ] } },
+    { id: 'B16', zone: 'ess1', pos: [9.2, 2.0, 1.3], titre: 'Les racks voisins',
+      description: 'Rack N16 (BSC3, rack 2) et racks N3–N4 (BSC2) dégradés uniquement dans leur partie haute ; leurs modules bas sont intacts. Aucune donnée de défaillance électrique sur ces racks avant 15:50.',
+      analyse: { question: 'S\'agit-il d\'autres départs de feu ?', ref: '22.2.1 / 6.3.2.3', options: [
+        { t: 'Non : ce sont des dégâts par le haut (gaz chauds, rayonnement), conséquences de la propagation.', ok: true, fb: 'Exact : des dégâts « par le haut » sur des racks sans défaillance électrique préalable sont des propagations.' },
+        { t: 'Oui : plusieurs racks ont pris feu indépendamment.', ok: false, fb: 'Rien dans les données ne montre de défaillance indépendante : leurs parties basses sont intactes.' },
+      ] } },
+    { id: 'B17', zone: 'ess1', pos: [10.8, 2.25, 1.15], titre: 'Le ventilo-convecteur au-dessus du rack N15',
+      description: 'Caisson au-dessus de la rangée nord, isolant synthétique fondu. Bac à condensats sec, dépôts calcaires anciens. Son tuyau d\'évacuation descend le long du rack N15. Canalisations d\'eau glacée en plafond, sans fuite visible après le feu.',
+      analyse: { question: 'Quel rôle lui donnes-tu à ce stade ?', ref: '18.3 / 18.6', options: [
+        { t: 'Une source d\'eau possible au-dessus du rack : une hypothèse à tester (humidité, écoulement), mais aucun fait ne montre d\'écoulement.', ok: true, fb: 'Exact : on l\'inscrit comme hypothèse et on la confronte aux données d\'ambiance et à l\'examen des modules.' },
+        { t: 'C\'est la cause : la climatisation a coulé sur les batteries.', ok: false, fb: 'Aucun fait ne montre d\'écoulement : bac sec, pas de fuite visible, air sec avant le départ.' },
+        { t: 'Hors sujet : on ne s\'occupe que des batteries.', ok: false, fb: 'L\'eau est un mode de défaillance connu des modules IP20 : l\'hypothèse doit être examinée.' },
+      ] },
+      prelevement: 'P2' },
+    { id: 'B18', zone: 'ess1', outil: 'arc', pos: [11.0, 1.35, 1.3], titre: 'Traces d\'arc sur le rack N15',
+      indice: 'Les bornes des modules et le terminal du rack sont accessibles. Un relevé des traces d\'arc est possible.',
+      description: 'Deux traces d\'arc : entre la borne négative du module 11 et son boîtier en aluminium, et sur le terminal négatif du rack, en partie haute. Aucun des fusibles 300 A des modules n\'a fondu ; serrages des connexions corrects ; contacteurs de tête de rack ouverts normalement après l\'alarme.',
+      analyse: { question: 'Que valent ces traces d\'arc ?', ref: '8.11 / 17.4.5', options: [
+        { t: 'Des modules restés chargés et sous tension pendant le feu ont fait des arcs : ce sont des conséquences probables ; les fusibles intacts écartent un court-circuit externe au module.', ok: true, fb: 'Exact : un arc prouve qu\'un conducteur était sous tension quand il a été atteint, pas qu\'il a causé le feu.' },
+        { t: 'Ces arcs prouvent un « double arc » rack–châssis à l\'origine du feu.', ok: false, fb: 'Piège : c\'est la thèse d\'une partie. Fusibles intacts, courants confinés au module 10, isolement resté élevé : elle n\'est pas soutenue.' },
+      ] } },
+    { id: 'B19', zone: 'ess1', couche: 3, pos: [11.0, 0.15, 1.1], titre: 'Le module 10 ouvert',
+      description: 'Démontage contradictoire : le boîtier a tenu. À l\'intérieur, les cellules des bi-cellules 9 et 10 sont les plus dégradées ; la cellule 9-2 est gonflée, son enveloppe ouverte. Fusible 300 A du module intact.',
+      analyse: { question: 'Que fais-tu de ce module ?', ref: '18.3 / 16.3', options: [
+        { t: 'Le placer sous scellé pour un examen en laboratoire (radiographie, tomographie) : il correspond aux premières données de défaillance.', ok: true, fb: 'Exact : les constats physiques rejoignent les données BMS ; seul le laboratoire peut voir l\'intérieur des cellules.' },
+        { t: 'Conclure tout de suite à un défaut de fabrication.', ok: false, fb: 'Pas sans examen : une cellule abîmée peut aussi être une victime.' },
+      ] },
+      prelevement: 'P1' },
+    { id: 'B20', zone: 'ess1', couche: 2, pos: [11.0, 0.25, 1.1], titre: 'Les câbles autour du module 10',
+      description: 'Au-dessus du module 10, le câble d\'alimentation droit présente du cuivre fondu et une perte d\'isolant venant du bas. Sous le module 10, câbles intacts mais isolant attaqué par le haut.',
+      analyse: { question: 'Que disent ces câbles ?', ref: '17.4.2 / 8.11', options: [
+        { t: 'La chaleur est montée du module 10 vers le haut et a rayonné vers le bas : un vecteur de plus qui converge vers ce module.', ok: true, fb: 'Exact : l\'atteinte « depuis le bas » au-dessus et « depuis le haut » en dessous encadre le module 10.' },
+        { t: 'Le câble fondu au-dessus est l\'origine.', ok: false, fb: 'Sa dégradation vient du bas : il a subi la chaleur du module 10.' },
+      ] } },
+  ],
+
+  fouille: {
+    zone: 'ess1', ref: '17.3.2',
+    aire: { x: 10.4, z: 1.27, w: 1.3, d: 0.5 },
+    couches: [
+      { n: 1, nom: 'Modules 13 à 17 (haut du rack)', description: 'Retrait contradictoire des modules supérieurs, numérotés et photographiés un à un.', h: 0.12, couleur: '#4a4f54' },
+      { n: 2, nom: 'Modules 11 et 12, câblage', description: 'Modules voisins et câbles d\'alimentation du rack.', h: 0.1, couleur: '#3a3632' },
+      { n: 3, nom: 'Module 10', description: 'Le module désigné par les données et les gradients.', h: 0.05, couleur: '#221c18' },
+    ],
+  },
+
+  prelevements: [
+    { id: 'P1', nom: 'Module 10 du rack N15 (sous scellé, transport sécurisé)', type: 'objet', contenantsOK: ['carton', 'potMetal'],
+      analyses: [{ id: 'tomo', nom: 'Radiographie, tomographie et examen au microscope électronique des cellules', cout: 900,
+        resultats: {
+          ok: { fait: 'BF20', texte: 'Laboratoire Ventadour (fictif) : marques d\'arborescence liées au dégazage nettement plus marquées sur la cellule 9-2 ; fusible du module intact ; connexions correctement serrées ; pas de corrosion visible à l\'intérieur du boîtier. Conclusion : emballement thermique initié dans la cellule 9-2 du module 10.' },
+        } }] },
+    { id: 'P2', nom: 'Dépôts du bac à condensats et frottis du montant du rack N15', type: 'objet', contenantsOK: ['bocal', 'potMetal'],
+      analyses: [{ id: 'cond', nom: 'Analyse des dépôts (conductivité, sels, traces d\'écoulement)', cout: 300,
+        resultats: {
+          ok: { fait: 'BF21', texte: 'Dépôts minéraux anciens dans le bac, identiques à ceux du conteneur 2 ; pas de trace de débordement récent ni de coulure saline sur le montant. Un écoulement ponctuel ne peut pas être formellement exclu, mais rien ne le montre.' },
+        } }] },
+  ],
+
+  temoins: [
+    { id: 'T1', nom: 'Antoine Mariani', role: 'Technicien d\'astreinte de l\'exploitant', avatar: '👷', questions: [
+      { id: 'q1', type: 'ouverte', q: 'Racontez-moi l\'après-midi du 16 avril.', r: 'J\'étais à Bastia. Vers 15h30, l\'application a sonné : détection feu, extinction déclenchée, convertisseur déconnecté. J\'ai pris la main à distance, la température montait. J\'ai appelé les pompiers à 15h45 et je suis parti sur le site. Personne n\'était sur place.', fait: { id: 'BF1', texte: 'Alarme à distance vers 15h30 (feu, extinction, déconnexion) ; personne sur le site.' } },
+      { id: 'q2', type: 'ouverte', q: 'Comment fonctionnait l\'installation ce jour-là ?', r: 'Normalement. Charge depuis le matin avec le soleil, on était vers 90 % en début d\'après-midi. Pas d\'alarme particulière, la climatisation tournait.', fait: { id: 'BF2', texte: 'Fonctionnement normal, charge ≈ 90 %, aucune alarme avant le feu.' } },
+      { id: 'q3', type: 'fermee', q: 'Ce conteneur a-t-il déjà connu un incident ?', r: 'Oui, en 2023 : un départ de feu sur deux modules, éteint par le système automatique. Tous les modules exposés aux fumées ont été remplacés par la génération HX3, puis on a ajouté des modules en 2025 pour remplir les racks libres.', fait: { id: 'BF3', texte: 'Incident en 2023 (deux modules) ; modules remplacés par des HX3, complétés en 2025.' } },
+      { id: 'q4', type: 'orientee', q: 'La climatisation fuyait sur les batteries, non ?', r: 'Euh… je ne sais pas… il me semble qu\'une fois on avait vu des gouttes… mais je ne pourrais pas dire où.', fait: { id: 'BF4', texte: 'Des « gouttes » auraient été vues une fois (souvenir vague, sur suggestion).', contamine: true }, piege: 'Question orientée : le témoin a aligné un souvenir flou sur ta suggestion (NFPA 921, chap. 13.4).' },
+    ] },
+    { id: 'T2', nom: 'Lieutenant Orsini', role: 'Chef de groupe des sapeurs-pompiers', avatar: '🧑‍🚒', questions: [
+      { id: 'q1', type: 'ouverte', q: 'Qu\'avez-vous constaté à votre arrivée ?', r: 'De la fumée blanche qui sortait du conteneur central. Portes du conteneur fermées, la porte arrière un peu cintrée. 40 à 50 °C à la caméra sur les portes, mais le conteneur était au milieu du bâtiment, ça ne voulait pas dire grand-chose. L\'exploitant nous a demandé de laisser fermé sous gaz inerte.', fait: { id: 'BF5', texte: 'Fumée blanche, portes fermées, porte arrière déjà cintrée à l\'arrivée des secours.' } },
+      { id: 'q2', type: 'ouverte', q: 'Que s\'est-il passé à l\'ouverture ?', r: 'Vers 18h30, la température ne baissait pas, on a ouvert la porte ouest pour attaquer aux extincteurs CO₂. Plafond de fumée très dense. Mon chef d\'équipe a vu les fumées former des rouleaux, il a crié d\'évacuer… et ça a explosé. Ils ont été projetés au sol. Ensuite on est passés à l\'arrosage massif.', fait: { id: 'BF6', texte: 'Deuxième explosion à l\'ouverture vers 18h30 (fumées en rouleaux), puis arrosage massif.' } },
+    ] },
+    { id: 'T3', nom: 'M. Park', role: 'Représentant du fabricant des modules (Hanseon)', avatar: '🧑‍💼', questions: [
+      { id: 'q1', type: 'ouverte', q: 'Quelle est votre analyse ?', r: 'Nos modules sont sûrs. Dans les conteneurs de cet intégrateur, la climatisation crée de l\'humidité : l\'eau provoque des courants de fuite et un double arc électrique entre le module et le châssis. Les traces d\'arc le prouvent.', fait: { id: 'BF7', texte: 'Le fabricant attribue le feu à l\'humidité de la climatisation (« double arc »).', speculatif: true } },
+      { id: 'q2', type: 'fermee', q: 'Ce lot de modules était-il concerné par votre campagne de remplacement ?', r: 'Non. La campagne concernait des modules produits entre avril 2017 et septembre 2018. Les modules de Pratu-Longu ont été produits à partir de novembre 2018.', fait: { id: 'BF8', texte: 'Le lot du conteneur 1 n\'est pas concerné par la campagne de remplacement (production postérieure).' } },
+    ] },
+    { id: 'T4', nom: 'Mme Ferri', role: 'Ingénieure de l\'intégrateur (Volta Systèmes)', avatar: '👩‍🔧', questions: [
+      { id: 'q1', type: 'ouverte', q: 'Comment le conteneur était-il protégé ?', r: 'Six détecteurs sur deux boucles. Sur double détection : 30 secondes d\'alarme pour évacuer, puis libération d\'un gaz azote-argon pour descendre sous 12,5 % d\'oxygène. C\'est dimensionné pour un feu électrique classique. Il n\'y a qu\'une décharge.', fait: { id: 'BF9', texte: 'Extinction par gaz inerte, dimensionnée pour un feu électrique, une seule décharge possible.' } },
+      { id: 'q2', type: 'ouverte', q: 'Et la climatisation ?', r: 'Quatre ventilo-convecteurs alimentés en eau glacée, au-dessus des racks. Chacun a un bac à condensats évacué par un tuyau. Nos relevés d\'humidité étaient bas ce mois-là.', fait: { id: 'BF10', texte: 'Ventilo-convecteurs à eau glacée au-dessus des racks, avec bacs à condensats.' } },
+    ] },
+  ],
+
+  osint: [
+    { id: 'O1', source: 'tout', motsCles: [['bea-ri'], ['bea', 'batteries'], ['conteneur', 'batteries', 'incendie'], ['stockage', 'energie', 'incendie']], titre: 'BEA-RI — rapports publics sur des incendies de conteneurs de batteries (2020, 2022)',
+      extrait: 'Dans deux accidents précédents, l\'extinction par gaz a été peu efficace face à l\'emballement thermique : sans refroidissement, la réaction se propage d\'une cellule à l\'autre, même dans une atmosphère pauvre en oxygène.',
+      fait: { id: 'BF11', texte: 'Retours d\'expérience officiels : l\'inertage seul n\'arrête pas un emballement thermique.' }, fiabilite: 'Source institutionnelle (bureau d\'enquêtes).' },
+    { id: 'O2', source: 'rappel', motsCles: [['hanseon'], ['hx3'], ['module', 'rappel'], ['batterie', 'rappel']], titre: 'Avis du fabricant — campagne de remplacement de modules HX3 (fictif)',
+      extrait: 'Remplacement volontaire de modules HX3 produits d\'avril 2017 à septembre 2018 (défaut d\'épaisseur d\'électrodes), « par précaution ».',
+      fait: { id: 'BF12', texte: 'Campagne de remplacement de modules HX3 produits en 2017–2018.' }, fiabilite: 'Source fabricant : vérifier si le lot est concerné.', piege: true },
+    { id: 'O3', source: 'meteo', motsCles: [['meteo'], ['météo'], ['orage'], ['foudre']], titre: 'Archives météo · 16 avril',
+      extrait: 'Temps ensoleillé et sec, 18 °C, vent faible, aucune activité orageuse.',
+      fait: { id: 'BF13', texte: 'Journée sèche, sans orage.' }, fiabilite: 'Source institutionnelle.' },
+    { id: 'O4', source: 'presse', motsCles: [['pratu'], ['centrale', 'solaire'], ['malveillance'], ['sabotage']], titre: 'Presse locale — « Centrale de Pratu-Longu : la piste du sabotage ? »',
+      extrait: 'Un article évoque une « porte forcée » et une « alarme intrusion » au moment de l\'incendie, citant une source anonyme.',
+      fait: { id: 'BF14', texte: 'Article de presse évoquant un sabotage (porte « forcée », alarme « intrusion »).' }, fiabilite: 'Presse, source anonyme : non vérifié.', piege: true },
+  ],
+
+  hypotheses: {
+    origines: [
+      { id: 'BO1', nom: 'Module 10 du rack N15 (BSC3, rack 1), rangée nord du conteneur 1', pos: [11.0, 1.1, 1.3], ok: true, soutien: ['B09', 'B15', 'B20', 'B19', 'BF20'], refute: [] },
+      { id: 'BO2', nom: 'Ventilo-convecteur et canalisations en plafond du conteneur 1', pos: [10.8, 2.3, 1.1], soutien: ['B13'], refute: ['B15', 'B09', 'B20'] },
+      { id: 'BO3', nom: 'Local de conversion et de transformation', pos: [16.4, 1.0, 3.5], soutien: [], refute: ['B04', 'TH-B05'] },
+      { id: 'BO4', nom: 'Porte arrière du conteneur 1 (intrusion)', pos: [14.0, 1.0, 1.8], soutien: ['B07'], refute: ['B02', 'B08', 'B09'] },
+    ],
+    causes: [
+      { id: 'BC1', nom: 'Défaillance interne d\'une cellule (cellule 9-2 du module 10) : emballement thermique, gaz inflammables, deux explosions', premierCombustible: 'Électrolyte et gaz de dégazage des cellules, puis plastiques et gaines du rack', source: 'Court-circuit interne d\'une cellule (emballement thermique)', classification: 'accidentelle', ok: true, origine: 'BO1',
+        soutien: ['B09', 'B19', 'BF20', 'B15', 'B20', 'B18', 'B10', 'B08'], refute: [], competence: { source: 'Arc électrique', combustible: 'Polyéthylène' } },
+      { id: 'BC2', nom: 'Humidité ou eau de la climatisation : courants de fuite et « double arc » vers le châssis', premierCombustible: 'Isolants du module', source: 'Arc électrique', classification: 'accidentelle', origine: 'BO1', soutien: ['B17', 'BF7', 'BF4'], refute: ['B08', 'B09', 'B11', 'BF21'] },
+      { id: 'BC3', nom: 'Exploitation hors spécifications (surcharge, défaut de gestion BMS)', premierCombustible: 'Cellules du module', source: 'Surcharge', classification: 'accidentelle', origine: 'BO1', soutien: [], refute: ['B10'] },
+      { id: 'BC4', nom: 'Court-circuit externe au module (défaut d\'isolement du rack)', premierCombustible: 'Câblage du rack', source: 'Arc électrique', classification: 'accidentelle', origine: 'BO1', soutien: ['B11'], refute: ['B18', 'B09'] },
+      { id: 'BC5', nom: 'Malveillance : intrusion par la porte arrière', premierCombustible: '—', source: 'Flamme nue', classification: 'volontaire', soutien: ['B07', 'BF14'], refute: ['B02', 'B08', 'BF1', 'BF5'] },
+    ],
+  },
+
+  solution: {
+    origine: 'BO1', cause: 'BC1', classification: 'accidentelle', certitude: 'probable',
+    probableSi: { tous: ['B09'], unParmi: [['BF20', 'B19'], ['B10', 'B11', 'B18']] },
+    faitsCles: ['B02', 'B07', 'B08', 'B09', 'B10', 'B11', 'B15', 'B18', 'B19', 'BF20'],
+    pieges: [
+      { id: 'intrusion', titre: '« Alarme intrusion » et porte cintrée', ref: '20.2 / 22.3', texte: 'Le contact de porte a détecté deux ouvertures : la poussée du gaz inerte puis la première explosion. Personne n\'est entré, et la porte cintrée a heurté un fût.', faits: ['B07', 'B02', 'BF14'], origine: 'BO4', cause: 'BC5' },
+      { id: 'arc', titre: 'Les traces d\'arc désignent-elles la cause ?', ref: '8.11 / 17.4.5', texte: 'Des modules restés chargés font des arcs quand le feu les atteint. Les fusibles intacts et les courants confinés au module 10 écartent un court-circuit externe.', faits: ['B11'], cause: 'BC4' },
+      { id: 'clim', titre: '« La climatisation fuyait » : une partie intéressée et une question orientée', ref: '13.4 / 4.3.8', texte: 'La thèse du fabricant et un souvenir obtenu par une question orientée ne sont pas des faits. Les données d\'ambiance rendent la condensation peu probable ; l\'hypothèse reste moins probable sans être formellement exclue.', faits: ['BF7', 'BF4'], cause: 'BC2' },
+      { id: 'rappel', titre: 'La campagne de remplacement', ref: '13.5 / 18.6', texte: 'Un rappel ne prouve rien si le lot n\'est pas concerné : ici, les modules ont été produits après la période visée.', faits: ['BF12'] },
+    ],
+  },
+
+  reconstitution: [
+    { t: '09:30', titre: 'Charge des batteries avec la production solaire ; 95 % atteints vers 13h40.', feu: 0, fumee: {} },
+    { t: '15:32', titre: 'Défaillance interne dans le module 10 du rack N15 (cellule 9-2) : chute de tension, courants internes, dégazage.', feu: 0.05, fumee: { ess1: 0.15 } },
+    { t: '15:33', titre: 'Double détection : alarme, puis libération du gaz inerte qui chasse l\'air et pousse la porte arrière (« intrusion » 2 min).', feu: 0.1, fumee: { ess1: 0.3 } },
+    { t: '15:50', titre: 'L\'emballement continue malgré l\'inertage ; les gaz inflammables s\'enflamment : première explosion, la porte s\'ouvre et se referme sur le fût.', feu: 0.4, fumee: { ess1: 0.6, allee: 0.2 } },
+    { t: '18:30', titre: 'Les gaz se sont de nouveau accumulés : seconde explosion à l\'ouverture de la porte ouest par les secours.', feu: 0.6, flash: ['ess1'], fumee: { ess1: 0.8, allee: 0.4 } },
+    { t: '20:00', titre: 'Arrosage massif par lances monitor ; refroidissement prolongé puis surveillance pendant 12 jours.', feu: 0.15, fumee: { ess1: 0.4 } },
+  ],
+  dynamique: { piece: 'ess1', L: 12, l: 2.44, H: 2.59, ouvertures: [{ nom: 'Porte ouest du conteneur', w: 1.0, h: 2.1 }], combustible: 'Canapé Polyuréthanne' },
+};

@@ -283,7 +283,7 @@ export class Enquete {
     this.temoins.get(tid).add(qid);
     const msgs = [];
     if (q.type === 'orientee') { const v = this.violation('question-orientee', `Question orientée posée à ${t.nom}.`, '13.4', 2); if (v) msgs.push(v); }
-    if (q.fait) this.ajouterFait({ id: q.fait.id, texte: `${t.nom} : ${q.fait.texte}`, court: q.fait.texte, type: 'temoin', source: t.nom, contamine: !!q.fait.contamine });
+    if (q.fait) this.ajouterFait({ id: q.fait.id, texte: `${t.nom} : ${q.fait.texte}`, court: q.fait.texte, type: 'temoin', source: t.nom, contamine: !!q.fait.contamine, speculatif: !!q.fait.speculatif });
     this.log(`Entretien ${t.nom} : « ${q.q} »`);
     return { q, msgs };
   }

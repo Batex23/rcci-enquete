@@ -56,7 +56,7 @@ export function ouvrirAnalyse(src, container, opts = {}) {
           <tr><th style="width:190px">Zone d'origine</th><td>${esc(O(sol.origine)?.nom || 'Non déterminée')}</td></tr>
           <tr><th>Premier combustible</th><td>${esc(C(sol.cause)?.premierCombustible || '—')}</td></tr>
           <tr><th>Source d'ignition</th><td>${esc(C(sol.cause)?.source || '—')}</td></tr>
-          <tr><th>Cause / séquence</th><td>${esc(C(sol.cause)?.nom || 'Indéterminée')}</td></tr>
+          <tr><th>Cause / séquence</th><td>${esc(C(sol.cause)?.nom || sol.causeTexte || 'Indéterminée')}</td></tr>
           <tr><th>Niveau de certitude</th><td>${esc(cert)}</td></tr>
           <tr><th>Classification</th><td>${esc(cls)}</td></tr>
         </table>
