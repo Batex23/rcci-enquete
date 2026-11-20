@@ -491,3 +491,9 @@ body { font: 15px/1.5 var(--sans); }
 .l3-m6 b { font-size: 17px; }
 .l3-graphe { display: block; width: 100%; height: auto; margin: 8px 0 2px; border: 1px solid #d0dde5; border-radius: 8px; background: #fff; }
 .l3-q .choix small { font-weight: 500; opacity: .75; }
+
+/* Bandeau du mode administrateur */
+.admin-band { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 12px; padding: 8px 12px; border-radius: 8px;
+  background: repeating-linear-gradient(135deg, #3a2a08 0 14px, #2c2006 14px 28px); border: 2px dashed #ffd23f; color: #ffe9a8; font-size: 14px; }
+.admin-band b { color: #ffd23f; letter-spacing: .5px; }
+.admin-band .btn-j.ghost { color: #ffe9a8; border: 1px solid #ffd23f88; background: transparent; }

@@ -80,6 +80,10 @@ Tracés irréguliers post-embrasement, lecture PID positive due aux produits de 
 - **Équipements** : jauge de carbonisation/calcination, contenants pour liquides inflammables, kit de cartographie des arcs, PID, calculateur de dynamique du feu (Thomas, Babrauskas, Heskestad), OSINT pro, drone, photogrammétrie, véhicule d'investigation, équipe cynophile, laboratoire interne.
 - **Modes** : *Formation* (correction immédiate) ou *Expertise* (tout est révélé au débriefing), aide à la recherche activable.
 
+### Accès administrateur (formateur)
+
+Onglet **Carrière** → « Accès administrateur », ou directement `…/rcci-enquete/?admin`. Le code (`RCCI-ADMIN`, sans tenir compte des majuscules) débloque toutes les enquêtes, le grade maximal, tous les équipements et des crédits illimités. Le mode admin utilise une carrière séparée : la progression du joueur n'est pas touchée et revient telle quelle en quittant le mode. Le site est statique : ce code évite les accès par hasard, ce n'est pas une sécurité forte.
+
 ## Atelier de scènes (`editor.html`) — façon Les Sims
 
 Une barre de **boutons ronds en bas de l'écran** : les modes à gauche, les outils du mode et le **catalogue** juste au-dessus, une bulle de conseil qui explique l'outil choisi. Les listes du niveau (pièces, objets, tracés, constats, photos) sont à gauche, la sélection s'édite à droite. Une aide illustrée s'ouvre à la première visite (touche **H**).

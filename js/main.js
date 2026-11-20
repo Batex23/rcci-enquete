@@ -1,5 +1,5 @@
 // Point d'entrée : bureau de l'enquêteur (missions, équipement, référentiel, carrière)
-import { charger, sauver, grade, possede, reinitialiser, scenariosPerso, supprimerScenarioPerso } from './state.js';
+import { charger, sauver, grade, possede, reinitialiser, scenariosPerso, supprimerScenarioPerso, estAdmin, basculerAdmin, verifierCodeAdmin, CREDITS_ADMIN } from './state.js';
 import { SCENARIOS, A_VENIR } from './data/scenarios/index.js';
 import { OUTILS, GRADES } from './data/outils.js';
 import { CHAPITRES, TRACES, METHODE_SCIENTIFIQUE, NFPA_EDITION } from './data/nfpa.js';
@@ -44,12 +44,18 @@ function allerQG(onglet) {
         <div class="xpbar"><i style="width:${pct}%"></i></div>
         <div class="small" style="display:flex;justify-content:space-between;margin-top:4px;color:#d7c6a8"><span>${g.suivant ? `prochain : ${esc(g.suivant.nom)}` : 'grade maximal'}</span><span style="color:#ffd23f;font-weight:800">${app.c.credits.toLocaleString('fr-FR')} cr</span></div></div>
     </div>
+    ${estAdmin() ? `<div class="admin-band">🛠️ <b>MODE ADMINISTRATEUR</b> — toutes les enquêtes et tous les équipements sont débloqués. Ta vraie carrière est mise de côté et n'est pas modifiée.
+      <span style="flex:1"></span><button class="btn-j" data-adm="credits">💰 Recharger les crédits</button><button class="btn-j ghost" data-adm="sortir">Quitter le mode admin</button></div>` : ''}
     <nav class="qtabs">${[['missions', '🗂️ Enquêtes'], ['entrainement', '🔬 Laboratoire'], ['competences', '🎓 Compétences'], ['equipement', '🧰 Équipement'], ['codex', '📚 Référentiel'], ['carriere', '🏅 Carrière']].map(([id, l]) => `<button class="qtab ${app.onglet === id ? 'on' : ''}" data-o="${id}">${l}</button>`).join('')}
       <a class="qtab" href="editor.html" style="text-decoration:none;margin-left:auto">🛠️ Atelier de scènes</a></nav>
     <div class="tableau" id="qgBody"></div>
   </div></div>`);
   screen.appendChild(el);
   $$('[data-o]', el).forEach(b => b.onclick = () => { son('page'); allerQG(b.dataset.o); });
+  $$('[data-adm]', el).forEach(b => b.onclick = () => {
+    if (b.dataset.adm === 'credits') { app.c.credits = CREDITS_ADMIN; ctx.save(); toast('Crédits rechargés.', 'ok'); allerQG(); }
+    else { app.c = basculerAdmin(false); ctx.app.c = app.c; toast('Retour à ta carrière normale.', 'ok'); allerQG('missions'); }
+  });
   const body = $('#qgBody', el);
   body.classList.toggle('labo-salle', app.onglet === 'entrainement');
   ({ missions, entrainement: b2 => salleEntrainement(b2, ctx), competences, equipement, codex, carriere })[app.onglet](body);
@@ -59,7 +65,7 @@ function allerQG(onglet) {
 async function missions(b) {
   const perso = await scenariosPerso();
   const jamais = !Object.keys(app.c.missions).length;
-  const deverrouille = s => !s.requiert || (app.c.missions[s.requiert]?.meilleur ?? 0) >= 40;
+  const deverrouille = s => estAdmin() || !s.requiert || (app.c.missions[s.requiert]?.meilleur ?? 0) >= 40;
   const dossier = (s, i, opts = {}) => {
     const m = app.c.missions[s.id];
     const okNiv = deverrouille(s);
@@ -77,7 +83,7 @@ async function missions(b) {
         ${ok && jeu.ok ? `<button class="btn-j go" data-go="${esc(s.id)}">${m ? '↻ Rejouer' : '▶ Commencer'}</button>` : opts.perso && !jeu.ok ? '<span class="small">non jouable</span>' : ''}
         ${opts.perso ? `<button class="btn-j ghost" data-del="${esc(s.id)}" title="Supprimer">🗑</button>` : ''}</div></div>`;
   };
-  b.innerHTML = `${jamais ? `<div class="hcarte" style="max-width:640px;margin:0 auto 22px;display:flex;gap:12px;align-items:center"><span style="font-size:40px">👨‍🚒</span><div><b>Bienvenue, stagiaire !</b><br>Je suis le capitaine Ferrand. On commence ensemble par le <b>niveau 1</b> : un petit feu de cuisine, en doublon. Je te montre la méthode pas à pas.</div></div>` : ''}
+  b.innerHTML = `${jamais && !estAdmin() ? `<div class="hcarte" style="max-width:640px;margin:0 auto 22px;display:flex;gap:12px;align-items:center"><span style="font-size:40px">👨‍🚒</span><div><b>Bienvenue, stagiaire !</b><br>Je suis le capitaine Ferrand. On commence ensemble par le <b>niveau 1</b> : un petit feu de cuisine, en doublon. Je te montre la méthode pas à pas.</div></div>` : ''}
     <div class="chemin">${SCENARIOS.map((s, i) => dossier(s, i)).join('')}${perso.map((s, i) => dossier(s, i, { perso: true })).join('')}
     ${A_VENIR.map(s => `<div class="dossier verrou"><span class="punaise"></span><div class="niv">Bientôt</div><h3>${esc(s.titre)}</h3><p>${esc(s.resume)}</p></div>`).join('')}</div>`;
   $$('[data-go]', b).forEach(x => x.onclick = () => lancer(SCENARIOS.find(y => y.id === x.dataset.go) || perso.find(y => y.id === x.dataset.go)));
@@ -211,6 +217,11 @@ function carriere(b) {
     <div class="panel"><h3>Sauvegarde</h3>
       <p class="small muted">La progression est conservée dans ce navigateur. Exportez-la pour changer de poste.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="exp">Exporter</button><label class="btn">Importer<input type="file" id="imp" accept=".json" hidden></label><button class="btn btn-ghost" id="rst" style="color:var(--ko)">Réinitialiser la carrière</button></div>
+      <h3 style="margin-top:16px">🛠️ Accès administrateur</h3>
+      ${estAdmin() ? `<p class="small">Mode administrateur actif. Les scores obtenus ici sont enregistrés dans la carrière « admin », séparée.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="admComp">Compétences : ${DOMAINES.every(d => xpDe(app.c, d.id) >= PALIERS[PALIERS.length - 1]) ? 'remettre à zéro' : 'toutes au maximum'}</button><button class="btn" id="admRaz">Repartir d'une carrière admin neuve</button><button class="btn btn-ghost" id="admOff">Quitter le mode admin</button></div>`
+        : `<p class="small muted">Réservé au formateur : débloque toutes les enquêtes, le grade maximal, tous les équipements et des crédits illimités, sans toucher à la carrière du joueur.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><input class="inp" id="admCode" type="password" placeholder="Code d'accès" style="max-width:200px" autocomplete="off"><button class="btn" id="admOn">Activer</button></div>`}
       <h3 style="margin-top:16px">Historique</h3>
       ${app.c.journal.length ? `<table class="det">${app.c.journal.map(j => `<tr><td>${esc(j.date)}</td><td>${esc(j.mission)}</td><td class="p">${j.score}/100</td></tr>`).join('')}</table>` : '<p class="muted">Aucune enquête terminée.</p>'}
     </div></div>`;
@@ -225,7 +236,24 @@ function carriere(b) {
     try { const d = JSON.parse(await e.target.files[0].text()); if (typeof d.xp !== 'number') throw new Error('format'); app.c = { ...app.c, ...d }; ctx.app.c = app.c; ctx.save(); toast('Carrière importée.', 'ok'); allerQG('carriere'); }
     catch { toast('Fichier de sauvegarde invalide.', 'ko'); }
   };
+  const admOn = $('#admOn', b);
+  if (admOn) {
+    const essayer = async () => {
+      if (!(await verifierCodeAdmin($('#admCode', b).value))) { toast('Code incorrect.', 'ko'); return; }
+      app.c = basculerAdmin(true); ctx.app.c = app.c; ctx.save(); toast('Mode administrateur activé.', 'ok'); allerQG('missions');
+    };
+    admOn.onclick = essayer;
+    $('#admCode', b).onkeydown = e => { if (e.key === 'Enter') essayer(); };
+  } else {
+    $('#admOff', b).onclick = () => { app.c = basculerAdmin(false); ctx.app.c = app.c; toast('Retour à ta carrière normale.', 'ok'); allerQG('missions'); };
+    $('#admRaz', b).onclick = async () => { if (await confirmer('Carrière admin neuve ?', 'Les scores et l\'historique du mode admin seront effacés (ta vraie carrière n\'est pas touchée).', 'Effacer')) { app.c = reinitialiser(); ctx.app.c = app.c; ctx.save(); allerQG('carriere'); } };
+    $('#admComp', b).onclick = () => {
+      const max = DOMAINES.every(d => xpDe(app.c, d.id) >= PALIERS[PALIERS.length - 1]);
+      app.c.competences = Object.fromEntries(DOMAINES.map(d => [d.id, max ? 0 : PALIERS[PALIERS.length - 1]]));
+      ctx.save(); toast(max ? 'Compétences remises à zéro.' : 'Toutes les compétences au niveau maximal (avantages actifs).', 'ok'); allerQG('carriere');
+    };
+  }
   $('#rst', b).onclick = async () => { if (await confirmer('Réinitialiser ?', 'XP, crédits, équipements et historique seront effacés.', 'Réinitialiser')) { app.c = reinitialiser(); ctx.app.c = app.c; ctx.save(); allerQG('carriere'); } };
 }
 
-allerQG();
+allerQG(!estAdmin() && /[?&#]admin\b/.test(location.search + location.hash) ? 'carriere' : undefined);
